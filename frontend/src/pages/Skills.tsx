@@ -1,155 +1,131 @@
-import React from 'react';
-import { Shield, Smartphone, Code2, Database, Loader2 } from 'lucide-react';
-import SEOHead from '../components/SEOHead';
 import { useGetSkills } from '../hooks/useQueries';
+import { SkillCategory } from '../backend';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Zap, Shield, Star, Plus } from 'lucide-react';
 
-const staticSkillCategories = [
-  {
-    id: 'primary',
-    title: 'Primary Skills',
-    icon: Smartphone,
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
-    borderColor: 'border-primary/30',
-    skills: [
-      { name: 'Flutter', level: 95 },
-      { name: 'Dart', level: 92 },
-    ],
+const categoryConfig: Record<string, { label: string; icon: React.ElementType; color: string; bg: string; border: string }> = {
+  [SkillCategory.primary]: {
+    label: 'Primary Skills',
+    icon: Star,
+    color: 'text-cyan-400',
+    bg: 'bg-cyan-500/10',
+    border: 'border-cyan-500/30',
   },
-  {
-    id: 'secondary',
-    title: 'Secondary Skills',
-    icon: Code2,
-    color: 'text-chart-2',
-    bgColor: 'bg-chart-2/10',
-    borderColor: 'border-chart-2/30',
-    skills: [
-      { name: 'React Native', level: 85 },
-      { name: 'JavaScript', level: 80 },
-      { name: 'TypeScript', level: 78 },
-    ],
+  [SkillCategory.secondary]: {
+    label: 'Secondary Skills',
+    icon: Zap,
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/30',
   },
-  {
-    id: 'security',
-    title: 'Security Expertise',
+  [SkillCategory.security]: {
+    label: 'Security Skills',
     icon: Shield,
-    color: 'text-chart-3',
-    bgColor: 'bg-chart-3/10',
-    borderColor: 'border-chart-3/30',
-    skills: [
-      { name: 'Secure API Integration', level: 90 },
-      { name: 'Authentication Security', level: 92 },
-      { name: 'Secure Local Storage', level: 88 },
-      { name: 'Data Encryption', level: 87 },
-    ],
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/30',
   },
-  {
-    id: 'additional',
-    title: 'Additional Skills',
-    icon: Database,
-    color: 'text-chart-4',
-    bgColor: 'bg-chart-4/10',
-    borderColor: 'border-chart-4/30',
-    skills: [
-      { name: 'Firebase', level: 85 },
-      { name: 'REST APIs', level: 90 },
-      { name: 'Web Development', level: 75 },
-    ],
+  [SkillCategory.additional]: {
+    label: 'Additional Skills',
+    icon: Plus,
+    color: 'text-purple-400',
+    bg: 'bg-purple-500/10',
+    border: 'border-purple-500/30',
   },
-];
+};
+
+const categoryOrder = [SkillCategory.primary, SkillCategory.secondary, SkillCategory.security, SkillCategory.additional];
 
 export default function Skills() {
-  const { data: backendSkills, isLoading } = useGetSkills();
+  const { data: skills, isLoading, error } = useGetSkills();
+
+  const grouped = (skills ?? []).reduce<Record<string, typeof skills>>((acc, skill) => {
+    const cat = skill.category as unknown as string;
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat]!.push(skill);
+    return acc;
+  }, {});
 
   return (
-    <>
-      <SEOHead page="skills" defaultTitle="Skills – Boby Dhorajiya" defaultDescription="Technical skills including Flutter, Dart, React Native, and mobile security expertise." />
+    <div className="min-h-screen bg-background py-16">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4">Skills</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            A comprehensive overview of my technical expertise across mobile, web, and security domains.
+          </p>
+        </div>
 
-      <div className="pt-24 section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">Technical Skills</span>
-            <h1 className="section-title font-display mt-2">
-              My <span className="gradient-text">Expertise</span>
-            </h1>
-            <p className="section-subtitle text-muted-foreground mx-auto">
-              A comprehensive skill set focused on mobile development and security engineering.
-            </p>
-          </div>
-
-          {/* Security shield highlight */}
-          <div className="flex justify-center mb-12">
-            <div className="relative">
-              <img
-                src="/assets/generated/security-shield-icon.dim_256x256.png"
-                alt="Security Shield"
-                className="w-20 h-20 animate-float"
-              />
-              <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl" />
-            </div>
-          </div>
-
-          {/* Static skill categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            {staticSkillCategories.map((category, catIdx) => (
-              <div
-                key={category.id}
-                className={`p-6 rounded-2xl border ${category.borderColor} bg-card card-hover animate-slide-up`}
-                style={{ animationDelay: `${catIdx * 0.1}s` }}
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <div className={`w-10 h-10 rounded-xl ${category.bgColor} border ${category.borderColor} flex items-center justify-center`}>
-                    <category.icon className={`w-5 h-5 ${category.color}`} />
-                  </div>
-                  <h2 className="font-display font-bold text-lg">{category.title}</h2>
-                </div>
-                <div className="space-y-4">
-                  {category.skills.map((skill) => (
-                    <div key={skill.name}>
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-sm font-medium">{skill.name}</span>
-                        <span className={`text-xs font-mono ${category.color}`}>{skill.level}%</span>
-                      </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-1000`}
-                          style={{
-                            width: `${skill.level}%`,
-                            background: `oklch(var(--primary))`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-card border border-border rounded-2xl p-6">
+                <Skeleton className="h-6 w-40 mb-4" />
+                <div className="space-y-3">
+                  {[1, 2, 3].map((j) => <Skeleton key={j} className="h-10 w-full" />)}
                 </div>
               </div>
             ))}
           </div>
+        )}
 
-          {/* Backend skills (if any) */}
-          {isLoading && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          )}
-          {backendSkills && backendSkills.length > 0 && (
-            <div className="mt-8">
-              <h2 className="font-display font-bold text-xl mb-6 text-center">Additional Skills</h2>
-              <div className="flex flex-wrap gap-3 justify-center">
-                {backendSkills.map((skill) => (
-                  <div key={skill.id.toString()} className="skill-badge border-border text-foreground">
-                    <span>{skill.name}</span>
-                    {Number(skill.experience) > 0 && (
-                      <span className="text-primary font-mono">{Number(skill.experience)}y</span>
-                    )}
+        {error && (
+          <div className="text-center text-muted-foreground py-12">
+            <p>Failed to load skills. Please try again later.</p>
+          </div>
+        )}
+
+        {!isLoading && !error && (skills ?? []).length === 0 && (
+          <div className="text-center text-muted-foreground py-12">
+            <p>No skills added yet.</p>
+          </div>
+        )}
+
+        {!isLoading && !error && (skills ?? []).length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {categoryOrder.map((cat) => {
+              const catKey = cat as unknown as string;
+              const catSkills = grouped[catKey];
+              if (!catSkills || catSkills.length === 0) return null;
+              const config = categoryConfig[catKey];
+              const Icon = config.icon;
+              return (
+                <div key={catKey} className={`bg-card border ${config.border} rounded-2xl p-6`}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className={`w-10 h-10 rounded-xl ${config.bg} flex items-center justify-center`}>
+                      <Icon size={20} className={config.color} />
+                    </div>
+                    <h2 className="text-xl font-bold text-foreground">{config.label}</h2>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+                  <div className="space-y-4">
+                    {catSkills.map((skill) => {
+                      const exp = Number(skill.experience);
+                      const maxExp = 10;
+                      const pct = Math.min((exp / maxExp) * 100, 100);
+                      return (
+                        <div key={String(skill.id)}>
+                          <div className="flex justify-between items-center mb-1.5">
+                            <span className="text-sm font-medium text-foreground">{skill.name}</span>
+                            <span className="text-xs text-muted-foreground">{exp} yr{exp !== 1 ? 's' : ''}</span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${config.bg.replace('/10', '/60')}`}
+                              style={{ width: `${pct}%`, background: `var(--tw-gradient-from, currentColor)` }}
+                            >
+                              <div className={`h-full rounded-full ${config.color.replace('text-', 'bg-')}`} style={{ width: '100%' }} />
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }

@@ -1,105 +1,125 @@
-import React from 'react';
+import { useIsCallerAdmin, useGetDashboardStats, useGetSkills, useGetCategories } from '../../hooks/useQueries';
+import { useInternetIdentity } from '../../hooks/useInternetIdentity';
+import AdminSidebar from '../../components/AdminSidebar';
 import { Link } from '@tanstack/react-router';
-import { FolderOpen, Users, BookOpen, MessageSquare, Wrench, Star, Search, Loader2, LayoutDashboard, TrendingUp } from 'lucide-react';
-import AdminGuard from '../../components/AdminGuard';
-import { useGetDashboardStats } from '../../hooks/useQueries';
+import { FolderOpen, Users, BookOpen, Zap, Tag, ArrowRight, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const adminSections = [
-  { href: '/admin/projects', label: 'Projects', icon: FolderOpen, desc: 'Manage portfolio projects' },
-  { href: '/admin/blog', label: 'Blog Posts', icon: BookOpen, desc: 'Create and edit blog content' },
-  { href: '/admin/testimonials', label: 'Testimonials', icon: Star, desc: 'Manage client testimonials' },
-  { href: '/admin/skills', label: 'Skills', icon: TrendingUp, desc: 'Update skill listings' },
-  { href: '/admin/services', label: 'Services', icon: Wrench, desc: 'Manage service offerings' },
-  { href: '/admin/leads', label: 'Leads', icon: Users, desc: 'View contact form submissions' },
-  { href: '/admin/seo', label: 'SEO Settings', icon: Search, desc: 'Configure page meta tags' },
-];
+function AdminGuard({ children }: { children: React.ReactNode }) {
+  const { identity, isInitializing } = useInternetIdentity();
+  const { data: isAdmin, isLoading } = useIsCallerAdmin();
 
-function DashboardContent() {
-  const { data: stats, isLoading } = useGetDashboardStats();
+  if (isInitializing || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="animate-spin text-primary" size={32} />
+      </div>
+    );
+  }
 
-  return (
-    <div className="pt-24 section-padding">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-10 animate-fade-in">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-center">
-              <LayoutDashboard className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="font-display font-bold text-2xl">Admin Dashboard</h1>
-              <p className="text-sm text-muted-foreground">Manage your portfolio content</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-          {isLoading ? (
-            <div className="col-span-3 flex justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              <div className="p-6 rounded-2xl border border-border bg-card animate-slide-up">
-                <div className="flex items-center gap-3 mb-2">
-                  <FolderOpen className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">Total Projects</span>
-                </div>
-                <p className="text-3xl font-display font-bold text-primary">
-                  {stats ? Number(stats.projectCount) : 0}
-                </p>
-              </div>
-              <div className="p-6 rounded-2xl border border-border bg-card animate-slide-up stagger-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <Users className="w-5 h-5 text-chart-2" />
-                  <span className="text-sm text-muted-foreground">Total Leads</span>
-                </div>
-                <p className="text-3xl font-display font-bold" style={{ color: 'oklch(0.65 0.22 160)' }}>
-                  {stats ? Number(stats.leadCount) : 0}
-                </p>
-              </div>
-              <div className="p-6 rounded-2xl border border-border bg-card animate-slide-up stagger-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <BookOpen className="w-5 h-5 text-chart-3" />
-                  <span className="text-sm text-muted-foreground">Blog Posts</span>
-                </div>
-                <p className="text-3xl font-display font-bold" style={{ color: 'oklch(0.55 0.18 280)' }}>
-                  {stats ? Number(stats.blogCount) : 0}
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Navigation cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {adminSections.map((section, idx) => (
-            <Link
-              key={section.href}
-              to={section.href}
-              className="p-5 rounded-2xl border border-border bg-card card-hover group animate-slide-up"
-              style={{ animationDelay: `${idx * 0.05}s` }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:border-primary/40 transition-colors">
-                  <section.icon className="w-4 h-4 text-primary" />
-                </div>
-                <h3 className="font-display font-semibold group-hover:text-primary transition-colors">{section.label}</h3>
-              </div>
-              <p className="text-xs text-muted-foreground">{section.desc}</p>
-            </Link>
-          ))}
+  if (!identity) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground mb-4">Please log in to access the admin panel.</p>
+          <Link to="/admin" className="text-primary hover:underline">Go to Login</Link>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
+          <p className="text-muted-foreground">You don't have admin privileges.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 export default function Dashboard() {
+  const { data: stats, isLoading: statsLoading } = useGetDashboardStats();
+  const { data: skills } = useGetSkills();
+  const { data: categories } = useGetCategories();
+
+  const statCards = [
+    { label: 'Total Projects', value: stats ? Number(stats.projectCount) : null, icon: FolderOpen, color: 'text-blue-400', bg: 'bg-blue-500/10', path: '/admin/projects' },
+    { label: 'Total Leads', value: stats ? Number(stats.leadCount) : null, icon: Users, color: 'text-green-400', bg: 'bg-green-500/10', path: '/admin/leads' },
+    { label: 'Total Blog Posts', value: stats ? Number(stats.blogCount) : null, icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-500/10', path: '/admin/blog' },
+    { label: 'Total Skills', value: skills ? skills.length : null, icon: Zap, color: 'text-yellow-400', bg: 'bg-yellow-500/10', path: '/admin/skills' },
+    { label: 'Total Categories', value: categories ? categories.length : null, icon: Tag, color: 'text-cyan-400', bg: 'bg-cyan-500/10', path: '/admin/categories' },
+  ];
+
   return (
     <AdminGuard>
-      <DashboardContent />
+      <div className="flex min-h-screen bg-background">
+        <AdminSidebar />
+        <main className="flex-1 p-6 lg:p-8 lg:ml-0">
+          <div className="max-w-6xl mx-auto">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Welcome back! Here's an overview of your portfolio.</p>
+            </div>
+
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+              {statCards.map((card) => (
+                <Link
+                  key={card.label}
+                  to={card.path}
+                  className="bg-card border border-border rounded-2xl p-5 hover:border-primary/40 transition-colors group"
+                >
+                  <div className={`w-10 h-10 rounded-xl ${card.bg} flex items-center justify-center mb-3`}>
+                    <card.icon size={20} className={card.color} />
+                  </div>
+                  {statsLoading || card.value === null ? (
+                    <Skeleton className="h-8 w-16 mb-1" />
+                  ) : (
+                    <p className="text-3xl font-bold text-foreground">{card.value}</p>
+                  )}
+                  <p className="text-sm text-muted-foreground mt-1">{card.label}</p>
+                  <div className="flex items-center gap-1 text-xs text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Manage <ArrowRight size={12} />
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Quick Actions */}
+            <div>
+              <h2 className="text-xl font-bold text-foreground mb-4">Quick Actions</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { label: 'Add New Project', path: '/admin/projects', desc: 'Upload and publish a new portfolio project' },
+                  { label: 'Write Blog Post', path: '/admin/blog', desc: 'Create and publish a new blog article' },
+                  { label: 'Manage Skills', path: '/admin/skills', desc: 'Add or update your technical skills' },
+                  { label: 'View Leads', path: '/admin/leads', desc: 'Check new contact form submissions' },
+                  { label: 'Manage Social Links', path: '/admin/social-links', desc: 'Update your social media profiles' },
+                  { label: 'SEO Settings', path: '/admin/seo', desc: 'Optimize meta titles and descriptions' },
+                ].map((action) => (
+                  <Link
+                    key={action.path}
+                    to={action.path}
+                    className="bg-card border border-border rounded-xl p-5 hover:border-primary/40 transition-colors group"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold text-foreground">{action.label}</h3>
+                      <ArrowRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">{action.desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </AdminGuard>
   );
 }

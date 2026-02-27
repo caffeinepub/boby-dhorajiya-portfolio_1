@@ -1,168 +1,139 @@
-import React, { useState } from 'react';
-import { Mail, MessageSquare, User, Send, CheckCircle2, Loader2, Phone, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { useProcessContactForm } from '../hooks/useQueries';
+import { toast } from 'sonner';
+import { Mail, MapPin, Clock, Send, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import SEOHead from '../components/SEOHead';
-import { useContactForm } from '../hooks/useQueries';
-import { toast } from 'sonner';
 
 export default function Contact() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const { mutate, isPending } = useProcessContactForm();
 
-  const contactMutation = useContactForm();
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim() || !message.trim()) return;
-
-    try {
-      await contactMutation.mutateAsync({ name: name.trim(), email: email.trim(), message: message.trim() });
-      setSubmitted(true);
-      setName('');
-      setEmail('');
-      setMessage('');
-      toast.success('Message sent successfully! I\'ll get back to you soon.');
-    } catch {
-      toast.error('Failed to send message. Please try again.');
+    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+      toast.error('Please fill in all fields.');
+      return;
     }
+    mutate(form, {
+      onSuccess: () => {
+        toast.success('Message sent! I\'ll get back to you soon.');
+        setForm({ name: '', email: '', message: '' });
+      },
+      onError: () => toast.error('Failed to send message. Please try again.'),
+    });
   };
 
   return (
-    <>
-      <SEOHead page="contact" defaultTitle="Contact – Boby Dhorajiya" defaultDescription="Get in touch with Boby Dhorajiya for mobile app development projects." />
+    <div className="min-h-screen bg-background py-16">
+      <div className="max-w-5xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4">Get In Touch</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Have a project in mind? Let's talk. I'm available for freelance work and full-time opportunities.
+          </p>
+        </div>
 
-      <div className="pt-24 section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">Get In Touch</span>
-            <h1 className="section-title font-display mt-2">
-              Let's <span className="gradient-text">Build Together</span>
-            </h1>
-            <p className="section-subtitle text-muted-foreground mx-auto">
-              Have a project in mind? I'd love to hear about it. Send me a message and let's discuss.
-            </p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+          {/* Contact Info */}
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-6">Contact Information</h2>
+            <div className="space-y-5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Mail size={18} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Email</p>
+                  <a href="mailto:dhorajiyaboby8@gmail.com" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                    dhorajiyaboby8@gmail.com
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <MapPin size={18} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Location</p>
+                  <p className="text-muted-foreground text-sm">India</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Clock size={18} className="text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">Availability</p>
+                  <p className="text-muted-foreground text-sm">🕘 Available: 9:00 AM – 8:00 PM IST</p>
+                  <p className="text-muted-foreground text-xs mt-1">Monday – Saturday</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 p-5 bg-card border border-border rounded-2xl">
+              <h3 className="font-semibold text-foreground mb-2">Response Time</h3>
+              <p className="text-muted-foreground text-sm">
+                I typically respond within a few hours during working hours. For urgent inquiries, please mention it in your message.
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            {/* Contact info */}
-            <div className="lg:col-span-2 space-y-6 animate-slide-in-left">
+          {/* Contact Form */}
+          <div className="bg-card border border-border rounded-2xl p-8">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Send a Message</h2>
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <h2 className="font-display font-bold text-xl mb-4">Contact Information</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  Available for freelance projects, consulting, and full-time opportunities. Let's create something amazing together.
-                </p>
+                <Label htmlFor="name" className="text-foreground mb-1.5 block">Your Name</Label>
+                <Input
+                  id="name"
+                  placeholder="John Doe"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  disabled={isPending}
+                  required
+                  aria-label="Your name"
+                />
               </div>
-
-              <div className="space-y-4">
-                {[
-                  { icon: Mail, label: 'Email', value: 'boby@example.com' },
-                  { icon: Phone, label: 'Availability', value: 'Mon–Fri, 9am–6pm IST' },
-                  { icon: MapPin, label: 'Location', value: 'Remote / Worldwide' },
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                      <item.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">{item.label}</p>
-                      <p className="text-sm font-medium">{item.value}</p>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <Label htmlFor="email" className="text-foreground mb-1.5 block">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  disabled={isPending}
+                  required
+                  aria-label="Your email address"
+                />
               </div>
-
-              <div className="p-4 rounded-xl border border-primary/20 bg-primary/5">
-                <p className="text-sm text-primary font-medium mb-1">🚀 Currently Available</p>
-                <p className="text-xs text-muted-foreground">Open to new projects and collaborations.</p>
+              <div>
+                <Label htmlFor="message" className="text-foreground mb-1.5 block">Message</Label>
+                <Textarea
+                  id="message"
+                  placeholder="Tell me about your project..."
+                  value={form.message}
+                  onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  disabled={isPending}
+                  required
+                  rows={5}
+                  aria-label="Your message"
+                />
               </div>
-            </div>
-
-            {/* Contact form */}
-            <div className="lg:col-span-3 animate-slide-up">
-              {submitted ? (
-                <div className="h-full flex items-center justify-center p-8 rounded-2xl border border-primary/20 bg-primary/5">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto">
-                      <CheckCircle2 className="w-8 h-8 text-primary" />
-                    </div>
-                    <h3 className="font-display font-bold text-xl">Message Sent!</h3>
-                    <p className="text-muted-foreground text-sm">
-                      Thank you for reaching out. I'll get back to you within 24 hours.
-                    </p>
-                    <button
-                      onClick={() => setSubmitted(false)}
-                      className="btn-outline text-sm"
-                    >
-                      Send Another Message
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="p-6 md:p-8 rounded-2xl border border-border bg-card space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="contact-name" className="flex items-center gap-2">
-                        <User className="w-3.5 h-3.5 text-primary" /> Name *
-                      </Label>
-                      <Input
-                        id="contact-name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        placeholder="Your name"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="contact-email" className="flex items-center gap-2">
-                        <Mail className="w-3.5 h-3.5 text-primary" /> Email *
-                      </Label>
-                      <Input
-                        id="contact-email"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="your@email.com"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-message" className="flex items-center gap-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-primary" /> Message *
-                    </Label>
-                    <Textarea
-                      id="contact-message"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Tell me about your project..."
-                      rows={6}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={contactMutation.isPending || !name.trim() || !email.trim() || !message.trim()}
-                    className="w-full btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {contactMutation.isPending ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Sending...</>
-                    ) : (
-                      <><Send className="w-4 h-4" /> Send Message</>
-                    )}
-                  </button>
-                </form>
-              )}
-            </div>
+              <Button type="submit" disabled={isPending} className="w-full" size="lg">
+                {isPending ? (
+                  <><Loader2 size={16} className="animate-spin mr-2" /> Sending...</>
+                ) : (
+                  <><Send size={16} className="mr-2" /> Send Message</>
+                )}
+              </Button>
+            </form>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

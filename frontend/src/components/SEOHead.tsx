@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { useGetSeoByPage } from '../hooks/useQueries';
+import { useEffect } from 'react';
+import { useGetSeoSettingByPage } from '../hooks/useQueries';
 
 interface SEOHeadProps {
   page: string;
@@ -8,7 +8,7 @@ interface SEOHeadProps {
 }
 
 export default function SEOHead({ page, defaultTitle, defaultDescription }: SEOHeadProps) {
-  const { data: seoSetting } = useGetSeoByPage(page);
+  const { data: seoSetting } = useGetSeoSettingByPage(page);
 
   const title = seoSetting?.metaTitle || defaultTitle || 'Boby Dhorajiya – Flutter & React Native Developer';
   const description = seoSetting?.metaDescription || defaultDescription || 'Mobile app developer specializing in Flutter, React Native & mobile security.';

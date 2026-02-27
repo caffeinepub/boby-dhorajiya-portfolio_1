@@ -1,179 +1,126 @@
-import React from 'react';
-import { ExternalLink, Smartphone, Shield, Code2, Loader2, AlertCircle } from 'lucide-react';
-import SEOHead from '../components/SEOHead';
-import { useGetProjects } from '../hooks/useQueries';
-import type { Project } from '../backend';
+import { useState } from 'react';
+import { useGetProjects, useGetCategories } from '../hooks/useQueries';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExternalLink, Github } from 'lucide-react';
 
-const placeholderProjects = [
-  {
-    id: 'p1',
-    title: 'SecureBank Mobile',
-    platform: 'iOS & Android (Flutter)',
-    techUsed: 'Flutter, Dart, Firebase, JWT',
-    securityImplemented: 'Biometric Auth, AES-256 Encryption, Certificate Pinning',
-    description: 'A full-featured mobile banking application with enterprise-grade security, real-time transactions, and seamless UX.',
-    role: 'Lead Mobile Developer',
-    url: '',
-  },
-  {
-    id: 'p2',
-    title: 'HealthTrack Pro',
-    platform: 'iOS & Android (React Native)',
-    techUsed: 'React Native, TypeScript, REST APIs',
-    securityImplemented: 'HIPAA Compliance, Secure Storage, OAuth 2.0',
-    description: 'A health monitoring app with secure patient data management, wearable device integration, and telemedicine features.',
-    role: 'Full-Stack Mobile Developer',
-    url: '',
-  },
-  {
-    id: 'p3',
-    title: 'E-Commerce Suite',
-    platform: 'iOS & Android (Flutter)',
-    techUsed: 'Flutter, Dart, Stripe, Firebase',
-    securityImplemented: 'PCI-DSS Compliance, Tokenized Payments, SSL Pinning',
-    description: 'A comprehensive e-commerce platform with secure payment processing, inventory management, and analytics dashboard.',
-    role: 'Mobile App Developer',
-    url: '',
-  },
-];
+export default function Projects() {
+  const { data: projects, isLoading: projectsLoading } = useGetProjects();
+  const { data: categories, isLoading: categoriesLoading } = useGetCategories();
+  const [activeCategory, setActiveCategory] = useState<bigint | null>(null);
 
-interface ProjectCardProps {
-  title: string;
-  platform?: string;
-  techUsed?: string;
-  securityImplemented?: string;
-  description: string;
-  role?: string;
-  url?: string;
-  image?: string;
-}
+  const filtered = (projects ?? []).filter((p) => {
+    if (activeCategory === null) return true;
+    return p.categoryId !== undefined && p.categoryId !== null && BigInt(p.categoryId) === activeCategory;
+  });
 
-function ProjectCard({ title, platform, techUsed, securityImplemented, description, role, url, image }: ProjectCardProps) {
   return (
-    <div className="group p-6 rounded-2xl border border-border bg-card card-hover overflow-hidden">
-      {/* Image */}
-      {image && (
-        <div className="w-full h-40 rounded-xl overflow-hidden mb-4 bg-muted">
-          <img src={image} alt={title} className="w-full h-full object-cover" />
+    <div className="min-h-screen bg-background py-16">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-14">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4">Projects</h1>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            A showcase of my work across mobile, web, and security domains.
+          </p>
         </div>
-      )}
-      {!image && (
-        <div className="w-full h-40 rounded-xl mb-4 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 flex items-center justify-center">
-          <Smartphone className="w-12 h-12 text-primary/40" />
-        </div>
-      )}
 
-      <div className="space-y-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display font-bold text-lg group-hover:text-primary transition-colors">{title}</h3>
-          {url && (
-            <a href={url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors flex-shrink-0">
-              <ExternalLink className="w-4 h-4" />
-            </a>
+        {/* Category Filter Tabs */}
+        <div className="flex flex-wrap gap-2 justify-center mb-10">
+          <button
+            onClick={() => setActiveCategory(null)}
+            className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${
+              activeCategory === null
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
+            }`}
+          >
+            All
+          </button>
+          {categoriesLoading && (
+            <div className="flex gap-2">
+              {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-9 w-32 rounded-full" />)}
+            </div>
           )}
+          {(categories ?? []).map((cat) => (
+            <button
+              key={String(cat.id)}
+              onClick={() => setActiveCategory(BigInt(cat.id))}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${
+                activeCategory === BigInt(cat.id)
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground border-border hover:border-primary/40 hover:text-foreground'
+              }`}
+            >
+              {cat.name}
+            </button>
+          ))}
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-
-        {platform && (
-          <div className="flex items-center gap-2 text-xs">
-            <Smartphone className="w-3.5 h-3.5 text-primary" />
-            <span className="text-muted-foreground">{platform}</span>
+        {/* Projects Grid */}
+        {projectsLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-card border border-border rounded-2xl overflow-hidden">
+                <Skeleton className="h-48 w-full" />
+                <div className="p-5 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {techUsed && (
-          <div className="flex items-start gap-2 text-xs">
-            <Code2 className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
-            <span className="text-muted-foreground">{techUsed}</span>
+        ) : filtered.length === 0 ? (
+          <div className="text-center text-muted-foreground py-16">
+            <p className="text-lg">No projects found in this category.</p>
           </div>
-        )}
-
-        {securityImplemented && (
-          <div className="flex items-start gap-2 text-xs">
-            <Shield className="w-3.5 h-3.5 text-primary mt-0.5 flex-shrink-0" />
-            <span className="text-muted-foreground">{securityImplemented}</span>
-          </div>
-        )}
-
-        {role && (
-          <div className="pt-2 border-t border-border">
-            <span className="text-xs font-medium text-primary">{role}</span>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((project) => {
+              const catName = (categories ?? []).find((c) => project.categoryId !== undefined && BigInt(c.id) === BigInt(project.categoryId!))?.name;
+              return (
+                <div
+                  key={String(project.id)}
+                  className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/40 transition-all hover:shadow-lg hover:shadow-primary/5 group"
+                >
+                  {project.image ? (
+                    <div className="h-48 overflow-hidden">
+                      <img
+                        src={project.image.getDirectURL()}
+                        alt={`Screenshot of ${project.title} project`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                      <Github size={40} className="text-primary/30" />
+                    </div>
+                  )}
+                  <div className="p-5">
+                    {catName && (
+                      <span className="text-xs font-medium text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 mb-3 inline-block">
+                        {catName}
+                      </span>
+                    )}
+                    <h3 className="font-bold text-foreground text-lg mb-2">{project.title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-4 line-clamp-3">{project.description}</p>
+                    {project.url && (
+                      <a
+                        href={project.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`View ${project.title} project`}
+                        className="inline-flex items-center gap-2 text-primary text-sm font-medium hover:underline"
+                      >
+                        <ExternalLink size={14} /> View Project
+                      </a>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-export default function Projects() {
-  const { data: projects, isLoading, error } = useGetProjects();
-
-  const hasBackendProjects = projects && projects.length > 0;
-
-  return (
-    <>
-      <SEOHead page="projects" defaultTitle="Projects – Boby Dhorajiya" defaultDescription="Mobile app projects built with Flutter and React Native." />
-
-      <div className="pt-24 section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">Portfolio</span>
-            <h1 className="section-title font-display mt-2">
-              Featured <span className="gradient-text">Projects</span>
-            </h1>
-            <p className="section-subtitle text-muted-foreground mx-auto">
-              A selection of mobile applications built with security and performance in mind.
-            </p>
-          </div>
-
-          {isLoading && (
-            <div className="flex justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          )}
-
-          {error && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive mb-8">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
-              <p className="text-sm">Failed to load projects. Showing sample projects.</p>
-            </div>
-          )}
-
-          {/* Backend projects */}
-          {hasBackendProjects && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {projects.map((project: Project, idx: number) => (
-                <div key={project.id.toString()} className="animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                  <ProjectCard
-                    title={project.title}
-                    description={project.description}
-                    url={project.url}
-                    image={project.image ? project.image.getDirectURL() : undefined}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Placeholder projects */}
-          {!hasBackendProjects && !isLoading && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {placeholderProjects.map((project, idx) => (
-                  <div key={project.id} className="animate-slide-up" style={{ animationDelay: `${idx * 0.1}s` }}>
-                    <ProjectCard {...project} />
-                  </div>
-                ))}
-              </div>
-              <p className="text-center text-xs text-muted-foreground mt-8">
-                * Sample projects shown. Add real projects via the admin panel.
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    </>
   );
 }

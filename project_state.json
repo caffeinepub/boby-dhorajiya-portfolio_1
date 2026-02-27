@@ -1,17 +1,21 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Personal portfolio website for Boby Dhorajiya, a mobile application developer specializing in Flutter, React Native, and mobile security. Built with React (Vite/Next.js), Tailwind CSS, Framer Motion, Node.js, Express.js, MySQL, and JWT authentication. Includes full public-facing pages and an admin panel.",
+  "projectStateVersion": 11,
+  "summary": "Personal portfolio website for Boby Dhorajiya upgraded with: hero section contrast/mobile fixes, admin account setup with force-reset, availability time update (9AM–8PM), dynamic project categories table, experience updated to Senior Mobile App Developer at Nexus IT Solution, fully dynamic skills management, dynamic social media links table, 6 new home page sections (Why Work With Me, Dev Process, Security-First, Tech Stack, CTA Banner, FAQ), improved admin panel with sidebar nav/pagination/search/toasts/modals, admin help guide page, security hardening (Helmet, rate limiting, XSS/CSRF/input validation), and full website analysis with best practices applied.",
   "architectural_notes": [
     "Frontend: React (Vite or Next.js) + Tailwind CSS + Framer Motion",
     "Backend: Node.js + Express.js REST API with JWT authentication",
     "Database: MySQL with migrations for all entities",
     "Admin panel uses role-based JWT protection on all API routes",
-    "Deployment: VPS with Nginx reverse proxy, PM2, SSL via Let's Encrypt, GitHub Actions CI/CD"
+    "Deployment: VPS with Nginx reverse proxy, PM2, SSL via Let's Encrypt, GitHub Actions CI/CD",
+    "Security: Helmet.js, rate limiting, XSS/CSRF protection, Joi/Zod input validation, sanitized blog HTML",
+    "New tables: project_categories (id, name, slug, created_at), social_links (id, platform, url, icon, is_active)"
   ],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Dark futuristic hero background with glowing circuit board patterns, faint code lines, and a centered mobile device silhouette on a deep navy/black background with cyan accent glow (hero-bg.dim_1920x1080.png)\n- Abstract mobile security shield icon with a lock symbol and shield outline in cyan on dark background (security-shield-icon.dim_256x256.png)",
+  "known_issues": [
+    "Hero section has low text visibility on mobile due to insufficient background contrast",
+    "Admin panel authentication/access issue reported — user unable to log in via Internet Identity; needs investigation or alternative auth flow"
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-create-a-hero-section-on-the-home-page-with-headline-hi-i-m-boby-mobile-app-developer-subheadline-i-build-secure-scalable-and-high-performance-mobile-apps-using-flutter-react-native-and-a-cta-button-labeled-let-s-build-your-app",
@@ -124,6 +128,134 @@
         "REQ-15"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-improve-the-hero-section-for-mobile-readability-add-a-dark-gradient-overlay-black-dark-navy-opacity-60-75-over-the-hero-background-image-increase-heading-font-weight-to-800-apply-a-subtle-text-shadow-to-heading-and-subheading-improve-mobile-padding-px-6-minimum-and-ensure-the-cta-button-has-sufficient-contrast-wcag-aa-compliant-all-text-must-pass-wcag-aa-contrast-ratio-on-mobile-screens",
+      "title": "Improve the Hero section for mobile readability: add a dark gradient overlay (black/dark-navy, opacity 60–75%) over the hero background image, increase heading font-weight to 800+, apply a subtle text-shadow to heading and subheading, improve mobile padding (px-6 minimum), and ensure the CTA button has sufficient contrast (WCAG AA compliant). All text must pass WCAG AA contrast ratio on mobile screens.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-availability-time-displayed-on-the-website-to-9-00-am-8-00-pm-everywhere-it-appears-the-footer-component-the-contact-page-any-hero-availability-badge-and-any-structured-seo-schema-data",
+      "title": "Update the availability time displayed on the website to '9:00 AM – 8:00 PM' everywhere it appears: the Footer component, the Contact page, any hero availability badge, and any structured SEO/schema data.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-projects-page-add-category-filter-tabs-all-mobile-app-development-web-development-security-solutions-others-that-filter-the-displayed-project-cards-client-side-by-the-project-s-assigned-category-fetch-categories-dynamically-from-the-backend",
+      "title": "On the Projects page, add category filter tabs ('All', 'Mobile App Development', 'Web Development', 'Security Solutions', 'Others') that filter the displayed project cards client-side by the project's assigned category. Fetch categories dynamically from the backend.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-categories-management-section-to-the-admin-panel-admin-can-create-edit-and-delete-project-categories-each-category-form-has-name-and-slug-fields-the-projects-create-edit-form-must-include-a-category-dropdown-populated-from-the-backend-categories-list",
+      "title": "Add a Categories management section to the Admin Panel. Admin can create, edit, and delete project categories. Each category form has name and slug fields. The Projects create/edit form must include a category dropdown populated from the backend categories list.",
+      "reqIds": [
+        "REQ-20"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-experience-page-to-show-exactly-one-entry-title-senior-mobile-app-developer-company-nexus-it-solution-the-description-must-highlight-flutter-app-development-react-native-cross-platform-apps-secure-api-handling-mobile-authentication-security-secure-storage-implementation-and-web-application-security-practices-remove-all-other-experience-entries",
+      "title": "Update the Experience page to show exactly one entry: Title 'Senior Mobile App Developer', Company 'Nexus IT Solution'. The description must highlight: Flutter app development, React Native cross-platform apps, secure API handling, mobile authentication security, secure storage implementation, and web application security practices. Remove all other experience entries.",
+      "reqIds": [
+        "REQ-21"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-category-field-values-primary-secondary-security-additional-to-the-skills-data-model-in-the-motoko-backend-expose-backend-functions-createskill-updateskill-deleteskill-listskills-each-skill-has-id-name-category-yearsofexperience-ensure-the-admin-panel-skillsmanagement-page-supports-adding-editing-deleting-skills-and-selecting-the-category-from-a-dropdown",
+      "title": "Add a 'category' field (values: Primary, Secondary, Security, Additional) to the skills data model in the Motoko backend. Expose backend functions: createSkill, updateSkill, deleteSkill, listSkills (each skill has id, name, category, yearsOfExperience). Ensure the admin panel SkillsManagement page supports adding, editing, deleting skills and selecting the category from a dropdown.",
+      "reqIds": [
+        "REQ-22"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-social-links-management-section-in-the-admin-panel-where-admin-can-add-edit-enable-disable-and-delete-social-media-links-each-link-form-has-platform-url-icon-and-active-toggle-fields-show-active-inactive-status-clearly-in-the-list",
+      "title": "Add a Social Links management section in the Admin Panel where admin can add, edit, enable/disable, and delete social media links. Each link form has platform, URL, icon, and active toggle fields. Show active/inactive status clearly in the list.",
+      "reqIds": [
+        "REQ-24"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-footer-component-and-hero-section-to-fetch-and-display-only-active-social-links-from-the-backend-replace-any-hardcoded-social-link-urls-with-dynamically-fetched-data-if-no-active-links-exist-the-social-icons-section-should-be-hidden",
+      "title": "Update the Footer component and Hero section to fetch and display only active social links from the backend. Replace any hardcoded social link URLs with dynamically fetched data. If no active links exist, the social icons section should be hidden.",
+      "reqIds": [
+        "REQ-25"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-six-new-premium-sections-to-the-home-page-in-order-after-the-existing-hero-highlights-1-why-work-with-me-key-differentiators-2-my-development-process-numbered-steps-discovery-design-build-test-launch-3-security-first-approach-security-practices-boby-follows-4-tech-stack-overview-visual-grid-of-key-technologies-5-call-to-action-banner-bold-banner-with-a-contact-cta-6-faq-section-expandable-accordion-with-common-client-questions-all-sections-must-have-scroll-triggered-entrance-animations-mobile-optimized-layouts-and-clean-consistent-spacing-matching-the-existing-dark-premium-theme",
+      "title": "Add six new premium sections to the Home page, in order after the existing hero/highlights: (1) 'Why Work With Me' — key differentiators; (2) 'My Development Process' — numbered steps (Discovery → Design → Build → Test → Launch); (3) 'Security-First Approach' — security practices Boby follows; (4) 'Tech Stack Overview' — visual grid of key technologies; (5) 'Call-To-Action Banner' — bold banner with a contact CTA; (6) 'FAQ Section' — expandable accordion with common client questions. All sections must have scroll-triggered entrance animations, mobile-optimized layouts, and clean consistent spacing matching the existing dark premium theme.",
+      "reqIds": [
+        "REQ-26"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-overhaul-the-admin-panel-layout-with-a-persistent-sidebar-navigation-containing-links-to-dashboard-projects-categories-skills-services-blogs-testimonials-leads-social-links-seo-settings-and-a-logout-option-the-sidebar-must-be-collapsible-on-mobile-update-the-dashboard-stats-to-show-total-projects-total-leads-total-blog-posts-total-skills-and-total-categories",
+      "title": "Overhaul the Admin Panel layout with a persistent sidebar navigation containing links to: Dashboard, Projects, Categories, Skills, Services, Blogs, Testimonials, Leads, Social Links, SEO Settings, and a Logout option. The sidebar must be collapsible on mobile. Update the Dashboard stats to show: Total Projects, Total Leads, Total Blog Posts, Total Skills, and Total Categories.",
+      "reqIds": [
+        "REQ-27"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-pagination-10-items-per-page-search-filter-input-toast-notifications-on-all-crud-operations-and-confirmation-modals-before-delete-actions-across-all-admin-management-pages-projects-categories-skills-services-blogs-testimonials-leads-social-links-seo-settings",
+      "title": "Add pagination (10 items per page), search/filter input, toast notifications on all CRUD operations, and confirmation modals before delete actions across all Admin management pages: Projects, Categories, Skills, Services, Blogs, Testimonials, Leads, Social Links, SEO Settings.",
+      "reqIds": [
+        "REQ-28"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-admin-help-guide-page-accessible-only-to-authenticated-admins-at-the-route-admin-help-the-page-must-document-in-simple-step-by-step-instructions-how-to-add-a-project-how-to-assign-a-category-to-a-project-how-to-edit-skills-how-to-update-seo-settings-how-to-manage-leads-how-to-update-social-links-and-how-to-change-the-availability-time",
+      "title": "Create an Admin Help Guide page accessible only to authenticated admins at the route /admin/help. The page must document, in simple step-by-step instructions: how to add a project, how to assign a category to a project, how to edit skills, how to update SEO settings, how to manage leads, how to update social links, and how to change the availability time.",
+      "reqIds": [
+        "REQ-29"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-general-ui-ux-performance-and-seo-best-practices-across-all-public-pages-ensure-all-images-have-alt-text-all-pages-have-unique-meta-titles-and-descriptions-via-seohead-buttons-have-accessible-labels-font-loading-is-optimized-font-display-swap-and-the-navigation-active-state-correctly-reflects-the-current-route-on-all-pages",
+      "title": "Apply general UI/UX, performance, and SEO best practices across all public pages: ensure all images have alt text, all pages have unique meta titles and descriptions via SEOHead, buttons have accessible labels, font loading is optimized (font-display: swap), and the navigation active state correctly reflects the current route on all pages.",
+      "reqIds": [
+        "REQ-30"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-adminguard-frontend-component-to-call-the-backend-claimadmin-function-automatically-when-the-user-is-authenticated-but-has-no-admin-role-yet-and-no-admin-has-been-registered-i-e-first-time-setup-display-a-claim-admin-access-button-on-the-access-denied-screen-that-triggers-this-call-and-then-re-checks-the-admin-status-if-an-admin-is-already-registered-and-the-current-user-is-not-that-admin-keep-showing-the-access-denied-message",
+      "title": "Update the `AdminGuard` frontend component to call the backend `claimAdmin` function automatically when the user is authenticated but has no admin role yet, and no admin has been registered (i.e., first-time setup). Display a 'Claim Admin Access' button on the access-denied screen that triggers this call and then re-checks the admin status. If an admin is already registered and the current user is not that admin, keep showing the 'Access Denied' message.",
+      "reqIds": [
+        "REQ-32"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-adminguard-component-so-that-after-a-successful-internet-identity-login-if-no-admin-has-been-registered-yet-the-authenticated-user-sees-a-visible-claim-admin-access-button-not-just-access-denied-the-button-must-call-the-backend-claimadmin-function-and-on-success-automatically-re-check-admin-status-and-redirect-to-the-admin-dashboard-the-current-state-shows-only-access-denied-you-don-t-have-admin-privileges-with-no-actionable-ui-element-visible",
+      "title": "Fix the AdminGuard component so that after a successful Internet Identity login, if no admin has been registered yet, the authenticated user sees a visible 'Claim Admin Access' button (not just 'Access Denied'). The button must call the backend `claimAdmin` function, and on success, automatically re-check admin status and redirect to the admin dashboard. The current state shows only 'Access Denied / You don't have admin privileges' with no actionable UI element visible.",
+      "reqIds": [
+        "REQ-33"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-perform-a-deep-audit-and-full-rewrite-of-the-adminguard-component-and-the-backend-claimadmin-checkadminstatus-flow-the-fix-must-address-1-after-a-successful-internet-identity-login-if-no-admin-principal-has-been-registered-in-the-backend-yet-the-authenticated-user-must-see-a-clearly-visible-claim-admin-access-button-not-an-access-denied-message-2-clicking-that-button-must-call-the-backend-claimadmin-function-correctly-handle-all-return-variants-success-alreadyclaimed-notauthenticated-and-any-kind-tagged-variants-and-on-success-immediately-re-fetch-admin-status-and-redirect-to-admin-dashboard-3-if-an-admin-is-already-registered-and-the-current-user-is-not-that-admin-show-access-denied-with-no-claim-button-4-ensure-the-component-never-incorrectly-treats-a-freshly-authenticated-identity-as-unauthenticated-due-to-actor-caching-stale-identity-or-race-conditions-between-auth-state-and-actor-instantiation-invalidate-and-refetch-admin-status-queries-immediately-after-login-completes-and-after-a-successful-claimadmin-call-5-verify-the-backend-claimadmin-stores-the-caller-s-principal-when-adminprincipal-is-null-none-and-that-checkadminstatus-returns-true-for-that-principal-on-all-subsequent-calls-6-the-fix-must-work-correctly-in-both-safari-and-chrome-browsers",
+      "title": "Perform a deep audit and full rewrite of the AdminGuard component and the backend claimAdmin / checkAdminStatus flow. The fix must address: (1) After a successful Internet Identity login, if no admin principal has been registered in the backend yet, the authenticated user must see a clearly visible 'Claim Admin Access' button — not an 'Access Denied' message. (2) Clicking that button must call the backend `claimAdmin` function, correctly handle all return variants (success, alreadyClaimed, notAuthenticated, and any __kind__-tagged variants), and on success immediately re-fetch admin status and redirect to /admin dashboard. (3) If an admin is already registered and the current user is NOT that admin, show 'Access Denied' with no claim button. (4) Ensure the component never incorrectly treats a freshly authenticated identity as unauthenticated due to actor caching, stale identity, or race conditions between auth state and actor instantiation. Invalidate and refetch admin-status queries immediately after login completes and after a successful claimAdmin call. (5) Verify the backend `claimAdmin` stores the caller's principal when adminPrincipal is null/None, and that `checkAdminStatus` returns true for that principal on all subsequent calls. (6) The fix must work correctly in both Safari and Chrome browsers.",
+      "reqIds": [
+        "REQ-35"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -216,6 +348,104 @@
       "summary": "Implement backend data storage for all entities using Motoko stable data structures: projects, skills, services, testimonials, blogs, leads, and seo_settings, matching the specified schema fields.",
       "reqIds": [
         "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-25",
+      "summary": "Hero section mobile fix: dark gradient overlay, WCAG contrast, font weight, text-shadow, mobile padding, CTA visibility",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-26",
+      "summary": "Admin account setup for dhorajiyaboby8@gmail.com with bcrypt, JWT, force-reset on first login, role-based middleware",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-27",
+      "summary": "Update availability time to 9:00 AM – 8:00 PM in footer, contact section, hero badge, and structured SEO data",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-28",
+      "summary": "Dynamic project categories: new project_categories table, category_id FK on projects, admin CRUD for categories, frontend filter tabs",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-29",
+      "summary": "Update experience to single entry: Senior Mobile App Developer at Nexus IT Solution with Flutter, React Native, secure API, auth security highlights",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-30",
+      "summary": "Dynamic skills management: admin CRUD with category assignment, frontend renders dynamically grouped by category",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-31",
+      "summary": "Dynamic social_links table (platform, url, icon, is_active), admin manage links, frontend shows active links in hero and footer",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-32",
+      "summary": "Add 6 new home page sections: Why Work With Me, My Development Process, Security-First Approach, Tech Stack Overview, CTA Banner, FAQ — with scroll animations and mobile optimization",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-33",
+      "summary": "Improved admin panel: sidebar nav, dashboard stats (projects/leads/blogs/skills/categories), pagination, search, toast notifications, confirmation modals",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-34",
+      "summary": "Admin-only help/guide page explaining how to manage projects, categories, skills, SEO, leads, social links, and availability",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-35",
+      "summary": "Security hardening: Helmet.js, rate limiting, XSS/CSRF protection, input validation (Joi/Zod), secure HTTP headers, HTTPS enforcement, sanitize blog HTML",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-38",
+      "summary": "Add a 'category' field to the projects data model in the Motoko backend. Define project category as a type with id, name, and slug. Add backend functions: createCategory, updateCategory, deleteCategory, listCategories, and update createProject/updateProject to accept an optional categoryId. Seed four default categories: 'Mobile App Development', 'Web Development', 'Security Solutions', 'Others'.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-43",
+      "summary": "Add a social_links data model to the Motoko backend with fields: id, platform (GitHub, LinkedIn, X), url, icon, isActive. Expose backend functions: createSocialLink, updateSocialLink, deleteSocialLink, listSocialLinks, toggleSocialLink. Seed with placeholder entries for GitHub, LinkedIn, and X.",
+      "reqIds": [
+        "REQ-23"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-44",
+      "summary": "Update the Motoko backend so that the very first Internet Identity principal that calls a backend function (or a dedicated `claimAdmin` function) is automatically granted the admin role. If no admin exists yet, the first authenticated caller who invokes `claimAdmin` should be stored as the admin principal. This resolves the 'Access Denied / You don't have admin privileges' error that appears after a successful Internet Identity login.",
+      "reqIds": [
+        "REQ-31"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-46",
+      "summary": "Fix the backend `claimAdmin` function in main.mo to correctly handle the case where no admin principal has been registered yet. If `adminPrincipal` is null/empty, the first authenticated caller of `claimAdmin` must be stored as the admin. Ensure the `isAdmin` / `checkAdminStatus` query correctly returns `true` for that principal after claiming. Also ensure `claimAdmin` returns a clear success/error variant that the frontend can act on.",
+      "reqIds": [
+        "REQ-34"
       ],
       "status": "pending"
     }

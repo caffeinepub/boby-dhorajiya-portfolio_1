@@ -14,13 +14,21 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
-export interface Lead {
+export interface Testimonial {
     id: bigint;
-    name: string;
-    email: string;
+    author: string;
     message: string;
-    timestamp: bigint;
 }
+export type ClaimAdminResult = {
+    __kind__: "adminAlreadyExists";
+    adminAlreadyExists: Principal;
+} | {
+    __kind__: "adminClaimed";
+    adminClaimed: null;
+} | {
+    __kind__: "anonymousPrincipal";
+    anonymousPrincipal: null;
+};
 export interface BlogPost {
     id: bigint;
     metaDescription: string;
@@ -30,10 +38,12 @@ export interface BlogPost {
     metaTitle: string;
     timestamp: bigint;
 }
-export interface Skill {
+export interface SocialLink {
     id: bigint;
-    name: string;
-    experience: bigint;
+    url: string;
+    icon: string;
+    platform: SocialPlatform;
+    isActive: boolean;
 }
 export interface Service {
     id: bigint;
@@ -45,9 +55,28 @@ export interface SeoSetting {
     page: string;
     metaTitle: string;
 }
+export interface ProjectCategory {
+    id: bigint;
+    name: string;
+    slug: string;
+}
+export interface Lead {
+    id: bigint;
+    name: string;
+    email: string;
+    message: string;
+    timestamp: bigint;
+}
+export interface Skill {
+    id: bigint;
+    name: string;
+    experience: bigint;
+    category: SkillCategory;
+}
 export interface Project {
     id: bigint;
     url: string;
+    categoryId?: bigint;
     title: string;
     description: string;
     timestamp: bigint;
@@ -57,10 +86,16 @@ export interface UserProfile {
     name: string;
     email: string;
 }
-export interface Testimonial {
-    id: bigint;
-    author: string;
-    message: string;
+export enum SkillCategory {
+    security = "security",
+    secondary = "secondary",
+    primary = "primary",
+    additional = "additional"
+}
+export enum SocialPlatform {
+    x = "x",
+    linkedin = "linkedin",
+    github = "github"
 }
 export enum UserRole {
     admin = "admin",
@@ -69,17 +104,22 @@ export enum UserRole {
 }
 export interface backendInterface {
     addBlog(title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<void>;
-    addProject(title: string, description: string, url: string, image: ExternalBlob | null): Promise<void>;
+    addProject(title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null): Promise<void>;
     addService(title: string, description: string): Promise<void>;
-    addSkill(name: string, experience: bigint): Promise<void>;
+    addSkill(name: string, experience: bigint, category: SkillCategory): Promise<void>;
     addTestimonial(author: string, message: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    claimAdmin(): Promise<ClaimAdminResult>;
+    createCategory(name: string, slug: string): Promise<void>;
+    createSocialLink(platform: SocialPlatform, url: string, icon: string): Promise<void>;
     deleteBlog(id: bigint): Promise<void>;
+    deleteCategory(id: bigint): Promise<void>;
     deleteLead(id: bigint): Promise<void>;
     deleteProject(id: bigint): Promise<void>;
     deleteSeoSetting(page: string): Promise<void>;
     deleteService(id: bigint): Promise<void>;
     deleteSkill(id: bigint): Promise<void>;
+    deleteSocialLink(id: bigint): Promise<void>;
     deleteTestimonial(id: bigint): Promise<void>;
     getBlogBySlug(slug: string): Promise<BlogPost | null>;
     getBlogs(): Promise<Array<BlogPost>>;
@@ -95,16 +135,21 @@ export interface backendInterface {
     getSeoSettingByPage(page: string): Promise<SeoSetting | null>;
     getSeoSettings(): Promise<Array<SeoSetting>>;
     getServices(): Promise<Array<Service>>;
-    getSkills(): Promise<Array<Skill>>;
     getTestimonials(): Promise<Array<Testimonial>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    listCategories(): Promise<Array<ProjectCategory>>;
+    listSkills(): Promise<Array<Skill>>;
+    listSocialLinks(): Promise<Array<SocialLink>>;
     processContactForm(name: string, email: string, message: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setSeoSetting(page: string, metaTitle: string, metaDescription: string): Promise<void>;
+    toggleSocialLink(id: bigint): Promise<void>;
     updateBlog(id: bigint, title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<void>;
-    updateProject(id: bigint, title: string, description: string, url: string, image: ExternalBlob | null): Promise<void>;
+    updateCategory(id: bigint, name: string, slug: string): Promise<void>;
+    updateProject(id: bigint, title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null): Promise<void>;
     updateService(id: bigint, title: string, description: string): Promise<void>;
-    updateSkill(id: bigint, name: string, experience: bigint): Promise<void>;
+    updateSkill(id: bigint, name: string, experience: bigint, category: SkillCategory): Promise<void>;
+    updateSocialLink(id: bigint, url: string, icon: string): Promise<void>;
     updateTestimonial(id: bigint, author: string, message: string): Promise<void>;
 }

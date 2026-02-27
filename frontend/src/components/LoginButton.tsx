@@ -17,6 +17,10 @@ export default function LoginButton() {
     } else {
       try {
         await login();
+        // After successful login, invalidate admin status so AdminGuard re-checks
+        // with the newly authenticated identity
+        queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
+        queryClient.invalidateQueries({ queryKey: ['actor'] });
       } catch (error: unknown) {
         const err = error as Error;
         if (err?.message === 'User is already authenticated') {

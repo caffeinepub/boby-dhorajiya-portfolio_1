@@ -19,6 +19,9 @@ export interface BlogPost {
   'metaTitle' : string,
   'timestamp' : bigint,
 }
+export type ClaimAdminResult = { 'adminAlreadyExists' : Principal } |
+  { 'adminClaimed' : null } |
+  { 'anonymousPrincipal' : null };
 export type ExternalBlob = Uint8Array;
 export interface Lead {
   'id' : bigint,
@@ -30,10 +33,16 @@ export interface Lead {
 export interface Project {
   'id' : bigint,
   'url' : string,
+  'categoryId' : [] | [bigint],
   'title' : string,
   'description' : string,
   'timestamp' : bigint,
   'image' : [] | [ExternalBlob],
+}
+export interface ProjectCategory {
+  'id' : bigint,
+  'name' : string,
+  'slug' : string,
 }
 export interface SeoSetting {
   'metaDescription' : string,
@@ -45,7 +54,26 @@ export interface Service {
   'title' : string,
   'description' : string,
 }
-export interface Skill { 'id' : bigint, 'name' : string, 'experience' : bigint }
+export interface Skill {
+  'id' : bigint,
+  'name' : string,
+  'experience' : bigint,
+  'category' : SkillCategory,
+}
+export type SkillCategory = { 'security' : null } |
+  { 'secondary' : null } |
+  { 'primary' : null } |
+  { 'additional' : null };
+export interface SocialLink {
+  'id' : bigint,
+  'url' : string,
+  'icon' : string,
+  'platform' : SocialPlatform,
+  'isActive' : boolean,
+}
+export type SocialPlatform = { 'x' : null } |
+  { 'linkedin' : null } |
+  { 'github' : null };
 export interface Testimonial {
   'id' : bigint,
   'author' : string,
@@ -85,19 +113,24 @@ export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addBlog' : ActorMethod<[string, string, string, string, string], undefined>,
   'addProject' : ActorMethod<
-    [string, string, string, [] | [ExternalBlob]],
+    [string, string, string, [] | [ExternalBlob], [] | [bigint]],
     undefined
   >,
   'addService' : ActorMethod<[string, string], undefined>,
-  'addSkill' : ActorMethod<[string, bigint], undefined>,
+  'addSkill' : ActorMethod<[string, bigint, SkillCategory], undefined>,
   'addTestimonial' : ActorMethod<[string, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'claimAdmin' : ActorMethod<[], ClaimAdminResult>,
+  'createCategory' : ActorMethod<[string, string], undefined>,
+  'createSocialLink' : ActorMethod<[SocialPlatform, string, string], undefined>,
   'deleteBlog' : ActorMethod<[bigint], undefined>,
+  'deleteCategory' : ActorMethod<[bigint], undefined>,
   'deleteLead' : ActorMethod<[bigint], undefined>,
   'deleteProject' : ActorMethod<[bigint], undefined>,
   'deleteSeoSetting' : ActorMethod<[string], undefined>,
   'deleteService' : ActorMethod<[bigint], undefined>,
   'deleteSkill' : ActorMethod<[bigint], undefined>,
+  'deleteSocialLink' : ActorMethod<[bigint], undefined>,
   'deleteTestimonial' : ActorMethod<[bigint], undefined>,
   'getBlogBySlug' : ActorMethod<[string], [] | [BlogPost]>,
   'getBlogs' : ActorMethod<[], Array<BlogPost>>,
@@ -112,23 +145,31 @@ export interface _SERVICE {
   'getSeoSettingByPage' : ActorMethod<[string], [] | [SeoSetting]>,
   'getSeoSettings' : ActorMethod<[], Array<SeoSetting>>,
   'getServices' : ActorMethod<[], Array<Service>>,
-  'getSkills' : ActorMethod<[], Array<Skill>>,
   'getTestimonials' : ActorMethod<[], Array<Testimonial>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'listCategories' : ActorMethod<[], Array<ProjectCategory>>,
+  'listSkills' : ActorMethod<[], Array<Skill>>,
+  'listSocialLinks' : ActorMethod<[], Array<SocialLink>>,
   'processContactForm' : ActorMethod<[string, string, string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setSeoSetting' : ActorMethod<[string, string, string], undefined>,
+  'toggleSocialLink' : ActorMethod<[bigint], undefined>,
   'updateBlog' : ActorMethod<
     [bigint, string, string, string, string, string],
     undefined
   >,
+  'updateCategory' : ActorMethod<[bigint, string, string], undefined>,
   'updateProject' : ActorMethod<
-    [bigint, string, string, string, [] | [ExternalBlob]],
+    [bigint, string, string, string, [] | [ExternalBlob], [] | [bigint]],
     undefined
   >,
   'updateService' : ActorMethod<[bigint, string, string], undefined>,
-  'updateSkill' : ActorMethod<[bigint, string, bigint], undefined>,
+  'updateSkill' : ActorMethod<
+    [bigint, string, bigint, SkillCategory],
+    undefined
+  >,
+  'updateSocialLink' : ActorMethod<[bigint, string, string], undefined>,
   'updateTestimonial' : ActorMethod<[bigint, string, string], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

@@ -1,353 +1,45 @@
 {
   "kind": "build_request",
-  "title": "Personal Portfolio Website for Boby Dhorajiya",
-  "projectName": "Boby Portfolio",
-  "priority": "normal",
+  "title": "Fix AdminGuard: Claim Admin Access flow not working after Internet Identity login",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Create a Hero section on the Home page with headline 'Hi, I'm Boby — Mobile App Developer', subheadline 'I build secure, scalable, and high-performance mobile apps using Flutter & React Native.', and a CTA button labeled 'Let's Build Your App'.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Hero Section",
-          "Hi, I'm Boby — Mobile App Developer",
-          "Let's Build Your App"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Hero section is visible at the top of the Home page",
-        "Headline, subheadline, and CTA button text match specifications exactly",
-        "CTA button is visually prominent and interactive"
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Create an About page displaying the bio: 'Boby is a mobile-focused developer specializing in Flutter and React Native, with strong expertise in building secure and scalable applications for startups and enterprises.' Position him as a Freelance Mobile App Developer.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Boby is a mobile-focused developer specializing in Flutter and React Native"
-        ]
-      },
-      "acceptanceCriteria": [
-        "About page is accessible via navigation",
-        "Bio text matches specification",
-        "Freelance positioning is communicated clearly"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Create a Skills section displaying categorized skills: Primary (Flutter, Dart), Secondary (React Native), Security (Secure API Integration, Authentication Security, Secure Local Storage, Data Encryption), and Additional (Firebase, REST APIs, Web Development).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "SKILLS SECTION",
-          "Flutter",
-          "Dart",
-          "React Native",
-          "Security"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Skills are grouped by category",
-        "All listed skills are displayed",
-        "Layout is visually clear and readable on mobile and desktop"
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Create a Projects showcase page where each project card displays: App Name, Platform, Tech Used, Security Implemented, Description, and Role. Seed with placeholder project data.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "PROJECT SHOWCASE",
-          "App Name",
-          "Platform",
-          "Tech Used",
-          "Security Implemented",
-          "Description",
-          "Role"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Projects page is accessible via navigation",
-        "Each project card shows all six fields",
-        "At least one placeholder project is visible"
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Create a Services section with cards for: Flutter App Development, React Native Development, Secure Mobile App Architecture, API Integration, Firebase Integration, Mobile App Security Consulting, and Web Development Support.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "SERVICES",
-          "Flutter App Development",
-          "React Native Development",
-          "Secure Mobile App Architecture"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All seven services are displayed",
-        "Each service has a title and brief description",
-        "Layout is responsive"
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Create an Experience page positioning Boby as a Freelance Mobile App Developer working on production apps using Flutter and React Native.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "EXPERIENCE",
-          "Freelance Mobile App Developer"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Experience page is accessible via navigation",
-        "Freelance role with Flutter & React Native focus is clearly stated"
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Create a Testimonials page that reads testimonials from the backend and displays them as cards with name and message.",
+      "id": "REQ-35",
+      "text": "Perform a deep audit and full rewrite of the AdminGuard component and the backend claimAdmin / checkAdminStatus flow. The fix must address: (1) After a successful Internet Identity login, if no admin principal has been registered in the backend yet, the authenticated user must see a clearly visible 'Claim Admin Access' button — not an 'Access Denied' message. (2) Clicking that button must call the backend `claimAdmin` function, correctly handle all return variants (success, alreadyClaimed, notAuthenticated, and any __kind__-tagged variants), and on success immediately re-fetch admin status and redirect to /admin dashboard. (3) If an admin is already registered and the current user is NOT that admin, show 'Access Denied' with no claim button. (4) Ensure the component never incorrectly treats a freshly authenticated identity as unauthenticated due to actor caching, stale identity, or race conditions between auth state and actor instantiation. Invalidate and refetch admin-status queries immediately after login completes and after a successful claimAdmin call. (5) Verify the backend `claimAdmin` stores the caller's principal when adminPrincipal is null/None, and that `checkAdminStatus` returns true for that principal on all subsequent calls. (6) The fix must work correctly in both Safari and Chrome browsers.",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-6"
         ],
         "quotes": [
-          "Testimonials"
+          "still getting same issue and also now I am test on chrome as well but it's not working can you please fix this ?"
         ]
       },
       "acceptanceCriteria": [
-        "Testimonials page fetches data from backend",
-        "Each testimonial shows name and message",
-        "Page is accessible via navigation"
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Create a Blog page listing posts with title, slug, meta title, and meta description. Each post should have a detail view accessible via slug-based routing with full content display.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Blog",
-          "slug",
-          "meta_title",
-          "meta_description"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Blog listing page shows post titles",
-        "Clicking a post navigates to a detail page via slug",
-        "Detail page shows full content"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Create a Contact page with a form collecting Name, Email, and Message. On submission, save the lead to the backend leads store.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Contact",
-          "leads",
-          "name",
-          "email",
-          "message"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Contact form has Name, Email, and Message fields",
-        "Successful submission stores the lead in the backend",
-        "User receives a confirmation message after submission"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Implement backend data storage for all entities using Motoko stable data structures: projects, skills, services, testimonials, blogs, leads, and seo_settings, matching the specified schema fields.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "DATABASE SCHEMA",
-          "projects",
-          "skills",
-          "services",
-          "testimonials",
-          "blogs",
-          "leads",
-          "seo_settings"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All entities can be created, read, updated, and deleted via canister calls",
-        "Schema fields match specification for each entity",
-        "Data persists across canister upgrades using stable variables"
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Create an Admin Panel accessible at /admin with Internet Identity authentication. Admin can manage (CRUD) Projects, Blog posts, Testimonials, Skills, Services, Leads, and SEO Settings. Dashboard shows total counts for Projects, Leads, and Blog posts.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Admin Panel",
-          "Admin must manage",
-          "Dashboard must show",
-          "JWT Authentication",
-          "Role-based protection"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin panel is only accessible after authentication via Internet Identity",
-        "Dashboard displays total Projects, Leads, and Blog post counts",
-        "Each managed entity has a list view and create/edit/delete functionality",
-        "Unauthenticated users are redirected to login"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "text": "Apply a dark, premium visual theme with a mobile-first security-focused brand identity. Use a dark background with high-contrast accent colors (e.g., electric green or cyan), clean modern typography, and subtle animations on scroll and hover. Support both dark and light mode toggle. Enforce the theme consistently across all pages.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "UI STYLE",
-          "Mobile-first theme",
-          "Security-focused messaging",
-          "Clean & modern",
-          "Dark + Light mode support",
-          "Smooth animations"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Dark mode is the default with a toggle for light mode",
-        "Accent color is consistently applied across buttons, headings, and highlights",
-        "Animations are present on hero section and card entries",
-        "Layout is responsive and mobile-first"
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "text": "Set per-page SEO meta titles and descriptions. Home page title: 'Boby Dhorajiya – Flutter & React Native Developer', description: 'Mobile app developer specializing in Flutter, React Native & mobile security.' Allow admin to update SEO settings per page.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "SEO META",
-          "Boby Dhorajiya – Flutter & React Native Developer",
-          "Mobile app developer specializing in Flutter, React Native & mobile security."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Home page renders correct meta title and description",
-        "Admin panel allows editing SEO settings per page",
-        "Updated SEO settings are reflected on the respective page"
-      ]
-    },
-    {
-      "id": "REQ-14",
-      "text": "Add a top navigation bar with links to all pages: Home, About, Skills, Projects, Services, Experience, Testimonials, Blog, Contact, and an Admin link. Navigation must be responsive with a hamburger menu on mobile.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Pages Required",
-          "Home",
-          "About",
-          "Skills",
-          "Projects",
-          "Services",
-          "Experience",
-          "Testimonials",
-          "Blog",
-          "Contact",
-          "Admin Panel"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All pages are reachable via the navigation bar",
-        "Navigation collapses to a hamburger menu on small screens",
-        "Active page is visually highlighted"
-      ]
-    },
-    {
-      "id": "REQ-15",
-      "text": "Generate a hero background image: a dark, futuristic digital security aesthetic with subtle circuit board patterns, code lines, and a mobile device silhouette, suitable as a full-width hero background.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Security-focused messaging",
-          "Mobile-first theme",
-          "Smooth animations"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Hero background image is rendered in the Hero section",
-        "Image loads from frontend/public/assets/generated/",
-        "Image does not distract from hero text"
+        "After logging in via Internet Identity on a fresh deployment with no admin registered, the user sees a 'Claim Admin Access' button (not just 'Access Denied').",
+        "Clicking 'Claim Admin Access' calls the backend claimAdmin function without error.",
+        "On a successful claimAdmin response, the admin status is re-fetched and the user is redirected to the /admin dashboard.",
+        "If an admin is already registered and the logged-in user is not that admin, 'Access Denied' is shown with no claim button.",
+        "The backend checkAdminStatus / isAdmin query returns true for the principal that successfully called claimAdmin.",
+        "The backend claimAdmin function stores the caller's principal when no admin has been registered yet (adminPrincipal is null/None).",
+        "The fix works correctly in both Chrome and Safari browsers.",
+        "No race condition exists between Internet Identity auth state settling and the AdminGuard querying admin status — queries are invalidated and refetched after login.",
+        "All claimAdmin return variants (including __kind__-tagged variants) are handled gracefully in the frontend."
       ]
     }
   ],
   "constraints": [
-    "Authentication must use Internet Identity (no JWT or external auth providers)",
-    "Backend must be implemented as a single Motoko actor",
-    "No external databases — use Motoko stable variables for persistence",
-    "Do not edit files under frontend/src/hooks/ or frontend/src/components/ui",
-    "No Node.js, Express.js, or MySQL — use Internet Computer backend only"
+    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts directly — use safe alternatives or wrapper logic.",
+    "All Motoko logic must remain in the single backend/main.mo actor file.",
+    "Do not break existing admin CRUD functionality for authenticated admins."
   ],
   "nonGoals": [
-    "VPS deployment with Nginx, PM2, or SSL configuration",
-    "GitHub Actions CI/CD pipeline setup",
-    "GitHub repository creation or live URL provisioning",
-    "Framer Motion library (use CSS transitions and React state animations instead)",
-    "Real-time features or WebSocket communication"
+    "Changing the Internet Identity provider or authentication mechanism.",
+    "Adding a second admin role or multi-admin support.",
+    "Modifying any public-facing pages or non-admin routes."
   ],
   "imageRequirements": {
-    "required": [
-      "Dark futuristic hero background with glowing circuit board patterns, faint code lines, and a centered mobile device silhouette on a deep navy/black background with cyan accent glow (hero-bg.dim_1920x1080.png)",
-      "Abstract mobile security shield icon with a lock symbol and shield outline in cyan on dark background (security-shield-icon.dim_256x256.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }
