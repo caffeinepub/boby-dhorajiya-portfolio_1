@@ -1,0 +1,227 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Personal portfolio website for Boby Dhorajiya, a mobile application developer specializing in Flutter, React Native, and mobile security. Built with React (Vite/Next.js), Tailwind CSS, Framer Motion, Node.js, Express.js, MySQL, and JWT authentication. Includes full public-facing pages and an admin panel.",
+  "architectural_notes": [
+    "Frontend: React (Vite or Next.js) + Tailwind CSS + Framer Motion",
+    "Backend: Node.js + Express.js REST API with JWT authentication",
+    "Database: MySQL with migrations for all entities",
+    "Admin panel uses role-based JWT protection on all API routes",
+    "Deployment: VPS with Nginx reverse proxy, PM2, SSL via Let's Encrypt, GitHub Actions CI/CD"
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Dark futuristic hero background with glowing circuit board patterns, faint code lines, and a centered mobile device silhouette on a deep navy/black background with cyan accent glow (hero-bg.dim_1920x1080.png)\n- Abstract mobile security shield icon with a lock symbol and shield outline in cyan on dark background (security-shield-icon.dim_256x256.png)",
+  "existing_features": [
+    {
+      "id": "feature-create-a-hero-section-on-the-home-page-with-headline-hi-i-m-boby-mobile-app-developer-subheadline-i-build-secure-scalable-and-high-performance-mobile-apps-using-flutter-react-native-and-a-cta-button-labeled-let-s-build-your-app",
+      "title": "Create a Hero section on the Home page with headline 'Hi, I'm Boby — Mobile App Developer', subheadline 'I build secure, scalable, and high-performance mobile apps using Flutter & React Native.', and a CTA button labeled 'Let's Build Your App'.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-about-page-displaying-the-bio-boby-is-a-mobile-focused-developer-specializing-in-flutter-and-react-native-with-strong-expertise-in-building-secure-and-scalable-applications-for-startups-and-enterprises-position-him-as-a-freelance-mobile-app-developer",
+      "title": "Create an About page displaying the bio: 'Boby is a mobile-focused developer specializing in Flutter and React Native, with strong expertise in building secure and scalable applications for startups and enterprises.' Position him as a Freelance Mobile App Developer.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-skills-section-displaying-categorized-skills-primary-flutter-dart-secondary-react-native-security-secure-api-integration-authentication-security-secure-local-storage-data-encryption-and-additional-firebase-rest-apis-web-development",
+      "title": "Create a Skills section displaying categorized skills: Primary (Flutter, Dart), Secondary (React Native), Security (Secure API Integration, Authentication Security, Secure Local Storage, Data Encryption), and Additional (Firebase, REST APIs, Web Development).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-projects-showcase-page-where-each-project-card-displays-app-name-platform-tech-used-security-implemented-description-and-role-seed-with-placeholder-project-data",
+      "title": "Create a Projects showcase page where each project card displays: App Name, Platform, Tech Used, Security Implemented, Description, and Role. Seed with placeholder project data.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-services-section-with-cards-for-flutter-app-development-react-native-development-secure-mobile-app-architecture-api-integration-firebase-integration-mobile-app-security-consulting-and-web-development-support",
+      "title": "Create a Services section with cards for: Flutter App Development, React Native Development, Secure Mobile App Architecture, API Integration, Firebase Integration, Mobile App Security Consulting, and Web Development Support.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-experience-page-positioning-boby-as-a-freelance-mobile-app-developer-working-on-production-apps-using-flutter-and-react-native",
+      "title": "Create an Experience page positioning Boby as a Freelance Mobile App Developer working on production apps using Flutter and React Native.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-testimonials-page-that-reads-testimonials-from-the-backend-and-displays-them-as-cards-with-name-and-message",
+      "title": "Create a Testimonials page that reads testimonials from the backend and displays them as cards with name and message.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-blog-page-listing-posts-with-title-slug-meta-title-and-meta-description-each-post-should-have-a-detail-view-accessible-via-slug-based-routing-with-full-content-display",
+      "title": "Create a Blog page listing posts with title, slug, meta title, and meta description. Each post should have a detail view accessible via slug-based routing with full content display.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-contact-page-with-a-form-collecting-name-email-and-message-on-submission-save-the-lead-to-the-backend-leads-store",
+      "title": "Create a Contact page with a form collecting Name, Email, and Message. On submission, save the lead to the backend leads store.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-an-admin-panel-accessible-at-admin-with-internet-identity-authentication-admin-can-manage-crud-projects-blog-posts-testimonials-skills-services-leads-and-seo-settings-dashboard-shows-total-counts-for-projects-leads-and-blog-posts",
+      "title": "Create an Admin Panel accessible at /admin with Internet Identity authentication. Admin can manage (CRUD) Projects, Blog posts, Testimonials, Skills, Services, Leads, and SEO Settings. Dashboard shows total counts for Projects, Leads, and Blog posts.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-dark-premium-visual-theme-with-a-mobile-first-security-focused-brand-identity-use-a-dark-background-with-high-contrast-accent-colors-e-g-electric-green-or-cyan-clean-modern-typography-and-subtle-animations-on-scroll-and-hover-support-both-dark-and-light-mode-toggle-enforce-the-theme-consistently-across-all-pages",
+      "title": "Apply a dark, premium visual theme with a mobile-first security-focused brand identity. Use a dark background with high-contrast accent colors (e.g., electric green or cyan), clean modern typography, and subtle animations on scroll and hover. Support both dark and light mode toggle. Enforce the theme consistently across all pages.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-set-per-page-seo-meta-titles-and-descriptions-home-page-title-boby-dhorajiya-flutter-react-native-developer-description-mobile-app-developer-specializing-in-flutter-react-native-mobile-security-allow-admin-to-update-seo-settings-per-page",
+      "title": "Set per-page SEO meta titles and descriptions. Home page title: 'Boby Dhorajiya – Flutter & React Native Developer', description: 'Mobile app developer specializing in Flutter, React Native & mobile security.' Allow admin to update SEO settings per page.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-top-navigation-bar-with-links-to-all-pages-home-about-skills-projects-services-experience-testimonials-blog-contact-and-an-admin-link-navigation-must-be-responsive-with-a-hamburger-menu-on-mobile",
+      "title": "Add a top navigation bar with links to all pages: Home, About, Skills, Projects, Services, Experience, Testimonials, Blog, Contact, and an Admin link. Navigation must be responsive with a hamburger menu on mobile.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-a-hero-background-image-a-dark-futuristic-digital-security-aesthetic-with-subtle-circuit-board-patterns-code-lines-and-a-mobile-device-silhouette-suitable-as-a-full-width-hero-background",
+      "title": "Generate a hero background image: a dark, futuristic digital security aesthetic with subtle circuit board patterns, code lines, and a mobile device silhouette, suitable as a full-width hero background.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Home page with hero section (headline, subheadline, CTA)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "About page with developer bio",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Skills section (Flutter, Dart, React Native, Security, Firebase, REST APIs)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Projects showcase with app name, platform, tech, security, description, role",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Services section (Flutter, React Native, Security Consulting, API, Firebase, Web)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Experience page positioned as freelance mobile app developer",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Testimonials page",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Blog page with slug-based posts and SEO meta fields",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Contact/leads page with name, email, message form",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Admin panel with JWT auth, role-based protection, manage projects/blog/testimonials/skills/services/leads/SEO, dashboard stats",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "MySQL database schema for projects, skills, services, testimonials, blogs, leads, seo_settings",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Dark + Light mode support with mobile-first responsive design and Framer Motion animations",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-13",
+      "summary": "SEO optimization with meta titles and descriptions per page",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Deployment on VPS with Nginx, PM2, MySQL, SSL (Let's Encrypt), GitHub Actions CI/CD for zero-downtime deploy",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-24",
+      "summary": "Implement backend data storage for all entities using Motoko stable data structures: projects, skills, services, testimonials, blogs, leads, and seo_settings, matching the specified schema fields.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Boby Dhorajiya Portfolio",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

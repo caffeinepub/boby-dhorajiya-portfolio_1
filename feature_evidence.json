@@ -1,0 +1,300 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-create-a-hero-section-on-the-home-page-with-headline-hi-i-m-boby-mobile-app-developer-subheadline-i-build-secure-scalable-and-high-performance-mobile-apps-using-flutter-react-native-and-a-cta-button-labeled-let-s-build-your-app",
+      "featureTitle": "Create a Hero section on the Home page with headline 'Hi, I'm Boby — Mobile App Developer', subheadline 'I build secure, scalable, and high-performance mobile apps using Flutter & React Native.', and a CTA button labeled 'Let's Build Your App'.",
+      "files": [
+        "frontend/src/pages/Home.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-an-about-page-displaying-the-bio-boby-is-a-mobile-focused-developer-specializing-in-flutter-and-react-native-with-strong-expertise-in-building-secure-and-scalable-applications-for-startups-and-enterprises-position-him-as-a-freelance-mobile-app-developer",
+      "featureTitle": "Create an About page displaying the bio: 'Boby is a mobile-focused developer specializing in Flutter and React Native, with strong expertise in building secure and scalable applications for startups and enterprises.' Position him as a Freelance Mobile App Developer.",
+      "files": [
+        "frontend/src/pages/About.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-skills-section-displaying-categorized-skills-primary-flutter-dart-secondary-react-native-security-secure-api-integration-authentication-security-secure-local-storage-data-encryption-and-additional-firebase-rest-apis-web-development",
+      "featureTitle": "Create a Skills section displaying categorized skills: Primary (Flutter, Dart), Secondary (React Native), Security (Secure API Integration, Authentication Security, Secure Local Storage, Data Encryption), and Additional (Firebase, REST APIs, Web Development).",
+      "files": [
+        "frontend/src/pages/Skills.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-projects-showcase-page-where-each-project-card-displays-app-name-platform-tech-used-security-implemented-description-and-role-seed-with-placeholder-project-data",
+      "featureTitle": "Create a Projects showcase page where each project card displays: App Name, Platform, Tech Used, Security Implemented, Description, and Role. Seed with placeholder project data.",
+      "files": [
+        "frontend/src/pages/Projects.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-services-section-with-cards-for-flutter-app-development-react-native-development-secure-mobile-app-architecture-api-integration-firebase-integration-mobile-app-security-consulting-and-web-development-support",
+      "featureTitle": "Create a Services section with cards for: Flutter App Development, React Native Development, Secure Mobile App Architecture, API Integration, Firebase Integration, Mobile App Security Consulting, and Web Development Support.",
+      "files": [
+        "frontend/src/pages/Services.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-an-experience-page-positioning-boby-as-a-freelance-mobile-app-developer-working-on-production-apps-using-flutter-and-react-native",
+      "featureTitle": "Create an Experience page positioning Boby as a Freelance Mobile App Developer working on production apps using Flutter and React Native.",
+      "files": [
+        "frontend/src/pages/Experience.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-testimonials-page-that-reads-testimonials-from-the-backend-and-displays-them-as-cards-with-name-and-message",
+      "featureTitle": "Create a Testimonials page that reads testimonials from the backend and displays them as cards with name and message.",
+      "files": [
+        "frontend/src/pages/Testimonials.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-7"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-blog-page-listing-posts-with-title-slug-meta-title-and-meta-description-each-post-should-have-a-detail-view-accessible-via-slug-based-routing-with-full-content-display",
+      "featureTitle": "Create a Blog page listing posts with title, slug, meta title, and meta description. Each post should have a detail view accessible via slug-based routing with full content display.",
+      "files": [
+        "frontend/src/pages/Blog.tsx",
+        "frontend/src/pages/BlogPost.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-contact-page-with-a-form-collecting-name-email-and-message-on-submission-save-the-lead-to-the-backend-leads-store",
+      "featureTitle": "Create a Contact page with a form collecting Name, Email, and Message. On submission, save the lead to the backend leads store.",
+      "files": [
+        "frontend/src/pages/Contact.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-an-admin-panel-accessible-at-admin-with-internet-identity-authentication-admin-can-manage-crud-projects-blog-posts-testimonials-skills-services-leads-and-seo-settings-dashboard-shows-total-counts-for-projects-leads-and-blog-posts",
+      "featureTitle": "Create an Admin Panel accessible at /admin with Internet Identity authentication. Admin can manage (CRUD) Projects, Blog posts, Testimonials, Skills, Services, Leads, and SEO Settings. Dashboard shows total counts for Projects, Leads, and Blog posts.",
+      "files": [
+        "frontend/src/components/AdminGuard.tsx",
+        "frontend/src/components/ProfileSetup.tsx",
+        "frontend/src/pages/admin/BlogManagement.tsx",
+        "frontend/src/pages/admin/Dashboard.tsx",
+        "frontend/src/pages/admin/LeadsManagement.tsx",
+        "frontend/src/pages/admin/ProjectsManagement.tsx",
+        "frontend/src/pages/admin/SeoManagement.tsx",
+        "frontend/src/pages/admin/ServicesManagement.tsx",
+        "frontend/src/pages/admin/SkillsManagement.tsx",
+        "frontend/src/pages/admin/TestimonialsManagement.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-11"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-dark-premium-visual-theme-with-a-mobile-first-security-focused-brand-identity-use-a-dark-background-with-high-contrast-accent-colors-e-g-electric-green-or-cyan-clean-modern-typography-and-subtle-animations-on-scroll-and-hover-support-both-dark-and-light-mode-toggle-enforce-the-theme-consistently-across-all-pages",
+      "featureTitle": "Apply a dark, premium visual theme with a mobile-first security-focused brand identity. Use a dark background with high-contrast accent colors (e.g., electric green or cyan), clean modern typography, and subtle animations on scroll and hover. Support both dark and light mode toggle. Enforce the theme consistently across all pages.",
+      "files": [
+        "frontend/src/components/Layout.tsx",
+        "frontend/src/components/ThemeToggle.tsx",
+        "frontend/src/index.css",
+        "frontend/tailwind.config.js"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-12"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-set-per-page-seo-meta-titles-and-descriptions-home-page-title-boby-dhorajiya-flutter-react-native-developer-description-mobile-app-developer-specializing-in-flutter-react-native-mobile-security-allow-admin-to-update-seo-settings-per-page",
+      "featureTitle": "Set per-page SEO meta titles and descriptions. Home page title: 'Boby Dhorajiya – Flutter & React Native Developer', description: 'Mobile app developer specializing in Flutter, React Native & mobile security.' Allow admin to update SEO settings per page.",
+      "files": [
+        "frontend/src/components/SEOHead.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-13"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-top-navigation-bar-with-links-to-all-pages-home-about-skills-projects-services-experience-testimonials-blog-contact-and-an-admin-link-navigation-must-be-responsive-with-a-hamburger-menu-on-mobile",
+      "featureTitle": "Add a top navigation bar with links to all pages: Home, About, Skills, Projects, Services, Experience, Testimonials, Blog, Contact, and an Admin link. Navigation must be responsive with a hamburger menu on mobile.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/LoginButton.tsx",
+        "frontend/src/components/Navigation.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-14"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-generate-a-hero-background-image-a-dark-futuristic-digital-security-aesthetic-with-subtle-circuit-board-patterns-code-lines-and-a-mobile-device-silhouette-suitable-as-a-full-width-hero-background",
+      "featureTitle": "Generate a hero background image: a dark, futuristic digital security aesthetic with subtle circuit board patterns, code lines, and a mobile device silhouette, suitable as a full-width hero background.",
+      "files": [
+        "frontend/src/pages/Home.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "blob-storage@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-15"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

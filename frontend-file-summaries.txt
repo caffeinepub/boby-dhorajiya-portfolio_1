@@ -1,0 +1,11 @@
+{
+  "frontend/src/pages/Blog.tsx": "Blog listing page that fetches and displays all blog posts from the backend, using `useNavigate` with typed params instead of a dynamic template literal in the `to` prop to fix the TypeScript routing error.",
+  "frontend/src/pages/admin/Dashboard.tsx": "Admin dashboard page protected by AdminGuard, showing stats (projects, leads, blog count) fetched from the backend and navigation cards to all admin management sections.",
+  "frontend/src/pages/admin/ProjectsManagement.tsx": "Admin page for full CRUD management of portfolio projects, supporting image uploads via ExternalBlob, with inline create/edit forms and delete confirmation dialogs.",
+  "frontend/src/pages/admin/BlogManagement.tsx": "Admin page for full CRUD management of blog posts with fields for title, slug (auto-generated), meta title, meta description, and content, protected by AdminGuard.",
+  "frontend/src/pages/admin/TestimonialsManagement.tsx": "Admin page for full CRUD management of client testimonials with author and message fields, protected by AdminGuard with delete confirmation dialogs.",
+  "frontend/src/pages/admin/SkillsManagement.tsx": "Admin page for full CRUD management of skills with name and years-of-experience fields, protected by AdminGuard with delete confirmation dialogs.",
+  "frontend/src/pages/admin/ServicesManagement.tsx": "Admin page for full CRUD management of services with title and description fields, protected by AdminGuard with delete confirmation dialogs.",
+  "frontend/src/pages/admin/LeadsManagement.tsx": "Admin page for viewing and deleting contact form leads, displaying name, email, message, and timestamp, protected by AdminGuard.",
+  "frontend/src/pages/admin/SeoManagement.tsx": "Admin page for managing per-page SEO settings (meta title and description) with a page selector dropdown, protected by AdminGuard."
+}
