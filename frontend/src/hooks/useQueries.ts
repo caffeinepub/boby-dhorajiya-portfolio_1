@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { SkillCategory, SocialPlatform } from '../backend';
+import { SkillCategory, SocialPlatform, ClaimAdminResult } from '../backend';
 import type {
   Testimonial, BlogPost, Project, Service, Skill, Lead, SeoSetting,
-  ProjectCategory, SocialLink, UserProfile, ClaimAdminResult
+  ProjectCategory, SocialLink, UserProfile
 } from '../backend';
 
 // ─── User Profile ───────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ export function useClaimAdmin() {
       return actor.claimAdmin();
     },
     onSuccess: (result) => {
-      if (result.__kind__ === 'adminClaimed') {
+      if (result === ClaimAdminResult.success) {
         queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
       }
     },
@@ -405,7 +405,7 @@ export function useGetLeads() {
   return useQuery<Lead[]>({
     queryKey: ['leads'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
+      if (!actor) return [];
       return actor.getLeads();
     },
     enabled: !!actor && !isFetching,
@@ -426,11 +426,13 @@ export function useDeleteLead() {
 
 export function useProcessContactForm() {
   const { actor } = useActor();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ name, email, message }: { name: string; email: string; message: string }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.processContactForm(name, email, message);
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['leads'] }),
   });
 }
 

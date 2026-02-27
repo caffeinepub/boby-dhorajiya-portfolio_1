@@ -1,40 +1,60 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-27T18:52:13.503Z",
+  "generatedAt": "2026-02-27T19:03:16.761Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 1,
-    "implemented": 1,
+    "total": 3,
+    "implemented": 2,
     "items": [
       {
-        "id": "REQ-35",
-        "summary": "Perform a deep audit and full rewrite of the AdminGuard component and the backend claimAdmin / checkAdminStatus flow. The fix must address: (1) After a successful Internet Identity login, if no admin principal has been registered in the backend yet, the authenticated user must see a clearly visible 'Claim Admin Access' button — not an 'Access Denied' message. (2) Clicking that button must call the backend `claimAdmin` function, correctly handle all return variants (success, alreadyClaimed, notAuthenticated, and any __kind__-tagged variants), and on success immediately re-fetch admin status and redirect to /admin dashboard. (3) If an admin is already registered and the current user is NOT that admin, show 'Access Denied' with no claim button. (4) Ensure the component never incorrectly treats a freshly authenticated identity as unauthenticated due to actor caching, stale identity, or race conditions between auth state and actor instantiation. Invalidate and refetch admin-status queries immediately after login completes and after a successful claimAdmin call. (5) Verify the backend `claimAdmin` stores the caller's principal when adminPrincipal is null/None, and that `checkAdminStatus` returns true for that principal on all subsequent calls. (6) The fix must work correctly in both Safari and Chrome browsers.",
+        "id": "REQ-36",
+        "summary": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. The component must: (1) When the user is NOT authenticated — show 'Authentication Required' message and a clearly visible, fully functional 'Go to Login' button that directly triggers the Internet Identity login popup (calls the `login()` function from `useInternetIdentity`). The button must NOT navigate to a separate route — it must open the II popup inline. (2) After login completes successfully, immediately invalidate and refetch the admin-status query. (3) If authenticated and no admin is registered yet — show a 'Claim Admin Access' button that calls the backend `claimAdmin` function, handles all return variants, and on success redirects to `/admin`. (4) If authenticated and another admin is already registered — show 'Access Denied'. (5) If authenticated and current user IS the admin — render children. Do NOT use TanStack Router `navigate` for the login action; call `login()` directly.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/AdminGuard.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/AdminGuard.tsx"
+        ]
+      },
+      {
+        "id": "REQ-37",
+        "summary": "Audit and fix the backend `claimAdmin` and `checkAdminStatus` functions in `backend/main.mo`. Ensure: (1) `claimAdmin` stores the caller's principal in `adminPrincipal` when it is currently `null`/`None`, and returns a clear `#success` variant. (2) `checkAdminStatus` returns `true` for that stored principal on all subsequent calls. (3) `claimAdmin` returns `#alreadyClaimed` if an admin is already set and the caller is NOT that admin. (4) `claimAdmin` returns `#notAuthenticated` for anonymous callers. (5) All variant tags are consistent and do not use mixed `__kind__`-style tagging. Add a `resetAdmin` function callable only by the current admin to clear `adminPrincipal` back to `null` for emergency recovery.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-38",
+        "summary": "Fix the `useActor` hook and any query initialization so that after Internet Identity login completes, the actor is immediately re-created with the fresh authenticated identity before any admin-status queries are executed. Ensure there is no race condition where `checkAdminStatus` is called with an anonymous or stale actor right after login. The admin-status React Query key must be invalidated and immediately refetched after both login and after a successful `claimAdmin` call.",
         "status": "implemented",
         "plannedFiles": [
           "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminGuard.tsx",
-          "frontend/src/components/LoginButton.tsx",
-          "frontend/src/App.tsx"
+          "frontend/src/components/AdminGuard.tsx"
         ],
         "matchedFiles": [
           "frontend/src/hooks/useQueries.ts",
-          "frontend/src/components/AdminGuard.tsx",
-          "frontend/src/components/LoginButton.tsx"
+          "frontend/src/components/AdminGuard.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
     "frontend/src/components/AdminGuard.tsx",
-    "frontend/src/components/LoginButton.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",

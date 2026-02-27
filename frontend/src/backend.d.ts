@@ -19,16 +19,6 @@ export interface Testimonial {
     author: string;
     message: string;
 }
-export type ClaimAdminResult = {
-    __kind__: "adminAlreadyExists";
-    adminAlreadyExists: Principal;
-} | {
-    __kind__: "adminClaimed";
-    adminClaimed: null;
-} | {
-    __kind__: "anonymousPrincipal";
-    anonymousPrincipal: null;
-};
 export interface BlogPost {
     id: bigint;
     metaDescription: string;
@@ -86,6 +76,11 @@ export interface UserProfile {
     name: string;
     email: string;
 }
+export enum ClaimAdminResult {
+    notAuthenticated = "notAuthenticated",
+    success = "success",
+    alreadyClaimed = "alreadyClaimed"
+}
 export enum SkillCategory {
     security = "security",
     secondary = "secondary",
@@ -109,6 +104,7 @@ export interface backendInterface {
     addSkill(name: string, experience: bigint, category: SkillCategory): Promise<void>;
     addTestimonial(author: string, message: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAdminStatus(): Promise<boolean>;
     claimAdmin(): Promise<ClaimAdminResult>;
     createCategory(name: string, slug: string): Promise<void>;
     createSocialLink(platform: SocialPlatform, url: string, icon: string): Promise<void>;
@@ -142,6 +138,7 @@ export interface backendInterface {
     listSkills(): Promise<Array<Skill>>;
     listSocialLinks(): Promise<Array<SocialLink>>;
     processContactForm(name: string, email: string, message: string): Promise<void>;
+    resetAdmin(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setSeoSetting(page: string, metaTitle: string, metaDescription: string): Promise<void>;
     toggleSocialLink(id: bigint): Promise<void>;

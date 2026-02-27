@@ -1,22 +1,25 @@
 import Map "mo:core/Map";
-import Runtime "mo:core/Runtime";
-import Principal "mo:core/Principal";
-import Nat "mo:core/Nat";
-import Time "mo:core/Time";
 import Array "mo:core/Array";
-import Iter "mo:core/Iter";
 import Int "mo:core/Int";
+import Iter "mo:core/Iter";
+import Nat "mo:core/Nat";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
+import Time "mo:core/Time";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
+  // Mixin core components
   include MixinStorage();
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Types
+  // Type definitions
   public type UserProfile = {
     name : Text;
     email : Text;
@@ -61,6 +64,7 @@ actor {
   };
 
   public type SkillCategory = { #primary; #secondary; #security; #additional };
+
   public type Skill = {
     id : Nat;
     name : Text;
@@ -83,6 +87,7 @@ actor {
   };
 
   public type SocialPlatform = { #github; #linkedin; #x };
+
   public type SocialLink = {
     id : Nat;
     platform : SocialPlatform;
@@ -92,12 +97,12 @@ actor {
   };
 
   public type ClaimAdminResult = {
-    #adminClaimed;
-    #adminAlreadyExists : Principal;
-    #anonymousPrincipal;
+    #success;
+    #alreadyClaimed;
+    #notAuthenticated;
   };
 
-  // Persistent data stores
+  // Data stores
   let userProfiles = Map.empty<Principal, UserProfile>();
   let testimonials = Map.empty<Nat, Testimonial>();
   let blogPosts = Map.empty<Nat, BlogPost>();
@@ -115,35 +120,46 @@ actor {
   var nextServiceId = 1;
   var nextSkillId = 1;
   var nextLeadId = 1;
-  var nextCategoryId = 5; // Reserved 1-4 for default categories
+  var nextCategoryId = 1;
   var nextSocialLinkId = 1;
 
-  // Track whether an admin has been initialized yet.
-  // Once set to true, claimAdmin will no longer allow new claims.
-  var adminInitialized : Bool = false;
   var adminPrincipal : ?Principal = null;
 
-  // claimAdmin: Only the first authenticated caller may claim admin.
-  // If an admin already exists, returns #adminAlreadyExists with that principal.
-  // Anonymous callers are rejected with #anonymousPrincipal.
+  // Returns true and stores adminPrincipal if not set. Once set, returns true only for that principal.
   public shared ({ caller }) func claimAdmin() : async ClaimAdminResult {
-    if (caller.isAnonymous()) {
-      return #anonymousPrincipal;
-    };
-
-    if (adminInitialized) {
-      // An admin already exists; return that principal
-      switch (adminPrincipal) {
-        case (?p) { return #adminAlreadyExists(p) };
-        case (null) { return #adminAlreadyExists(caller) };
+    switch (adminPrincipal) {
+      case (null) {
+        if (caller.isAnonymous()) {
+          return #notAuthenticated;
+        };
+        adminPrincipal := ?caller;
+        return #success;
+      };
+      case (?p) {
+        if (caller == p) { #success } else { #alreadyClaimed };
       };
     };
+  };
 
-    // No admin has been set yet — initialize the caller as admin (no password needed for first admin)
-    AccessControl.initialize(accessControlState, caller, "", "");
-    adminInitialized := true;
-    adminPrincipal := ?caller;
-    return #adminClaimed;
+  public query ({ caller }) func checkAdminStatus() : async Bool {
+    switch (adminPrincipal) {
+      case (null) { false };
+      case (?p) { caller == p };
+    };
+  };
+
+  public shared ({ caller }) func resetAdmin() : async () {
+    switch (adminPrincipal) {
+      case (?p) {
+        if (caller != p) {
+          Runtime.trap("Unauthorized: Only admin can reset admin status");
+        };
+        adminPrincipal := null;
+      };
+      case (null) {
+        Runtime.trap("No admin to reset");
+      };
+    };
   };
 
   // User profile methods
@@ -511,7 +527,7 @@ actor {
     socialLinks.values().toArray();
   };
 
-  // Dashboard Stats
+  // Dashboard stats
   public query ({ caller }) func getDashboardStats() : async { projectCount : Nat; leadCount : Nat; blogCount : Nat } {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
       Runtime.trap("Unauthorized: Only admins can view dashboard stats");

@@ -19,9 +19,9 @@ export interface BlogPost {
   'metaTitle' : string,
   'timestamp' : bigint,
 }
-export type ClaimAdminResult = { 'adminAlreadyExists' : Principal } |
-  { 'adminClaimed' : null } |
-  { 'anonymousPrincipal' : null };
+export type ClaimAdminResult = { 'notAuthenticated' : null } |
+  { 'success' : null } |
+  { 'alreadyClaimed' : null };
 export type ExternalBlob = Uint8Array;
 export interface Lead {
   'id' : bigint,
@@ -120,6 +120,7 @@ export interface _SERVICE {
   'addSkill' : ActorMethod<[string, bigint, SkillCategory], undefined>,
   'addTestimonial' : ActorMethod<[string, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'checkAdminStatus' : ActorMethod<[], boolean>,
   'claimAdmin' : ActorMethod<[], ClaimAdminResult>,
   'createCategory' : ActorMethod<[string, string], undefined>,
   'createSocialLink' : ActorMethod<[SocialPlatform, string, string], undefined>,
@@ -152,6 +153,7 @@ export interface _SERVICE {
   'listSkills' : ActorMethod<[], Array<Skill>>,
   'listSocialLinks' : ActorMethod<[], Array<SocialLink>>,
   'processContactForm' : ActorMethod<[string, string, string], undefined>,
+  'resetAdmin' : ActorMethod<[], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'setSeoSetting' : ActorMethod<[string, string, string], undefined>,
   'toggleSocialLink' : ActorMethod<[bigint], undefined>,

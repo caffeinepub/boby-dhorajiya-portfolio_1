@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
+  "projectStateVersion": 13,
   "summary": "Personal portfolio website for Boby Dhorajiya upgraded with: hero section contrast/mobile fixes, admin account setup with force-reset, availability time update (9AM–8PM), dynamic project categories table, experience updated to Senior Mobile App Developer at Nexus IT Solution, fully dynamic skills management, dynamic social media links table, 6 new home page sections (Why Work With Me, Dev Process, Security-First, Tech Stack, CTA Banner, FAQ), improved admin panel with sidebar nav/pagination/search/toasts/modals, admin help guide page, security hardening (Helmet, rate limiting, XSS/CSRF/input validation), and full website analysis with best practices applied.",
   "architectural_notes": [
     "Frontend: React (Vite or Next.js) + Tailwind CSS + Framer Motion",
@@ -13,7 +13,7 @@
   ],
   "known_issues": [
     "Hero section has low text visibility on mobile due to insufficient background contrast",
-    "Admin panel authentication/access issue reported — user unable to log in via Internet Identity; needs investigation or alternative auth flow"
+    "Admin login flow completely broken: 'Go to Login' button not working and admin cannot log in at all — multiple fix attempts have failed"
   ],
   "isFixRequest": true,
   "existing_features": [
@@ -256,6 +256,22 @@
         "REQ-35"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-rewrite-the-adminguard-component-from-scratch-with-a-completely-new-minimal-implementation-the-component-must-1-when-the-user-is-not-authenticated-show-authentication-required-message-and-a-clearly-visible-fully-functional-go-to-login-button-that-directly-triggers-the-internet-identity-login-popup-calls-the-login-function-from-useinternetidentity-the-button-must-not-navigate-to-a-separate-route-it-must-open-the-ii-popup-inline-2-after-login-completes-successfully-immediately-invalidate-and-refetch-the-admin-status-query-3-if-authenticated-and-no-admin-is-registered-yet-show-a-claim-admin-access-button-that-calls-the-backend-claimadmin-function-handles-all-return-variants-and-on-success-redirects-to-admin-4-if-authenticated-and-another-admin-is-already-registered-show-access-denied-5-if-authenticated-and-current-user-is-the-admin-render-children-do-not-use-tanstack-router-navigate-for-the-login-action-call-login-directly",
+      "title": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. The component must: (1) When the user is NOT authenticated — show 'Authentication Required' message and a clearly visible, fully functional 'Go to Login' button that directly triggers the Internet Identity login popup (calls the `login()` function from `useInternetIdentity`). The button must NOT navigate to a separate route — it must open the II popup inline. (2) After login completes successfully, immediately invalidate and refetch the admin-status query. (3) If authenticated and no admin is registered yet — show a 'Claim Admin Access' button that calls the backend `claimAdmin` function, handles all return variants, and on success redirects to `/admin`. (4) If authenticated and another admin is already registered — show 'Access Denied'. (5) If authenticated and current user IS the admin — render children. Do NOT use TanStack Router `navigate` for the login action; call `login()` directly.",
+      "reqIds": [
+        "REQ-36"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-fix-the-useactor-hook-and-any-query-initialization-so-that-after-internet-identity-login-completes-the-actor-is-immediately-re-created-with-the-fresh-authenticated-identity-before-any-admin-status-queries-are-executed-ensure-there-is-no-race-condition-where-checkadminstatus-is-called-with-an-anonymous-or-stale-actor-right-after-login-the-admin-status-react-query-key-must-be-invalidated-and-immediately-refetched-after-both-login-and-after-a-successful-claimadmin-call",
+      "title": "Fix the `useActor` hook and any query initialization so that after Internet Identity login completes, the actor is immediately re-created with the fresh authenticated identity before any admin-status queries are executed. Ensure there is no race condition where `checkAdminStatus` is called with an anonymous or stale actor right after login. The admin-status React Query key must be invalidated and immediately refetched after both login and after a successful `claimAdmin` call.",
+      "reqIds": [
+        "REQ-38"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -446,6 +462,14 @@
       "summary": "Fix the backend `claimAdmin` function in main.mo to correctly handle the case where no admin principal has been registered yet. If `adminPrincipal` is null/empty, the first authenticated caller of `claimAdmin` must be stored as the admin. Ensure the `isAdmin` / `checkAdminStatus` query correctly returns `true` for that principal after claiming. Also ensure `claimAdmin` returns a clear success/error variant that the frontend can act on.",
       "reqIds": [
         "REQ-34"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-48",
+      "summary": "Audit and fix the backend `claimAdmin` and `checkAdminStatus` functions in `backend/main.mo`. Ensure: (1) `claimAdmin` stores the caller's principal in `adminPrincipal` when it is currently `null`/`None`, and returns a clear `#success` variant. (2) `checkAdminStatus` returns `true` for that stored principal on all subsequent calls. (3) `claimAdmin` returns `#alreadyClaimed` if an admin is already set and the caller is NOT that admin. (4) `claimAdmin` returns `#notAuthenticated` for anonymous callers. (5) All variant tags are consistent and do not use mixed `__kind__`-style tagging. Add a `resetAdmin` function callable only by the current admin to clear `adminPrincipal` back to `null` for emergency recovery.",
+      "reqIds": [
+        "REQ-37"
       ],
       "status": "pending"
     }

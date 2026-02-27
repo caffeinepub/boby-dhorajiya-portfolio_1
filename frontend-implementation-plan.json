@@ -1,42 +1,49 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix AdminGuard: Claim Admin Access flow after Internet Identity login",
+  "title": "Fix admin login flow: Go to Login button broken and full auth flow non-functional",
   "requirements": [
     {
-      "id": "REQ-35",
-      "summary": "Deep audit and rewrite of AdminGuard component and admin claim flow to ensure authenticated users can claim admin access after Internet Identity login, with proper handling of all ClaimAdminResult variants, immediate admin status refetch after login and claim success, and correct behavior in both Safari and Chrome",
+      "id": "REQ-36",
+      "summary": "Rewrite AdminGuard component with minimal implementation that directly triggers Internet Identity login popup inline without navigation",
       "acceptanceCriteria": [
-        "After logging in via Internet Identity on a fresh deployment with no admin registered, the user sees a 'Claim Admin Access' button (not just 'Access Denied').",
-        "Clicking 'Claim Admin Access' calls the backend claimAdmin function without error.",
-        "On a successful claimAdmin response, the admin status is re-fetched and the user is redirected to the /admin dashboard.",
-        "If an admin is already registered and the logged-in user is not that admin, 'Access Denied' is shown with no claim button.",
-        "The backend checkAdminStatus / isAdmin query returns true for the principal that successfully called claimAdmin.",
-        "The backend claimAdmin function stores the caller's principal when no admin has been registered yet (adminPrincipal is null/None).",
-        "The fix works correctly in both Chrome and Safari browsers.",
-        "No race condition exists between Internet Identity auth state settling and the AdminGuard querying admin status — queries are invalidated and refetched after login.",
-        "All claimAdmin return variants (including __kind__-tagged variants) are handled gracefully in the frontend."
+        "Visiting /admin while unauthenticated shows 'Authentication Required' with a 'Go to Login' button",
+        "Clicking 'Go to Login' opens the Internet Identity authentication popup immediately without navigating away",
+        "After successful Internet Identity login, the admin-status query is immediately refetched",
+        "If no admin has been registered yet, a 'Claim Admin Access' button appears after login",
+        "Clicking 'Claim Admin Access' calls the backend claimAdmin function and redirects to /admin on success",
+        "If an admin is already registered and the logged-in user is not that admin, 'Access Denied' is shown with no claim button",
+        "If the logged-in user is the admin, the admin panel content renders correctly",
+        "The fix works correctly in both Safari and Chrome"
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/AdminGuard.tsx",
+          "operation": "modify",
+          "description": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. When unauthenticated, show 'Authentication Required' message and a 'Go to Login' button that directly calls login() from useInternetIdentity (no TanStack Router navigate). After login completes, immediately invalidate and refetch the admin-status query using queryClient. If authenticated and no admin is registered, show a 'Claim Admin Access' button that calls the backend claimAdmin function, handles all return variants (#success, #alreadyClaimed, #notAuthenticated), and on success redirects to /admin. If authenticated and another admin is registered, show 'Access Denied'. If authenticated and current user IS the admin, render children. Use useQueryClient for cache invalidation. Handle all loading and error states with appropriate UI feedback."
+        }
+      ]
+    },
+    {
+      "id": "REQ-38",
+      "summary": "Fix useActor hook to re-create actor with fresh authenticated identity immediately after login, eliminating race conditions",
+      "acceptanceCriteria": [
+        "After Internet Identity login, the actor is re-initialized with the authenticated identity before checkAdminStatus is called",
+        "No race condition exists between auth state change and actor instantiation",
+        "Admin-status query is invalidated and refetched immediately after login completes",
+        "Admin-status query is invalidated and refetched immediately after a successful claimAdmin call",
+        "The flow works correctly on both first page load and on subsequent navigations to /admin"
       ],
       "file_operations": [
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Audit and enhance the useIsCallerAdmin hook to ensure it properly waits for actor availability, correctly reflects loading state during actor initialization, and sets enabled: !!actor && !actorFetching to prevent premature queries. Add a useClaimAdmin mutation hook that calls actor.claimAdmin(), handles all ClaimAdminResult variants (adminClaimed, adminAlreadyExists, anonymousPrincipal) by inspecting __kind__ property, invalidates the 'isCallerAdmin' query on success, and returns appropriate success/error states for UI feedback."
+          "description": "Modify the useCheckAdminStatus hook to ensure it properly waits for actor initialization and is not called with a stale or anonymous actor. Add explicit enabled conditions that check both actor availability and actorFetching status. Ensure the query key includes identity-dependent information to trigger refetch on identity change. Add query options that prevent premature execution before the actor is ready. Verify the hook properly handles the race condition where login completes but the actor hasn't been re-initialized yet."
         },
         {
           "path": "frontend/src/components/AdminGuard.tsx",
           "operation": "modify",
-          "description": "Perform a complete rewrite of AdminGuard to fix the claim admin flow. Use the authorization component's authentication patterns to ensure proper identity checks. Key changes: (1) Wait for both authentication state and actor availability before querying admin status using isLoading checks from both useInternetIdentity and useIsCallerAdmin. (2) When authenticated but not admin and admin does not exist yet, render a clearly visible 'Claim Admin Access' button instead of 'Access Denied'. (3) Wire the button to the useClaimAdmin mutation, handle loading/error states during the claim process, and display toast notifications for all result variants. (4) On successful claim (when __kind__ === 'adminClaimed'), invalidate admin status queries and programmatically navigate to /admin using useNavigate from @tanstack/react-router. (5) Show 'Access Denied' only when an admin already exists and the current user is not that admin (when __kind__ === 'adminAlreadyExists'). (6) Add proper error handling for the anonymousPrincipal variant. (7) Ensure no flash of incorrect UI state by checking both actorFetching and query loading states before rendering any content. Verify the authorization component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/LoginButton.tsx",
-          "operation": "modify",
-          "description": "Enhance the login success flow to immediately invalidate the 'isCallerAdmin' query key after a successful login completes. Use queryClient.invalidateQueries({ queryKey: ['isCallerAdmin'] }) after the login() promise resolves to ensure the AdminGuard refetches admin status with the fresh authenticated identity. This prevents stale admin status checks from racing with actor instantiation. Maintain existing logout behavior that clears all queries."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Ensure the admin layout routes (under /admin) are wrapped with the AdminGuard component at the layout level, so all admin pages inherit the guard behavior. Verify that the guard is positioned after authentication providers but before route-specific content renders. If the guard is already in place, confirm it receives fresh actor and identity state on every route navigation to /admin."
+          "description": "After calling login() from useInternetIdentity in the 'Go to Login' button handler, add an await to ensure login completes, then explicitly call queryClient.invalidateQueries for the admin-status query key. Similarly, after a successful claimAdmin call, immediately invalidate the admin-status query. Ensure proper error handling wraps both the login call and the claimAdmin mutation to catch and display errors to the user. Add loading state management during login and claimAdmin operations."
         }
       ]
     }

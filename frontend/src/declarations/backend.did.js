@@ -32,9 +32,9 @@ export const UserRole = IDL.Variant({
   'guest' : IDL.Null,
 });
 export const ClaimAdminResult = IDL.Variant({
-  'adminAlreadyExists' : IDL.Principal,
-  'adminClaimed' : IDL.Null,
-  'anonymousPrincipal' : IDL.Null,
+  'notAuthenticated' : IDL.Null,
+  'success' : IDL.Null,
+  'alreadyClaimed' : IDL.Null,
 });
 export const SocialPlatform = IDL.Variant({
   'x' : IDL.Null,
@@ -146,6 +146,7 @@ export const idlService = IDL.Service({
   'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [], []),
   'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'checkAdminStatus' : IDL.Func([], [IDL.Bool], ['query']),
   'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
   'createCategory' : IDL.Func([IDL.Text, IDL.Text], [], []),
   'createSocialLink' : IDL.Func([SocialPlatform, IDL.Text, IDL.Text], [], []),
@@ -193,6 +194,7 @@ export const idlService = IDL.Service({
   'listSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
   'listSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
   'processContactForm' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+  'resetAdmin' : IDL.Func([], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'setSeoSetting' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'toggleSocialLink' : IDL.Func([IDL.Nat], [], []),
@@ -247,9 +249,9 @@ export const idlFactory = ({ IDL }) => {
     'guest' : IDL.Null,
   });
   const ClaimAdminResult = IDL.Variant({
-    'adminAlreadyExists' : IDL.Principal,
-    'adminClaimed' : IDL.Null,
-    'anonymousPrincipal' : IDL.Null,
+    'notAuthenticated' : IDL.Null,
+    'success' : IDL.Null,
+    'alreadyClaimed' : IDL.Null,
   });
   const SocialPlatform = IDL.Variant({
     'x' : IDL.Null,
@@ -358,6 +360,7 @@ export const idlFactory = ({ IDL }) => {
     'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [], []),
     'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'checkAdminStatus' : IDL.Func([], [IDL.Bool], ['query']),
     'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
     'createCategory' : IDL.Func([IDL.Text, IDL.Text], [], []),
     'createSocialLink' : IDL.Func([SocialPlatform, IDL.Text, IDL.Text], [], []),
@@ -405,6 +408,7 @@ export const idlFactory = ({ IDL }) => {
     'listSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
     'listSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
     'processContactForm' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
+    'resetAdmin' : IDL.Func([], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'setSeoSetting' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'toggleSocialLink' : IDL.Func([IDL.Nat], [], []),

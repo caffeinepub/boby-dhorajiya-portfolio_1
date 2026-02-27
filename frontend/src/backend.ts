@@ -94,16 +94,6 @@ export interface Testimonial {
     author: string;
     message: string;
 }
-export type ClaimAdminResult = {
-    __kind__: "adminAlreadyExists";
-    adminAlreadyExists: Principal;
-} | {
-    __kind__: "adminClaimed";
-    adminClaimed: null;
-} | {
-    __kind__: "anonymousPrincipal";
-    anonymousPrincipal: null;
-};
 export interface BlogPost {
     id: bigint;
     metaDescription: string;
@@ -172,6 +162,11 @@ export interface UserProfile {
     name: string;
     email: string;
 }
+export enum ClaimAdminResult {
+    notAuthenticated = "notAuthenticated",
+    success = "success",
+    alreadyClaimed = "alreadyClaimed"
+}
 export enum SkillCategory {
     security = "security",
     secondary = "secondary",
@@ -202,6 +197,7 @@ export interface backendInterface {
     addSkill(name: string, experience: bigint, category: SkillCategory): Promise<void>;
     addTestimonial(author: string, message: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    checkAdminStatus(): Promise<boolean>;
     claimAdmin(): Promise<ClaimAdminResult>;
     createCategory(name: string, slug: string): Promise<void>;
     createSocialLink(platform: SocialPlatform, url: string, icon: string): Promise<void>;
@@ -235,6 +231,7 @@ export interface backendInterface {
     listSkills(): Promise<Array<Skill>>;
     listSocialLinks(): Promise<Array<SocialLink>>;
     processContactForm(name: string, email: string, message: string): Promise<void>;
+    resetAdmin(): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     setSeoSetting(page: string, metaTitle: string, metaDescription: string): Promise<void>;
     toggleSocialLink(id: bigint): Promise<void>;
@@ -428,6 +425,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n13(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async checkAdminStatus(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.checkAdminStatus();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.checkAdminStatus();
             return result;
         }
     }
@@ -841,6 +852,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async resetAdmin(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.resetAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.resetAdmin();
+            return result;
+        }
+    }
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -1106,31 +1131,13 @@ function from_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint
     };
 }
 function from_candid_variant_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    adminAlreadyExists: Principal;
+    notAuthenticated: null;
 } | {
-    adminClaimed: null;
+    success: null;
 } | {
-    anonymousPrincipal: null;
-}): {
-    __kind__: "adminAlreadyExists";
-    adminAlreadyExists: Principal;
-} | {
-    __kind__: "adminClaimed";
-    adminClaimed: null;
-} | {
-    __kind__: "anonymousPrincipal";
-    anonymousPrincipal: null;
-} {
-    return "adminAlreadyExists" in value ? {
-        __kind__: "adminAlreadyExists",
-        adminAlreadyExists: value.adminAlreadyExists
-    } : "adminClaimed" in value ? {
-        __kind__: "adminClaimed",
-        adminClaimed: value.adminClaimed
-    } : "anonymousPrincipal" in value ? {
-        __kind__: "anonymousPrincipal",
-        anonymousPrincipal: value.anonymousPrincipal
-    } : value;
+    alreadyClaimed: null;
+}): ClaimAdminResult {
+    return "notAuthenticated" in value ? ClaimAdminResult.notAuthenticated : "success" in value ? ClaimAdminResult.success : "alreadyClaimed" in value ? ClaimAdminResult.alreadyClaimed : value;
 }
 function from_candid_variant_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
