@@ -1,49 +1,48 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix admin login flow: Go to Login button broken and full auth flow non-functional",
+  "title": "Fix 401 Unauthorized error on admin CRUD operations",
   "requirements": [
     {
-      "id": "REQ-36",
-      "summary": "Rewrite AdminGuard component with minimal implementation that directly triggers Internet Identity login popup inline without navigation",
+      "id": "REQ-2",
+      "summary": "Ensure actor is initialized with authenticated identity before mutations",
       "acceptanceCriteria": [
-        "Visiting /admin while unauthenticated shows 'Authentication Required' with a 'Go to Login' button",
-        "Clicking 'Go to Login' opens the Internet Identity authentication popup immediately without navigating away",
-        "After successful Internet Identity login, the admin-status query is immediately refetched",
-        "If no admin has been registered yet, a 'Claim Admin Access' button appears after login",
-        "Clicking 'Claim Admin Access' calls the backend claimAdmin function and redirects to /admin on success",
-        "If an admin is already registered and the logged-in user is not that admin, 'Access Denied' is shown with no claim button",
-        "If the logged-in user is the admin, the admin panel content renders correctly",
-        "The fix works correctly in both Safari and Chrome"
+        "After login, the actor used by mutation hooks carries the authenticated Internet Identity principal, not the anonymous identity.",
+        "If a user logs in and immediately attempts to create a resource, the actor is initialized with the correct identity before the call is made.",
+        "Logging out and back in produces a fresh actor with the new identity.",
+        "No mutation hook in useQueries.ts falls back silently to an anonymous actor when an authenticated identity is available."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/AdminGuard.tsx",
+          "path": "frontend/src/hooks/useActorWrapper.ts",
           "operation": "modify",
-          "description": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. When unauthenticated, show 'Authentication Required' message and a 'Go to Login' button that directly calls login() from useInternetIdentity (no TanStack Router navigate). After login completes, immediately invalidate and refetch the admin-status query using queryClient. If authenticated and no admin is registered, show a 'Claim Admin Access' button that calls the backend claimAdmin function, handles all return variants (#success, #alreadyClaimed, #notAuthenticated), and on success redirects to /admin. If authenticated and another admin is registered, show 'Access Denied'. If authenticated and current user IS the admin, render children. Use useQueryClient for cache invalidation. Handle all loading and error states with appropriate UI feedback."
+          "description": "Add explicit identity validation to ensure the actor wrapper never returns an actor initialized with an anonymous identity when an authenticated identity is available from the InternetIdentityProvider. Add a state check that waits for identity resolution before returning the actor, preventing race conditions where mutations are dispatched before authentication completes."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add explicit identity checks to all mutation hooks (addSkill, updateSkill, deleteSkill, createProject, updateProject, deleteProject, createService, updateService, deleteService, addBlog, updateBlog, deleteBlog, createCategory, updateCategory, deleteCategory, createSocialLink, updateSocialLink, deleteSocialLink, setSeoSetting, deleteSeoSetting, addTestimonial, updateTestimonial, deleteTestimonial) to ensure the actor is available and authenticated before dispatching the mutation. Include error handling that prevents mutations from executing with an anonymous identity."
         }
       ]
     },
     {
-      "id": "REQ-38",
-      "summary": "Fix useActor hook to re-create actor with fresh authenticated identity immediately after login, eliminating race conditions",
+      "id": "REQ-3",
+      "summary": "Fix AdminGuard admin status verification and state persistence",
       "acceptanceCriteria": [
-        "After Internet Identity login, the actor is re-initialized with the authenticated identity before checkAdminStatus is called",
-        "No race condition exists between auth state change and actor instantiation",
-        "Admin-status query is invalidated and refetched immediately after login completes",
-        "Admin-status query is invalidated and refetched immediately after a successful claimAdmin call",
-        "The flow works correctly on both first page load and on subsequent navigations to /admin"
+        "AdminGuard correctly confirms admin status on each protected route before rendering the management UI.",
+        "The admin status is not lost on page navigation or React Query cache invalidation.",
+        "If the user is not admin, AdminGuard shows the appropriate UI instead of silently allowing mutations that will fail."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Modify the useCheckAdminStatus hook to ensure it properly waits for actor initialization and is not called with a stale or anonymous actor. Add explicit enabled conditions that check both actor availability and actorFetching status. Ensure the query key includes identity-dependent information to trigger refetch on identity change. Add query options that prevent premature execution before the actor is ready. Verify the hook properly handles the race condition where login completes but the actor hasn't been re-initialized yet."
-        },
-        {
           "path": "frontend/src/components/AdminGuard.tsx",
           "operation": "modify",
-          "description": "After calling login() from useInternetIdentity in the 'Go to Login' button handler, add an await to ensure login completes, then explicitly call queryClient.invalidateQueries for the admin-status query key. Similarly, after a successful claimAdmin call, immediately invalidate the admin-status query. Ensure proper error handling wraps both the login call and the claimAdmin mutation to catch and display errors to the user. Add loading state management during login and claimAdmin operations."
+          "description": "Replace the imperative useEffect-based admin status check with a proper React Query hook (useIsCallerAdmin) to ensure admin status is cached and persisted across navigations. Add dependency on the authenticated identity to trigger re-verification when the user logs in or out. Ensure the guard waits for both actor initialization and admin status resolution before rendering admin-protected content or showing the access denied UI."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Ensure the useIsCallerAdmin query hook (if not already present, add it) uses proper query key scoping and is enabled only when the actor is available. Configure the query to use staleTime and cacheTime so admin status persists across page navigations without unnecessary re-fetches, while still invalidating when the identity changes."
         }
       ]
     }

@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-rewrite-the-adminguard-component-from-scratch-with-a-completely-new-minimal-implementation-the-component-must-1-when-the-user-is-not-authenticated-show-authentication-required-message-and-a-clearly-visible-fully-functional-go-to-login-button-that-directly-triggers-the-internet-identity-login-popup-calls-the-login-function-from-useinternetidentity-the-button-must-not-navigate-to-a-separate-route-it-must-open-the-ii-popup-inline-2-after-login-completes-successfully-immediately-invalidate-and-refetch-the-admin-status-query-3-if-authenticated-and-no-admin-is-registered-yet-show-a-claim-admin-access-button-that-calls-the-backend-claimadmin-function-handles-all-return-variants-and-on-success-redirects-to-admin-4-if-authenticated-and-another-admin-is-already-registered-show-access-denied-5-if-authenticated-and-current-user-is-the-admin-render-children-do-not-use-tanstack-router-navigate-for-the-login-action-call-login-directly",
-      "featureTitle": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. The component must: (1) When the user is NOT authenticated — show 'Authentication Required' message and a clearly visible, fully functional 'Go to Login' button that directly triggers the Internet Identity login popup (calls the `login()` function from `useInternetIdentity`). The button must NOT navigate to a separate route — it must open the II popup inline. (2) After login completes successfully, immediately invalidate and refetch the admin-status query. (3) If authenticated and no admin is registered yet — show a 'Claim Admin Access' button that calls the backend `claimAdmin` function, handles all return variants, and on success redirects to `/admin`. (4) If authenticated and another admin is already registered — show 'Access Denied'. (5) If authenticated and current user IS the admin — render children. Do NOT use TanStack Router `navigate` for the login action; call `login()` directly.",
+      "featureId": "feature-audit-frontend-src-hooks-useactor-ts-and-frontend-src-hooks-useactorwrapper-ts-to-ensure-the-actor-is-always-initialized-with-the-authenticated-identity-not-anonymous-when-the-user-is-logged-in-via-internet-identity-the-actor-instance-must-be-rebuilt-whenever-the-identity-changes-login-logout-and-all-mutation-hooks-in-usequeries-ts-must-use-this-authenticated-actor-if-the-actor-is-falling-back-to-anonymous-due-to-a-race-condition-or-stale-cache-add-proper-invalidation-and-re-initialization-logic-so-the-identity-is-attached-before-any-mutation-is-dispatched",
+      "featureTitle": "Audit `frontend/src/hooks/useActor.ts` and `frontend/src/hooks/useActorWrapper.ts` to ensure the actor is always initialized with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. The actor instance must be rebuilt whenever the identity changes (login/logout), and all mutation hooks in `useQueries.ts` must use this authenticated actor. If the actor is falling back to anonymous due to a race condition or stale cache, add proper invalidation and re-initialization logic so the identity is attached before any mutation is dispatched.",
       "files": [
-        "frontend/src/components/AdminGuard.tsx"
+        "frontend/src/hooks/useQueries.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -17,13 +17,13 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-36"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-fix-the-useactor-hook-and-any-query-initialization-so-that-after-internet-identity-login-completes-the-actor-is-immediately-re-created-with-the-fresh-authenticated-identity-before-any-admin-status-queries-are-executed-ensure-there-is-no-race-condition-where-checkadminstatus-is-called-with-an-anonymous-or-stale-actor-right-after-login-the-admin-status-react-query-key-must-be-invalidated-and-immediately-refetched-after-both-login-and-after-a-successful-claimadmin-call",
-      "featureTitle": "Fix the `useActor` hook and any query initialization so that after Internet Identity login completes, the actor is immediately re-created with the fresh authenticated identity before any admin-status queries are executed. Ensure there is no race condition where `checkAdminStatus` is called with an anonymous or stale actor right after login. The admin-status React Query key must be invalidated and immediately refetched after both login and after a successful `claimAdmin` call.",
+      "featureId": "feature-in-frontend-src-components-adminguard-tsx-ensure-that-the-admin-status-check-call-to-isadmin-or-equivalent-backend-function-completes-successfully-and-does-not-incorrectly-block-or-bypass-authorization-before-mutations-are-made-if-the-guard-is-short-circuiting-or-the-admin-state-is-not-being-persisted-correctly-across-navigations-fix-the-state-management-so-admin-protected-pages-reliably-confirm-admin-status-before-rendering-mutation-controls",
+      "featureTitle": "In `frontend/src/components/AdminGuard.tsx`, ensure that the admin status check (call to `isAdmin` or equivalent backend function) completes successfully and does not incorrectly block or bypass authorization before mutations are made. If the guard is short-circuiting or the admin state is not being persisted correctly across navigations, fix the state management so admin-protected pages reliably confirm admin status before rendering mutation controls.",
       "files": [
         "frontend/src/components/AdminGuard.tsx",
         "frontend/src/hooks/useQueries.ts"
@@ -38,7 +38,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-38"
+        "REQ-3"
       ],
       "confidence": "high"
     }

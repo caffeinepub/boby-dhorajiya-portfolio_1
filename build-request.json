@@ -1,83 +1,78 @@
 {
   "kind": "build_request",
-  "title": "Fix admin login flow: Go to Login button broken and full auth flow non-functional",
-  "projectName": "Boby Portfolio",
+  "title": "Fix 401 Unauthorized error on admin CRUD operations (projects, services, skills)",
   "priority": "high",
   "requirements": [
     {
-      "id": "REQ-36",
-      "text": "Rewrite the AdminGuard component from scratch with a completely new, minimal implementation. The component must: (1) When the user is NOT authenticated — show 'Authentication Required' message and a clearly visible, fully functional 'Go to Login' button that directly triggers the Internet Identity login popup (calls the `login()` function from `useInternetIdentity`). The button must NOT navigate to a separate route — it must open the II popup inline. (2) After login completes successfully, immediately invalidate and refetch the admin-status query. (3) If authenticated and no admin is registered yet — show a 'Claim Admin Access' button that calls the backend `claimAdmin` function, handles all return variants, and on success redirects to `/admin`. (4) If authenticated and another admin is already registered — show 'Access Denied'. (5) If authenticated and current user IS the admin — render children. Do NOT use TanStack Router `navigate` for the login action; call `login()` directly.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "Still not working and also if I click on go to login then this also not working why you are not fixing this why I am not able to admin login"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Visiting /admin while unauthenticated shows 'Authentication Required' with a 'Go to Login' button",
-        "Clicking 'Go to Login' opens the Internet Identity authentication popup immediately without navigating away",
-        "After successful Internet Identity login, the admin-status query is immediately refetched",
-        "If no admin has been registered yet, a 'Claim Admin Access' button appears after login",
-        "Clicking 'Claim Admin Access' calls the backend claimAdmin function and redirects to /admin on success",
-        "If an admin is already registered and the logged-in user is not that admin, 'Access Denied' is shown with no claim button",
-        "If the logged-in user is the admin, the admin panel content renders correctly",
-        "The fix works correctly in both Safari and Chrome"
-      ]
-    },
-    {
-      "id": "REQ-37",
-      "text": "Audit and fix the backend `claimAdmin` and `checkAdminStatus` functions in `backend/main.mo`. Ensure: (1) `claimAdmin` stores the caller's principal in `adminPrincipal` when it is currently `null`/`None`, and returns a clear `#success` variant. (2) `checkAdminStatus` returns `true` for that stored principal on all subsequent calls. (3) `claimAdmin` returns `#alreadyClaimed` if an admin is already set and the caller is NOT that admin. (4) `claimAdmin` returns `#notAuthenticated` for anonymous callers. (5) All variant tags are consistent and do not use mixed `__kind__`-style tagging. Add a `resetAdmin` function callable only by the current admin to clear `adminPrincipal` back to `null` for emergency recovery.",
+      "id": "REQ-1",
+      "text": "Audit and fix the backend admin authorization check in `backend/main.mo` so that all mutation functions (addProject, updateProject, deleteProject, addService, updateService, deleteService, addSkill, updateSkill, deleteSkill, and equivalents for blogs, categories, testimonials, social links, SEO settings) correctly validate the caller's principal against the stored admin principal. The `isAdmin` check must use `caller` (the implicit argument) — not a hardcoded or stale principal — and must return a proper `#err(\"Unauthorized\")` variant only when the caller is genuinely not the admin. Ensure the admin claim logic (`claimAdmin`) stores the principal correctly and that subsequent calls from the same authenticated identity are recognized.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-user-401"
         ],
         "quotes": [
-          "why I am not able to admin login"
+          "Unauthorized: Only admins can add skills",
+          "whenever I attempt to submit a POST request to create any of these resources, the server responds with an unauthorized error"
         ]
       },
       "acceptanceCriteria": [
-        "claimAdmin stores the caller's principal when adminPrincipal is null/None and returns #success",
-        "checkAdminStatus returns true for the stored admin principal on every subsequent call",
-        "claimAdmin returns #alreadyClaimed when an admin is already registered and the caller is not that admin",
-        "claimAdmin returns #notAuthenticated for anonymous callers",
-        "All variant tags are consistent (no mixed __kind__ tags)",
-        "resetAdmin function exists and clears adminPrincipal back to null when called by the current admin"
+        "A logged-in admin user can successfully create a skill, project, and service without receiving a 401/Unauthorized error.",
+        "The `isAdmin` function in `main.mo` compares the transaction `caller` principal against the stored admin principal.",
+        "Non-admin callers still correctly receive an Unauthorized error.",
+        "The `claimAdmin` function stores the caller's principal, and subsequent mutation calls from the same identity pass the admin check."
       ]
     },
     {
-      "id": "REQ-38",
-      "text": "Fix the `useActor` hook and any query initialization so that after Internet Identity login completes, the actor is immediately re-created with the fresh authenticated identity before any admin-status queries are executed. Ensure there is no race condition where `checkAdminStatus` is called with an anonymous or stale actor right after login. The admin-status React Query key must be invalidated and immediately refetched after both login and after a successful `claimAdmin` call.",
+      "id": "REQ-2",
+      "text": "Audit `frontend/src/hooks/useActor.ts` and `frontend/src/hooks/useActorWrapper.ts` to ensure the actor is always initialized with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. The actor instance must be rebuilt whenever the identity changes (login/logout), and all mutation hooks in `useQueries.ts` must use this authenticated actor. If the actor is falling back to anonymous due to a race condition or stale cache, add proper invalidation and re-initialization logic so the identity is attached before any mutation is dispatched.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-6"
+          "msg-user-401"
         ],
         "quotes": [
-          "if I click on go to login then this also not working"
+          "Authentication appears to be working correctly because I am able to log in successfully",
+          "Verify if the authorization headers are being sent correctly in the request"
         ]
       },
       "acceptanceCriteria": [
-        "After Internet Identity login, the actor is re-initialized with the authenticated identity before checkAdminStatus is called",
-        "No race condition exists between auth state change and actor instantiation",
-        "Admin-status query is invalidated and refetched immediately after login completes",
-        "Admin-status query is invalidated and refetched immediately after a successful claimAdmin call",
-        "The flow works correctly on both first page load and on subsequent navigations to /admin"
+        "After login, the actor used by mutation hooks carries the authenticated Internet Identity principal, not the anonymous identity.",
+        "If a user logs in and immediately attempts to create a resource, the actor is initialized with the correct identity before the call is made.",
+        "Logging out and back in produces a fresh actor with the new identity.",
+        "No mutation hook in `useQueries.ts` falls back silently to an anonymous actor when an authenticated identity is available."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "In `frontend/src/components/AdminGuard.tsx`, ensure that the admin status check (call to `isAdmin` or equivalent backend function) completes successfully and does not incorrectly block or bypass authorization before mutations are made. If the guard is short-circuiting or the admin state is not being persisted correctly across navigations, fix the state management so admin-protected pages reliably confirm admin status before rendering mutation controls.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-user-401"
+        ],
+        "quotes": [
+          "Check whether it could be related to JWT token handling, middleware, guards, or role-based permissions"
+        ]
+      },
+      "acceptanceCriteria": [
+        "AdminGuard correctly confirms admin status on each protected route before rendering the management UI.",
+        "The admin status is not lost on page navigation or React Query cache invalidation.",
+        "If the user is not admin, AdminGuard shows the appropriate UI instead of silently allowing mutations that will fail."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/useInternetIdentity.ts or frontend/src/hooks/useActor.ts — use safe wrappers or composition instead",
-    "Do not add a separate /login route — login must be triggered inline via the Internet Identity popup",
-    "Keep all Motoko logic in backend/main.mo"
+    "Do not change the Internet Identity authentication flow in `frontend/src/hooks/useInternetIdentity.ts` (immutable path).",
+    "Do not change `frontend/src/hooks/useActor.ts` directly if it is under immutable paths — propose a wrapper-level fix in `useActorWrapper.ts` instead.",
+    "All backend logic must remain in the single actor in `backend/main.mo`.",
+    "Do not introduce JWT, external auth services, or middleware — authentication is solely via Internet Identity and ICP caller principals."
   ],
   "nonGoals": [
-    "Adding new admin management features",
-    "Changing the visual design of the admin panel",
-    "Supporting any authentication method other than Internet Identity"
+    "Adding new admin roles or role-based access control beyond the existing single-admin model.",
+    "Changing the visual design or layout of any admin management pages.",
+    "Adding new CRUD features or fields to projects, services, or skills.",
+    "Modifying public-facing pages."
   ],
   "imageRequirements": {
     "required": [],

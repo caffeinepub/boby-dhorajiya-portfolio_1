@@ -1,9 +1,13 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
+import { lazy, Suspense } from 'react';
+import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet, redirect } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
+import { Loader2 } from 'lucide-react';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
+
+// Public pages - static imports for fast initial load
 import Home from './pages/Home';
 import About from './pages/About';
 import Projects from './pages/Projects';
@@ -14,18 +18,26 @@ import Blog from './pages/Blog';
 import BlogPost from './pages/BlogPost';
 import Contact from './pages/Contact';
 import Testimonials from './pages/Testimonials';
-import Dashboard from './pages/admin/Dashboard';
-import ProjectsManagement from './pages/admin/ProjectsManagement';
-import CategoriesManagement from './pages/admin/CategoriesManagement';
-import SkillsManagement from './pages/admin/SkillsManagement';
-import ServicesManagement from './pages/admin/ServicesManagement';
-import BlogManagement from './pages/admin/BlogManagement';
-import TestimonialsManagement from './pages/admin/TestimonialsManagement';
-import LeadsManagement from './pages/admin/LeadsManagement';
-import SeoManagement from './pages/admin/SeoManagement';
-import SocialLinksManagement from './pages/admin/SocialLinksManagement';
-import Help from './pages/admin/Help';
 import ProfileSetup from './components/ProfileSetup';
+
+// Admin pages - lazy loaded for code splitting
+const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const ProjectsManagement = lazy(() => import('./pages/admin/ProjectsManagement'));
+const CategoriesManagement = lazy(() => import('./pages/admin/CategoriesManagement'));
+const SkillsManagement = lazy(() => import('./pages/admin/SkillsManagement'));
+const ServicesManagement = lazy(() => import('./pages/admin/ServicesManagement'));
+const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
+const TestimonialsManagement = lazy(() => import('./pages/admin/TestimonialsManagement'));
+const LeadsManagement = lazy(() => import('./pages/admin/LeadsManagement'));
+const SeoManagement = lazy(() => import('./pages/admin/SeoManagement'));
+const SocialLinksManagement = lazy(() => import('./pages/admin/SocialLinksManagement'));
+const Help = lazy(() => import('./pages/admin/Help'));
+
+const AdminLoadingFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -65,7 +77,9 @@ const adminLayoutRoute = createRoute({
   id: 'admin',
   component: () => (
     <div className="min-h-screen bg-background text-foreground">
-      <Outlet />
+      <Suspense fallback={<AdminLoadingFallback />}>
+        <Outlet />
+      </Suspense>
     </div>
   ),
 });
@@ -82,8 +96,19 @@ const blogPostRoute = createRoute({ getParentRoute: () => publicLayoutRoute, pat
 const contactRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/contact', component: Contact });
 const testimonialsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/testimonials', component: Testimonials });
 
-// Admin routes
-const adminDashboardRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin', component: Dashboard });
+// Admin routes - /admin redirects to /admin/dashboard
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin',
+  beforeLoad: () => {
+    throw redirect({ to: '/admin/dashboard' });
+  },
+});
+const adminDashboardRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/admin/dashboard',
+  component: Dashboard,
+});
 const adminProjectsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/projects', component: ProjectsManagement });
 const adminCategoriesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/categories', component: CategoriesManagement });
 const adminSkillsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/skills', component: SkillsManagement });
@@ -109,6 +134,7 @@ const routeTree = rootRoute.addChildren([
     testimonialsRoute,
   ]),
   adminLayoutRoute.addChildren([
+    adminIndexRoute,
     adminDashboardRoute,
     adminProjectsRoute,
     adminCategoriesRoute,

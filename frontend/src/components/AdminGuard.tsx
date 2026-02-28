@@ -1,155 +1,94 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useActor } from '../hooks/useActor';
-import { useQueryClient } from '@tanstack/react-query';
-import { Shield, Lock, Loader2, ShieldCheck, AlertCircle, LogIn, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-import { ClaimAdminResult } from '../backend';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { Shield, Loader2 } from 'lucide-react';
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  const { identity, login, clear, loginStatus, isInitializing } = useInternetIdentity();
+  const { identity, login, loginStatus } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
   const queryClient = useQueryClient();
-
   const isAuthenticated = !!identity;
+  const principalStr = identity?.getPrincipal().toString() ?? 'anonymous';
+
+  // Use React Query to cache admin status, scoped to the current principal
+  const {
+    data: isAdmin,
+    isLoading: adminLoading,
+    isFetched: adminFetched,
+    refetch: refetchAdmin,
+  } = useQuery<boolean>({
+    queryKey: ['isAdmin', principalStr],
+    queryFn: async () => {
+      if (!actor) return false;
+      try {
+        return await actor.checkAdminStatus();
+      } catch {
+        return false;
+      }
+    },
+    enabled: !!actor && !actorFetching && isAuthenticated,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: false,
+  });
+
+  // Re-check admin status whenever the actor changes (e.g., after login)
+  useEffect(() => {
+    if (actor && !actorFetching && isAuthenticated) {
+      refetchAdmin();
+    }
+  }, [actor, actorFetching, isAuthenticated, refetchAdmin]);
+
+  // Invalidate admin status on logout
+  useEffect(() => {
+    if (!isAuthenticated) {
+      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
+    }
+  }, [isAuthenticated, queryClient]);
+
   const isLoggingIn = loginStatus === 'logging-in';
 
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [adminCheckLoading, setAdminCheckLoading] = useState(false);
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimError, setClaimError] = useState<'already-exists' | 'anonymous' | null>(null);
+  // Show loading while actor is initializing or admin status is being checked
+  const isLoading = actorFetching || (isAuthenticated && adminLoading && !adminFetched);
 
-  // Check admin status whenever actor becomes available
-  useEffect(() => {
-    if (!actor || actorFetching) return;
-
-    let cancelled = false;
-    setAdminCheckLoading(true);
-
-    actor.isCallerAdmin()
-      .then((result) => {
-        if (!cancelled) {
-          setIsAdmin(result);
-          setAdminCheckLoading(false);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setIsAdmin(false);
-          setAdminCheckLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [actor, actorFetching]);
-
-  // Reset admin state when identity changes (logout/login)
-  useEffect(() => {
-    setIsAdmin(null);
-    setClaimError(null);
-  }, [identity]);
-
-  const handleLogin = async () => {
-    try {
-      await login();
-      // Invalidate actor query so it re-initializes with the new authenticated identity
-      queryClient.invalidateQueries({ queryKey: ['actor'] });
-    } catch (error: unknown) {
-      const err = error as Error;
-      if (err?.message === 'User is already authenticated') {
-        await clear();
-        setTimeout(() => login(), 300);
-      } else {
-        toast.error('Login failed. Please try again.');
-      }
-    }
-  };
-
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
-    setIsAdmin(null);
-    setClaimError(null);
-  };
-
-  const handleClaimAdmin = async () => {
-    if (!actor) return;
-    setClaimError(null);
-    setIsClaiming(true);
-
-    try {
-      const result = await actor.claimAdmin();
-
-      if (result === ClaimAdminResult.success) {
-        toast.success('Admin access granted! Welcome to the admin panel.');
-        // Re-check admin status immediately with the same actor
-        setAdminCheckLoading(true);
-        try {
-          const adminStatus = await actor.isCallerAdmin();
-          setIsAdmin(adminStatus);
-        } catch {
-          setIsAdmin(false);
-        }
-        setAdminCheckLoading(false);
-        queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
-      } else if (result === ClaimAdminResult.alreadyClaimed) {
-        setClaimError('already-exists');
-        toast.error('An admin is already registered. You are not authorized.');
-      } else if (result === ClaimAdminResult.notAuthenticated) {
-        setClaimError('anonymous');
-        toast.error('You must be logged in to claim admin access.');
-      }
-    } catch (error: unknown) {
-      const message = (error as Error)?.message ?? '';
-      if (message.toLowerCase().includes('already') || message.toLowerCase().includes('registered')) {
-        setClaimError('already-exists');
-        toast.error('An admin is already registered.');
-      } else {
-        toast.error('Failed to claim admin access. Please try again.');
-      }
-    } finally {
-      setIsClaiming(false);
-    }
-  };
-
-  // Show loading while identity is initializing, actor is being fetched, or admin check is in progress
-  const isCheckingAccess = isInitializing || actorFetching || adminCheckLoading || (isAuthenticated && isAdmin === null);
-
-  if (isCheckingAccess) {
+  if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Verifying access...</p>
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Verifying access...</p>
         </div>
       </div>
     );
   }
 
-  // Not logged in — show login prompt with inline login button
   if (!isAuthenticated) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="text-center space-y-6 max-w-md">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center mx-auto">
-            <Lock className="w-8 h-8 text-primary" />
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+            <Shield className="w-8 h-8 text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold mb-2">Authentication Required</h2>
-            <p className="text-muted-foreground">Please log in to access the admin panel.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Admin Access Required</h2>
+            <p className="text-muted-foreground text-sm">
+              You need to log in with your admin account to access this area.
+            </p>
           </div>
-          <Button
-            onClick={handleLogin}
+          <button
+            onClick={() => {
+              try {
+                login();
+              } catch {
+                // login() is void; errors surface via loginStatus
+              }
+            }}
             disabled={isLoggingIn}
-            size="lg"
-            className="w-full gap-2"
+            className="w-full px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isLoggingIn ? (
               <>
@@ -157,87 +96,46 @@ export default function AdminGuard({ children }: AdminGuardProps) {
                 Logging in...
               </>
             ) : (
-              <>
-                <LogIn className="w-4 h-4" />
-                Go to Login
-              </>
+              'Log In'
             )}
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
-  // Logged in but not admin
+  // Authenticated but admin status not yet confirmed — show loading
+  if (!adminFetched) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Checking admin privileges...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center px-4">
-        <div className="text-center space-y-6 max-w-md w-full">
-          <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto">
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
             <Shield className="w-8 h-8 text-destructive" />
           </div>
-
           <div>
-            <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">
-              You don't have admin privileges to access this area.
+            <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
+            <p className="text-muted-foreground text-sm">
+              Your account does not have admin privileges. Please contact the administrator.
             </p>
           </div>
-
-          {claimError === 'already-exists' ? (
-            <div className="p-4 rounded-xl bg-destructive/5 border border-destructive/20 flex items-start gap-3 text-sm text-left">
-              <AlertCircle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
-              <p className="text-destructive">
-                An admin is already registered. Contact the existing admin for access.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 text-sm text-muted-foreground text-left">
-                <p className="font-medium text-foreground mb-1">First time here?</p>
-                <p>
-                  If no admin has been registered yet, you can claim admin access with your
-                  current identity.
-                </p>
-              </div>
-              <Button
-                onClick={handleClaimAdmin}
-                disabled={isClaiming}
-                className="w-full gap-2"
-                size="lg"
-              >
-                {isClaiming ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Claiming Admin Access...
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck className="w-4 h-4" />
-                    Claim Admin Access
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-
-          <div className="pt-2 border-t border-border">
-            <p className="text-xs text-muted-foreground mb-2">Logged in with a different account?</p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Switch Account
-            </Button>
-          </div>
+          <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-1 rounded">
+            {principalStr.slice(0, 20)}...
+          </p>
         </div>
       </div>
     );
   }
 
-  // Verified admin — render children
   return <>{children}</>;
 }

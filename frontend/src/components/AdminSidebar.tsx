@@ -31,7 +31,15 @@ export default function AdminSidebar() {
   const handleLogout = async () => {
     await clear();
     queryClient.clear();
-    router.navigate({ to: '/admin' });
+    router.navigate({ to: '/admin/dashboard' });
+  };
+
+  const isActive = (path: string) => {
+    // Match /admin/dashboard also when on /admin
+    if (path === '/admin/dashboard') {
+      return currentPath === '/admin/dashboard' || currentPath === '/admin';
+    }
+    return currentPath === path;
   };
 
   const SidebarContent = () => (
@@ -43,14 +51,14 @@ export default function AdminSidebar() {
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentPath === item.path;
+          const active = isActive(item.path);
           return (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setMobileOpen(false)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
+                active
                   ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                   : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
               }`}

@@ -19,6 +19,16 @@ export interface BlogPost {
   'metaTitle' : string,
   'timestamp' : bigint,
 }
+export interface CategoriesResult {
+  'data' : [] | [Array<ProjectCategory>],
+  'error' : [] | [string],
+  'success' : boolean,
+}
+export interface CategoryResult {
+  'data' : [] | [ProjectCategory],
+  'error' : [] | [string],
+  'success' : boolean,
+}
 export type ClaimAdminResult = { 'notAuthenticated' : null } |
   { 'success' : null } |
   { 'alreadyClaimed' : null };
@@ -44,6 +54,16 @@ export interface ProjectCategory {
   'name' : string,
   'slug' : string,
 }
+export interface ProjectResult {
+  'data' : [] | [Project],
+  'error' : [] | [string],
+  'success' : boolean,
+}
+export interface ProjectsResult {
+  'data' : [] | [Array<Project>],
+  'error' : [] | [string],
+  'success' : boolean,
+}
 export interface SeoSetting {
   'metaDescription' : string,
   'page' : string,
@@ -53,6 +73,16 @@ export interface Service {
   'id' : bigint,
   'title' : string,
   'description' : string,
+}
+export interface ServiceResult {
+  'data' : [] | [Service],
+  'error' : [] | [string],
+  'success' : boolean,
+}
+export interface ServicesResult {
+  'data' : [] | [Array<Service>],
+  'error' : [] | [string],
+  'success' : boolean,
 }
 export interface Skill {
   'id' : bigint,
@@ -112,24 +142,24 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addBlog' : ActorMethod<[string, string, string, string, string], undefined>,
-  'addProject' : ActorMethod<
-    [string, string, string, [] | [ExternalBlob], [] | [bigint]],
-    undefined
-  >,
-  'addService' : ActorMethod<[string, string], undefined>,
   'addSkill' : ActorMethod<[string, bigint, SkillCategory], undefined>,
   'addTestimonial' : ActorMethod<[string, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'checkAdminStatus' : ActorMethod<[], boolean>,
   'claimAdmin' : ActorMethod<[], ClaimAdminResult>,
-  'createCategory' : ActorMethod<[string, string], undefined>,
+  'createCategory' : ActorMethod<[string, string], CategoryResult>,
+  'createProject' : ActorMethod<
+    [string, string, string, [] | [ExternalBlob], [] | [bigint]],
+    ProjectResult
+  >,
+  'createService' : ActorMethod<[string, string], ServiceResult>,
   'createSocialLink' : ActorMethod<[SocialPlatform, string, string], undefined>,
   'deleteBlog' : ActorMethod<[bigint], undefined>,
-  'deleteCategory' : ActorMethod<[bigint], undefined>,
+  'deleteCategory' : ActorMethod<[bigint], CategoryResult>,
   'deleteLead' : ActorMethod<[bigint], undefined>,
-  'deleteProject' : ActorMethod<[bigint], undefined>,
+  'deleteProject' : ActorMethod<[bigint], ProjectResult>,
   'deleteSeoSetting' : ActorMethod<[string], undefined>,
-  'deleteService' : ActorMethod<[bigint], undefined>,
+  'deleteService' : ActorMethod<[bigint], ServiceResult>,
   'deleteSkill' : ActorMethod<[bigint], undefined>,
   'deleteSocialLink' : ActorMethod<[bigint], undefined>,
   'deleteTestimonial' : ActorMethod<[bigint], undefined>,
@@ -137,19 +167,23 @@ export interface _SERVICE {
   'getBlogs' : ActorMethod<[], Array<BlogPost>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getCategory' : ActorMethod<[bigint], CategoryResult>,
   'getDashboardStats' : ActorMethod<
     [],
     { 'leadCount' : bigint, 'projectCount' : bigint, 'blogCount' : bigint }
   >,
   'getLeads' : ActorMethod<[], Array<Lead>>,
+  'getProject' : ActorMethod<[bigint], ProjectResult>,
   'getProjects' : ActorMethod<[], Array<Project>>,
   'getSeoSettingByPage' : ActorMethod<[string], [] | [SeoSetting]>,
   'getSeoSettings' : ActorMethod<[], Array<SeoSetting>>,
-  'getServices' : ActorMethod<[], Array<Service>>,
+  'getService' : ActorMethod<[bigint], ServiceResult>,
   'getTestimonials' : ActorMethod<[], Array<Testimonial>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'listCategories' : ActorMethod<[], Array<ProjectCategory>>,
+  'listCategories' : ActorMethod<[], CategoriesResult>,
+  'listProjects' : ActorMethod<[], ProjectsResult>,
+  'listServices' : ActorMethod<[], ServicesResult>,
   'listSkills' : ActorMethod<[], Array<Skill>>,
   'listSocialLinks' : ActorMethod<[], Array<SocialLink>>,
   'processContactForm' : ActorMethod<[string, string, string], undefined>,
@@ -161,12 +195,12 @@ export interface _SERVICE {
     [bigint, string, string, string, string, string],
     undefined
   >,
-  'updateCategory' : ActorMethod<[bigint, string, string], undefined>,
+  'updateCategory' : ActorMethod<[bigint, string, string], CategoryResult>,
   'updateProject' : ActorMethod<
     [bigint, string, string, string, [] | [ExternalBlob], [] | [bigint]],
-    undefined
+    ProjectResult
   >,
-  'updateService' : ActorMethod<[bigint, string, string], undefined>,
+  'updateService' : ActorMethod<[bigint, string, string], ServiceResult>,
   'updateSkill' : ActorMethod<
     [bigint, string, bigint, SkillCategory],
     undefined

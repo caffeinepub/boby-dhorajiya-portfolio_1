@@ -1,200 +1,244 @@
-import { useState } from 'react';
-import { useGetCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
-import { useIsCallerAdmin } from '../../hooks/useQueries';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import AdminGuard from '../../components/AdminGuard';
 import AdminSidebar from '../../components/AdminSidebar';
-import { Link } from '@tanstack/react-router';
-import { toast } from 'sonner';
-import { Loader2, Plus, Pencil, Trash2, Search, Tag } from 'lucide-react';
+import { useListCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../../hooks/useQueries';
+import { type ProjectCategory } from '../../backend';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { ProjectCategory } from '../../backend';
+import { Loader2, Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 10;
+const DEBOUNCE_MS = 300;
 
-function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { identity, isInitializing } = useInternetIdentity();
-  const { data: isAdmin, isLoading } = useIsCallerAdmin();
-  if (isInitializing || isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={32} /></div>;
-  if (!identity || !isAdmin) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="text-center"><h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2><Link to="/admin" className="text-primary hover:underline">Go to Login</Link></div></div>;
-  return <>{children}</>;
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
 }
 
-export default function CategoriesManagement() {
-  const { data: categories, isLoading } = useGetCategories();
-  const createMutation = useCreateCategory();
-  const updateMutation = useUpdateCategory();
-  const deleteMutation = useDeleteCategory();
+interface CategoryCardProps {
+  cat: ProjectCategory;
+  onEdit: (cat: ProjectCategory) => void;
+  onDelete: (id: bigint) => void;
+  isDeleting: boolean;
+}
 
-  const [search, setSearch] = useState('');
+const CategoryCard = memo(({ cat, onEdit, onDelete, isDeleting }: CategoryCardProps) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between py-3">
+      <div>
+        <CardTitle className="text-base">{cat.name}</CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">/{cat.slug}</p>
+      </div>
+      <div className="flex gap-2">
+        <Button size="icon" variant="ghost" onClick={() => onEdit(cat)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-destructive"
+          onClick={() => onDelete(cat.id)}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </CardHeader>
+  </Card>
+));
+
+function CategoriesManagementContent() {
+  const { data: categories = [], isLoading } = useListCategories();
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const deleteCategory = useDeleteCategory();
+
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebounce(searchInput, DEBOUNCE_MS);
   const [page, setPage] = useState(1);
-  const [editing, setEditing] = useState<ProjectCategory | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   const [form, setForm] = useState({ name: '', slug: '' });
-  const [showForm, setShowForm] = useState(false);
 
-  const filtered = (categories ?? []).filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.slug.toLowerCase().includes(search.toLowerCase())
+  const prevSearch = useRef(debouncedSearch);
+  useEffect(() => {
+    if (prevSearch.current !== debouncedSearch) {
+      setPage(1);
+      prevSearch.current = debouncedSearch;
+    }
+  }, [debouncedSearch]);
+
+  const filtered = categories.filter(
+    (c) =>
+      c.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      c.slug.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const handleSearch = (v: string) => { setSearch(v); setPage(1); };
+  const openAdd = useCallback(() => {
+    setEditingCategory(null);
+    setForm({ name: '', slug: '' });
+    setDialogOpen(true);
+  }, []);
 
-  const generateSlug = (name: string) => name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const openEdit = useCallback((cat: ProjectCategory) => {
+    setEditingCategory(cat);
+    setForm({ name: cat.name, slug: cat.slug });
+    setDialogOpen(true);
+  }, []);
 
-  const openCreate = () => { setEditing(null); setForm({ name: '', slug: '' }); setShowForm(true); };
-  const openEdit = (cat: ProjectCategory) => { setEditing(cat); setForm({ name: cat.name, slug: cat.slug }); setShowForm(true); };
+  const handleNameChange = (name: string) => {
+    setForm(f => ({
+      ...f,
+      name,
+      // Auto-generate slug only when adding new category
+      ...(editingCategory ? {} : {
+        slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
+      }),
+    }));
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.name.trim() || !form.slug.trim()) { toast.error('Name and slug are required.'); return; }
-    if (editing) {
-      updateMutation.mutate({ id: BigInt(editing.id), name: form.name, slug: form.slug }, {
-        onSuccess: () => { toast.success('Category updated!'); setShowForm(false); },
-        onError: () => toast.error('Failed to update category.'),
-      });
-    } else {
-      createMutation.mutate({ name: form.name, slug: form.slug }, {
-        onSuccess: () => { toast.success('Category created!'); setShowForm(false); },
-        onError: () => toast.error('Failed to create category.'),
-      });
+  const handleSubmit = async () => {
+    if (!form.name || !form.slug) {
+      toast.error('Name and slug are required.');
+      return;
+    }
+    try {
+      if (editingCategory) {
+        await updateCategory.mutateAsync({ id: editingCategory.id, ...form });
+        toast.success('Category updated.');
+      } else {
+        await createCategory.mutateAsync(form);
+        toast.success('Category created.');
+      }
+      setDialogOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save category.';
+      toast.error(msg);
     }
   };
 
-  const handleDelete = (id: bigint) => {
-    deleteMutation.mutate(id, {
-      onSuccess: () => toast.success('Category deleted!'),
-      onError: () => toast.error('Failed to delete category.'),
-    });
-  };
+  const handleDelete = useCallback(async (id: bigint) => {
+    if (!confirm('Delete this category?')) return;
+    try {
+      await deleteCategory.mutateAsync(id);
+      toast.success('Category deleted.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete category.';
+      toast.error(msg);
+    }
+  }, [deleteCategory]);
 
-  const isPending = createMutation.isPending || updateMutation.isPending;
+  const isSaving = createCategory.isPending || updateCategory.isPending;
 
   return (
-    <AdminGuard>
-      <div className="flex min-h-screen bg-background">
-        <AdminSidebar />
-        <main className="flex-1 p-6 lg:p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Categories</h1>
-                <p className="text-muted-foreground mt-1">Manage project categories</p>
-              </div>
-              <Button onClick={openCreate}><Plus size={16} className="mr-2" /> Add Category</Button>
+    <div className="flex min-h-screen bg-background">
+      <AdminSidebar />
+      <main className="flex-1 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Categories</h1>
+            <Button onClick={openAdd}>
+              <Plus className="mr-2 h-4 w-4" /> New Category
+            </Button>
+          </div>
+
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search categories..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
+          ) : paginated.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No categories found.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {paginated.map((cat) => (
+                <CategoryCard
+                  key={String(cat.id)}
+                  cat={cat}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  isDeleting={deleteCategory.isPending}
+                />
+              ))}
+            </div>
+          )}
 
-            {/* Form */}
-            {showForm && (
-              <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-                <h2 className="text-lg font-bold text-foreground mb-4">{editing ? 'Edit Category' : 'New Category'}</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="cat-name">Name</Label>
-                    <Input
-                      id="cat-name"
-                      value={form.name}
-                      onChange={(e) => setForm({ name: e.target.value, slug: generateSlug(e.target.value) })}
-                      placeholder="Mobile App Development"
-                      disabled={isPending}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cat-slug">Slug</Label>
-                    <Input
-                      id="cat-slug"
-                      value={form.slug}
-                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                      placeholder="mobile-app-dev"
-                      disabled={isPending}
-                    />
-                  </div>
-                  <div className="flex gap-3">
-                    <Button type="submit" disabled={isPending}>
-                      {isPending && <Loader2 size={14} className="animate-spin mr-2" />}
-                      {editing ? 'Update' : 'Create'}
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-                  </div>
-                </form>
-              </div>
-            )}
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+                Previous
+              </Button>
+              <span className="flex items-center text-sm text-muted-foreground px-2">
+                {page} / {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+                Next
+              </Button>
+            </div>
+          )}
+        </div>
+      </main>
 
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingCategory ? 'Edit Category' : 'New Category'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label>Name *</Label>
               <Input
-                placeholder="Search categories..."
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9"
+                value={form.name}
+                onChange={(e) => handleNameChange(e.target.value)}
               />
             </div>
-
-            {/* List */}
-            {isLoading ? (
-              <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
-            ) : paginated.length === 0 ? (
-              <div className="text-center text-muted-foreground py-12">
-                <Tag size={40} className="mx-auto mb-3 opacity-30" />
-                <p>No categories found.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {paginated.map((cat) => (
-                  <div key={String(cat.id)} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-foreground">{cat.name}</p>
-                      <p className="text-xs text-muted-foreground">/{cat.slug}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" onClick={() => openEdit(cat)} aria-label={`Edit ${cat.name}`}>
-                        <Pencil size={15} />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" aria-label={`Delete ${cat.name}`}>
-                            <Trash2 size={15} />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{cat.name}"? Projects in this category will have their category removed.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(BigInt(cat.id))} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex justify-center gap-2 mt-6">
-                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
-                <span className="flex items-center text-sm text-muted-foreground px-3">Page {page} of {totalPages}</span>
-                <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next</Button>
-              </div>
-            )}
+            <div className="space-y-1">
+              <Label>Slug *</Label>
+              <Input
+                value={form.slug}
+                onChange={(e) => setForm(f => ({ ...f, slug: e.target.value }))}
+              />
+            </div>
           </div>
-        </main>
-      </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={isSaving}>
+              {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+export default function CategoriesManagement() {
+  return (
+    <AdminGuard>
+      <CategoriesManagementContent />
     </AdminGuard>
   );
 }

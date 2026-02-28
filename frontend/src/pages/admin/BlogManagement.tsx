@@ -1,251 +1,293 @@
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, BookOpen, Calendar, Search } from 'lucide-react';
-import { useGetBlogs, useAddBlog, useUpdateBlog, useDeleteBlog, useIsCallerAdmin } from '../../hooks/useQueries';
-import { useInternetIdentity } from '../../hooks/useInternetIdentity';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import AdminGuard from '../../components/AdminGuard';
 import AdminSidebar from '../../components/AdminSidebar';
-import type { BlogPost } from '../../backend';
+import { useGetBlogs, useAddBlog, useUpdateBlog, useDeleteBlog } from '../../hooks/useQueries';
+import { type BlogPost } from '../../backend';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { Loader2, Plus, Pencil, Trash2, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link } from '@tanstack/react-router';
 
 const ITEMS_PER_PAGE = 10;
+const DEBOUNCE_MS = 300;
 
-interface BlogFormData {
-  title: string;
-  slug: string;
-  metaTitle: string;
-  metaDescription: string;
-  content: string;
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
 }
 
-const emptyForm: BlogFormData = { title: '', slug: '', metaTitle: '', metaDescription: '', content: '' };
-
-function slugify(text: string) {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
 }
 
-function BlogForm({
-  initial, onSubmit, onCancel, isPending,
-}: {
-  initial?: BlogFormData;
-  onSubmit: (data: BlogFormData) => void;
-  onCancel: () => void;
-  isPending: boolean;
-}) {
-  const [form, setForm] = useState<BlogFormData>(initial || emptyForm);
+interface BlogCardProps {
+  blog: BlogPost;
+  onEdit: (blog: BlogPost) => void;
+  onDelete: (id: bigint) => void;
+  isDeleting: boolean;
+}
 
-  const handleTitleChange = (title: string) => {
-    setForm((prev) => ({ ...prev, title, slug: initial ? prev.slug : slugify(title) }));
-  };
-
-  return (
-    <form onSubmit={(e) => { e.preventDefault(); onSubmit(form); }} className="space-y-4 p-6 rounded-2xl border border-border bg-card">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="blog-title">Title *</Label>
-          <Input id="blog-title" value={form.title} onChange={(e) => handleTitleChange(e.target.value)} placeholder="Post title" required />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="blog-slug">Slug *</Label>
-          <Input id="blog-slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} placeholder="post-slug" required />
-        </div>
+const BlogCard = memo(({ blog, onEdit, onDelete, isDeleting }: BlogCardProps) => (
+  <Card>
+    <CardHeader className="flex flex-row items-center justify-between py-3">
+      <div>
+        <CardTitle className="text-base">{blog.title}</CardTitle>
+        <p className="text-xs text-muted-foreground mt-1">/{blog.slug}</p>
       </div>
-      <div className="space-y-2">
-        <Label htmlFor="blog-meta-title">Meta Title</Label>
-        <Input id="blog-meta-title" value={form.metaTitle} onChange={(e) => setForm({ ...form, metaTitle: e.target.value })} placeholder="SEO title" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="blog-meta-desc">Meta Description</Label>
-        <Input id="blog-meta-desc" value={form.metaDescription} onChange={(e) => setForm({ ...form, metaDescription: e.target.value })} placeholder="SEO description" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="blog-content">Content *</Label>
-        <Textarea id="blog-content" value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} placeholder="Write your blog post content..." rows={8} required />
-      </div>
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={isPending}>
-          {isPending ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</> : 'Save Post'}
+      <div className="flex gap-2">
+        <Button size="icon" variant="ghost" onClick={() => onEdit(blog)}>
+          <Pencil className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-destructive"
+          onClick={() => onDelete(blog.id)}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
       </div>
-    </form>
-  );
-}
+    </CardHeader>
+  </Card>
+));
 
-function AdminGuard({ children }: { children: React.ReactNode }) {
-  const { identity, isInitializing } = useInternetIdentity();
-  const { data: isAdmin, isLoading } = useIsCallerAdmin();
-  if (isInitializing || isLoading) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="animate-spin text-primary" size={32} /></div>;
-  if (!identity || !isAdmin) return <div className="min-h-screen flex items-center justify-center bg-background"><div className="text-center"><h2 className="text-2xl font-bold mb-2">Access Denied</h2><Link to="/admin" className="text-primary hover:underline">Go to Login</Link></div></div>;
-  return <>{children}</>;
-}
+function BlogManagementContent() {
+  const { data: blogs = [], isLoading } = useGetBlogs();
+  const addBlog = useAddBlog();
+  const updateBlog = useUpdateBlog();
+  const deleteBlog = useDeleteBlog();
 
-function BlogContent() {
-  const { data: blogs, isLoading } = useGetBlogs();
-  const addBlogMutation = useAddBlog();
-  const updateBlogMutation = useUpdateBlog();
-  const deleteBlogMutation = useDeleteBlog();
-
-  const [showForm, setShowForm] = useState(false);
-  const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const debouncedSearch = useDebounce(searchInput, DEBOUNCE_MS);
   const [page, setPage] = useState(1);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingBlog, setEditingBlog] = useState<BlogPost | null>(null);
+  const [form, setForm] = useState({
+    title: '',
+    slug: '',
+    metaTitle: '',
+    metaDescription: '',
+    content: '',
+  });
 
-  const filtered = (blogs ?? []).filter((b) =>
-    b.title.toLowerCase().includes(search.toLowerCase()) ||
-    b.slug.toLowerCase().includes(search.toLowerCase())
+  const prevSearch = useRef(debouncedSearch);
+  useEffect(() => {
+    if (prevSearch.current !== debouncedSearch) {
+      setPage(1);
+      prevSearch.current = debouncedSearch;
+    }
+  }, [debouncedSearch]);
+
+  const filtered = blogs.filter(
+    (b) =>
+      b.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      b.slug.toLowerCase().includes(debouncedSearch.toLowerCase())
   );
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
   const paginated = filtered.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const handleSearch = (v: string) => { setSearch(v); setPage(1); };
+  const openAdd = useCallback(() => {
+    setEditingBlog(null);
+    setForm({ title: '', slug: '', metaTitle: '', metaDescription: '', content: '' });
+    setDialogOpen(true);
+  }, []);
 
-  const handleAdd = async (data: BlogFormData) => {
+  const openEdit = useCallback((blog: BlogPost) => {
+    setEditingBlog(blog);
+    setForm({
+      title: blog.title,
+      slug: blog.slug,
+      metaTitle: blog.metaTitle,
+      metaDescription: blog.metaDescription,
+      content: blog.content,
+    });
+    setDialogOpen(true);
+  }, []);
+
+  const handleTitleChange = (title: string) => {
+    setForm(f => ({
+      ...f,
+      title,
+      // Auto-generate slug only when adding new post
+      ...(editingBlog ? {} : { slug: generateSlug(title) }),
+    }));
+  };
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.slug) {
+      toast.error('Title and slug are required.');
+      return;
+    }
+    // Validate slug uniqueness for new posts
+    if (!editingBlog) {
+      const slugExists = blogs.some(b => b.slug === form.slug);
+      if (slugExists) {
+        toast.error('A blog post with this slug already exists. Please use a unique slug.');
+        return;
+      }
+    }
     try {
-      await addBlogMutation.mutateAsync(data);
-      setShowForm(false);
-      toast.success('Blog post added!');
-    } catch {
-      toast.error('Failed to add blog post.');
+      if (editingBlog) {
+        await updateBlog.mutateAsync({
+          id: editingBlog.id,
+          ...form,
+        });
+        toast.success('Blog post updated.');
+      } else {
+        await addBlog.mutateAsync(form);
+        toast.success('Blog post created.');
+      }
+      setDialogOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to save blog post.';
+      toast.error(msg);
     }
   };
 
-  const handleUpdate = async (data: BlogFormData) => {
-    if (!editingBlog) return;
+  const handleDelete = useCallback(async (id: bigint) => {
+    if (!confirm('Delete this blog post?')) return;
     try {
-      await updateBlogMutation.mutateAsync({ id: editingBlog.id, ...data });
-      setEditingBlog(null);
-      toast.success('Blog post updated!');
-    } catch {
-      toast.error('Failed to update blog post.');
-    }
-  };
-
-  const handleDelete = async (id: bigint) => {
-    try {
-      await deleteBlogMutation.mutateAsync(id);
+      await deleteBlog.mutateAsync(id);
       toast.success('Blog post deleted.');
-    } catch {
-      toast.error('Failed to delete blog post.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete blog post.';
+      toast.error(msg);
     }
-  };
+  }, [deleteBlog]);
+
+  const isSaving = addBlog.isPending || updateBlog.isPending;
 
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar />
-      <main className="flex-1 p-6 lg:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Blog Management</h1>
-              <p className="text-muted-foreground mt-1">Create and manage blog posts</p>
-            </div>
-            {!showForm && !editingBlog && (
-              <Button onClick={() => setShowForm(true)}><Plus className="w-4 h-4 mr-2" /> New Post</Button>
-            )}
+      <main className="flex-1 p-8">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold text-foreground">Blog Management</h1>
+            <Button onClick={openAdd}>
+              <Plus className="mr-2 h-4 w-4" /> New Post
+            </Button>
           </div>
 
-          {showForm && (
-            <div className="mb-6">
-              <h2 className="font-semibold mb-3">New Blog Post</h2>
-              <BlogForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} isPending={addBlogMutation.isPending} />
-            </div>
-          )}
-
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search posts..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="pl-9"
             />
           </div>
 
           {isLoading ? (
-            <div className="space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}</div>
-          ) : paginated.length === 0 ? (
-            <div className="text-center py-16">
-              <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">No blog posts yet. Write your first post!</p>
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
+          ) : paginated.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                No blog posts found.
+              </CardContent>
+            </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {paginated.map((blog) => (
-                <div key={blog.id.toString()}>
-                  {editingBlog?.id === blog.id ? (
-                    <div>
-                      <h2 className="font-semibold mb-3">Edit Post</h2>
-                      <BlogForm
-                        initial={{ title: blog.title, slug: blog.slug, metaTitle: blog.metaTitle, metaDescription: blog.metaDescription, content: blog.content }}
-                        onSubmit={handleUpdate}
-                        onCancel={() => setEditingBlog(null)}
-                        isPending={updateBlogMutation.isPending}
-                      />
-                    </div>
-                  ) : (
-                    <div className="p-5 rounded-2xl border border-border bg-card flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{blog.title}</h3>
-                        <p className="text-xs text-muted-foreground font-mono mt-0.5">/{blog.slug}</p>
-                        {blog.metaDescription && (
-                          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">{blog.metaDescription}</p>
-                        )}
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-                          <Calendar className="w-3 h-3" />
-                          {new Date(Number(blog.timestamp) / 1_000_000).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <Button size="icon" variant="ghost" onClick={() => setEditingBlog(blog)} aria-label="Edit post">
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" aria-label="Delete post">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                              <AlertDialogDescription>Are you sure you want to delete "{blog.title}"? This cannot be undone.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(blog.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <BlogCard
+                  key={String(blog.id)}
+                  blog={blog}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                  isDeleting={deleteBlog.isPending}
+                />
               ))}
             </div>
           )}
 
           {totalPages > 1 && (
             <div className="flex justify-center gap-2 mt-6">
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>Previous</Button>
-              <span className="flex items-center text-sm text-muted-foreground px-3">Page {page} of {totalPages}</span>
-              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>Next</Button>
+              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => p - 1)}>
+                Previous
+              </Button>
+              <span className="flex items-center text-sm text-muted-foreground px-2">
+                {page} / {totalPages}
+              </span>
+              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>
+                Next
+              </Button>
             </div>
           )}
         </div>
       </main>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{editingBlog ? 'Edit Blog Post' : 'New Blog Post'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label>Title *</Label>
+                <Input
+                  value={form.title}
+                  onChange={(e) => handleTitleChange(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Slug *</Label>
+                <Input
+                  value={form.slug}
+                  onChange={(e) => setForm(f => ({ ...f, slug: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Meta Title</Label>
+              <Input value={form.metaTitle} onChange={(e) => setForm(f => ({ ...f, metaTitle: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label>Meta Description</Label>
+              <Input value={form.metaDescription} onChange={(e) => setForm(f => ({ ...f, metaDescription: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label>Content</Label>
+              <Textarea
+                value={form.content}
+                onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))}
+                rows={8}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={isSaving}>
+              {isSaving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...</> : 'Save'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
 
 export default function BlogManagement() {
-  return <AdminGuard><BlogContent /></AdminGuard>;
+  return (
+    <AdminGuard>
+      <BlogManagementContent />
+    </AdminGuard>
+  );
 }

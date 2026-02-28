@@ -1,7 +1,7 @@
 import React from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useQueryClient } from '@tanstack/react-query';
-import { LogIn, LogOut, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function LoginButton() {
   const { login, clear, loginStatus, identity } = useInternetIdentity();
@@ -13,17 +13,18 @@ export default function LoginButton() {
   const handleAuth = async () => {
     if (isAuthenticated) {
       await clear();
+      // Clear all cached data including admin status on logout
       queryClient.clear();
     } else {
       try {
         await login();
-        // After successful login, invalidate admin status so AdminGuard re-checks
-        // with the newly authenticated identity
+        // Invalidate admin status so it re-checks with the new identity
         queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
         queryClient.invalidateQueries({ queryKey: ['actor'] });
       } catch (error: unknown) {
         const err = error as Error;
-        if (err?.message === 'User is already authenticated') {
+        console.error('Login error:', err);
+        if (err.message === 'User is already authenticated') {
           await clear();
           setTimeout(() => login(), 300);
         }
@@ -35,19 +36,13 @@ export default function LoginButton() {
     <button
       onClick={handleAuth}
       disabled={isLoggingIn}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 disabled:opacity-50 ${
+      className={`px-5 py-2 rounded-lg transition-colors font-medium text-sm flex items-center gap-2 ${
         isAuthenticated
-          ? 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
-          : 'bg-primary text-primary-foreground hover:opacity-90'
-      }`}
+          ? 'bg-muted hover:bg-muted/80 text-foreground'
+          : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+      } disabled:opacity-50`}
     >
-      {isLoggingIn ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : isAuthenticated ? (
-        <LogOut className="w-4 h-4" />
-      ) : (
-        <LogIn className="w-4 h-4" />
-      )}
+      {isLoggingIn && <Loader2 className="w-4 h-4 animate-spin" />}
       {isLoggingIn ? 'Logging in...' : isAuthenticated ? 'Logout' : 'Login'}
     </button>
   );
