@@ -1,46 +1,39 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:14:52.805Z",
+  "generatedAt": "2026-03-01T22:22:29.740Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
     "total": 2,
-    "implemented": 2,
+    "implemented": 0,
     "items": [
       {
-        "id": "REQ-6",
-        "summary": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/Home.tsx"
-        ]
+        "id": "REQ-8",
+        "summary": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality. The frontend must remain completely untouched.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
-        "id": "REQ-7",
-        "summary": "Restore frontend/src/pages/About.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/About.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/About.tsx"
-        ]
+        "id": "REQ-9",
+        "summary": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/pages/About.tsx",
-    "frontend/src/pages/Home.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

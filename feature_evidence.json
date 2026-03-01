@@ -1,45 +1,4 @@
 {
   "kind": "feature_evidence_report",
-  "features": [
-    {
-      "featureId": "feature-restore-frontend-src-pages-home-tsx-to-its-exact-version-12-state-using-the-user-provided-version-12-source-code-undoing-all-changes-introduced-in-versions-13-through-16-leave-all-other-files-untouched",
-      "featureTitle": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-      "files": [
-        "frontend/src/pages/Home.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-restore-frontend-src-pages-about-tsx-to-its-exact-version-12-state-using-the-user-provided-version-12-source-code-undoing-all-changes-introduced-in-versions-13-through-16-leave-all-other-files-untouched",
-      "featureTitle": "Restore frontend/src/pages/About.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-      "files": [
-        "frontend/src/pages/About.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "blob-storage@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-7"
-      ],
-      "confidence": "high"
-    }
-  ]
+  "features": []
 }

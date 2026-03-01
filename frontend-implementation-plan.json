@@ -1,39 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Restore Home.tsx and About.tsx to Version 12 State",
-  "requirements": [
-    {
-      "id": "REQ-6",
-      "summary": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state, undoing all changes from versions 13-16",
-      "acceptanceCriteria": [
-        "frontend/src/pages/Home.tsx matches the Version 12 source code provided by the user",
-        "No other files are modified as part of this change",
-        "The Home page renders correctly using the Version 12 implementation"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/Home.tsx",
-          "operation": "modify",
-          "description": "Replace the entire file content with the user-provided Version 12 source code for Home.tsx. This restores the Home page component to its exact Version 12 state, reverting all changes introduced in versions 13 through 16. Ensure all imports, component structure, hooks, and JSX match the Version 12 implementation exactly."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Restore frontend/src/pages/About.tsx to its exact Version 12 state, undoing all changes from versions 13-16",
-      "acceptanceCriteria": [
-        "frontend/src/pages/About.tsx matches the Version 12 source code provided by the user",
-        "No other files are modified as part of this change",
-        "The About page renders correctly using the Version 12 implementation"
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/About.tsx",
-          "operation": "modify",
-          "description": "Replace the entire file content with the user-provided Version 12 source code for About.tsx. This restores the About page component to its exact Version 12 state, reverting all changes introduced in versions 13 through 16. Ensure all imports, component structure, hooks, and JSX match the Version 12 implementation exactly."
-        }
-      ]
-    }
-  ]
+  "title": "Restore backend/main.mo to Version 12 state",
+  "requirements": []
 }

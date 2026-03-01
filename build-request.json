@@ -1,58 +1,58 @@
 {
   "kind": "build_request",
-  "title": "Restore Home.tsx and About.tsx to Version 12 state",
+  "title": "Restore backend/main.mo to Version 12 state",
+  "projectName": "Portfolio Backend",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-6",
-      "text": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-      "target": "frontend",
+      "id": "REQ-8",
+      "text": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality. The frontend must remain completely untouched.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-3",
-          "msg-4"
+          "msg-6",
+          "msg-8"
         ],
         "quotes": [
-          "I want to restore only this home about file from version 12",
-          "I'll restore only Home.tsx and About.tsx to their Version 12 state, leaving all other files completely untouched."
+          "restore 12 version backend code",
+          "Restoring `backend/main.mo` to its exact Version 12 state — reverting all changes from versions 13–16, including schema changes, new endpoints, and modified logic. Frontend stays untouched."
         ]
       },
       "acceptanceCriteria": [
-        "frontend/src/pages/Home.tsx matches the Version 12 source code provided by the user",
-        "No other files are modified as part of this change",
-        "The Home page renders correctly using the Version 12 implementation"
+        "backend/main.mo contains only the data types, CRUD operations, and logic that existed in Version 12",
+        "All schema changes introduced in versions 13–16 are removed from backend/main.mo",
+        "All new endpoints or actor methods added in versions 13–16 are removed from backend/main.mo",
+        "All logic modifications introduced in versions 13–16 are reverted in backend/main.mo",
+        "No frontend files are modified"
       ]
     },
     {
-      "id": "REQ-7",
-      "text": "Restore frontend/src/pages/About.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
-      "target": "frontend",
+      "id": "REQ-9",
+      "text": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-3",
-          "msg-4"
+          "msg-6"
         ],
         "quotes": [
-          "I want to restore only this home about file from version 12",
-          "I'll restore only Home.tsx and About.tsx to their Version 12 state, leaving all other files completely untouched."
+          "restore 12 version backend code"
         ]
       },
       "acceptanceCriteria": [
-        "frontend/src/pages/About.tsx matches the Version 12 source code provided by the user",
-        "No other files are modified as part of this change",
-        "The About page renders correctly using the Version 12 implementation"
+        "migration.mo is generated and handles the stable variable shape differences between version 16 and version 12",
+        "Canister can be upgraded without trapping or losing existing persisted data",
+        "Any fields or entities added in versions 13–16 that do not exist in version 12 are gracefully dropped or mapped during migration"
       ]
     }
   ],
   "constraints": [
-    "Only Home.tsx and About.tsx may be modified — all other files must remain untouched",
-    "Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui"
+    "Do not modify any frontend files",
+    "Do not modify any immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Reverting any other frontend pages, components, hooks, styles, or configuration files",
-    "Reverting the backend (backend/main.mo) to Version 12",
-    "Generating a migration.mo file",
-    "Restoring any admin pages or shared components"
+    "Modifying or reverting any frontend source files",
+    "Introducing new backend features or endpoints beyond what existed in Version 12",
+    "Changing the frontend routing, components, hooks, or styles"
   ],
   "imageRequirements": {
     "required": [],

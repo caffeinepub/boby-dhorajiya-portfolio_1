@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 9,
-  "summary": "Restore Home.tsx and About.tsx to their Version 12 state, leaving all other files untouched.",
+  "projectStateVersion": 11,
+  "summary": "Restore backend/main.mo to its exact Version 12 state, reverting all changes introduced in versions 13 through 16. Frontend remains untouched.",
   "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": true,
@@ -49,14 +49,6 @@
       "status": "pending"
     },
     {
-      "id": "AR-2",
-      "summary": "Revert the backend (backend/main.mo) to its Version 12 state by undoing all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
       "id": "AR-4",
       "summary": "Generate a migration.mo file if the backend state shape changed between Version 12 and the current version (16), ensuring stable upgrade without data loss when the canister is redeployed.",
       "reqIds": [
@@ -68,6 +60,22 @@
       "id": "AR-5",
       "summary": "Restore only Home.tsx and About.tsx to their Version 12 state using the user-provided source code, leaving all other files untouched.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality. The frontend must remain completely untouched.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
+      "reqIds": [
+        "REQ-9"
+      ],
       "status": "pending"
     }
   ],

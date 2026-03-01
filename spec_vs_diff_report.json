@@ -1,30 +1,37 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:14:52.803Z",
-  "summary": "The diff modifies frontend/src/pages/Home.tsx and frontend/src/pages/About.tsx as required by REQ-6 and REQ-7. However, two additional files were also modified: frontend-file-summaries.txt and project_state.json. The constraint states only Home.tsx and About.tsx may be modified, so these additional file changes are hallucinated features. The core requirements appear to be addressed in terms of restoring the two pages.",
-  "missing_requirements": [],
-  "hallucinated_features": [
+  "generatedAt": "2026-03-01T22:22:29.737Z",
+  "summary": "The diff only modifies project_state.json (a metadata/state tracking file). Neither backend/main.mo nor a migration.mo file were created or modified. Both REQ-8 and REQ-9 are entirely unimplemented.",
+  "missing_requirements": [
     {
-      "description": "Modification of frontend-file-summaries.txt, which was not requested and violates the constraint that only Home.tsx and About.tsx may be modified.",
-      "reason": "The build request explicitly states 'Only Home.tsx and About.tsx may be modified — all other files must remain untouched.' frontend-file-summaries.txt was modified without being requested.",
+      "id": "REQ-8",
+      "requirement": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality.",
+      "reason": "The diff shows only project_state.json was modified. backend/main.mo was not touched at all — it was neither added nor modified in the diff.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "project_state.json"
       ]
     },
     {
-      "description": "Modification of project_state.json, which was not requested and violates the constraint that only Home.tsx and About.tsx may be modified.",
-      "reason": "The build request explicitly states 'Only Home.tsx and About.tsx may be modified — all other files must remain untouched.' project_state.json was modified without being requested.",
+      "id": "REQ-9",
+      "requirement": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
+      "reason": "No migration.mo file was created. The diff shows 0 added files and only 1 modified file (project_state.json). migration.mo is entirely absent.",
       "evidence": [
         "project_state.json"
       ]
     }
   ],
-  "confidence": 0.75,
+  "hallucinated_features": [
+    {
+      "description": "project_state.json was modified to update project metadata and summary referencing the revert task",
+      "reason": "The build request does not mention updating or modifying project_state.json. This change was not requested in any requirement.",
+      "evidence": [
+        "project_state.json"
+      ]
+    }
+  ],
+  "confidence": 0.97,
   "changed_files": [
-    "frontend-file-summaries.txt",
-    "frontend/src/pages/About.tsx",
-    "frontend/src/pages/Home.tsx",
     "project_state.json"
   ]
 }
