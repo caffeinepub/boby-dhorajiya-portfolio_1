@@ -1,33 +1,47 @@
 import { useParams, Link } from '@tanstack/react-router';
-import { ArrowLeft, Calendar, Loader2, AlertCircle } from 'lucide-react';
-import { useGetBlogBySlug } from '../hooks/useQueries';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import SEOHead from '../components/SEOHead';
+import { useGetBlogPosts } from '../hooks/useQueries';
+import { Calendar, ArrowLeft } from 'lucide-react';
 
 export default function BlogPost() {
   const { slug } = useParams({ strict: false });
-  const { data: post, isLoading, error } = useGetBlogBySlug(slug ?? '');
+  const { data: posts, isLoading } = useGetBlogPosts();
+
+  const post = posts?.find(p => p.slug === slug);
+
+  const formatDate = (timestamp: bigint) => {
+    return new Date(Number(timestamp) / 1_000_000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="container mx-auto px-4 py-20 max-w-3xl">
+        <Skeleton className="h-8 w-3/4 mb-4" />
+        <Skeleton className="h-4 w-1/3 mb-8" />
+        <div className="space-y-3">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-4 w-full" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (error || !post) {
+  if (!post) {
     return (
-      <div className="min-h-screen bg-background py-16">
-        <div className="max-w-3xl mx-auto px-6 text-center py-16">
-          <div className="w-16 h-16 rounded-2xl bg-destructive/10 border border-destructive/30 flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-8 h-8 text-destructive" />
-          </div>
-          <h1 className="font-bold text-2xl mb-2">Post Not Found</h1>
-          <p className="text-muted-foreground mb-6">The blog post you're looking for doesn't exist.</p>
-          <Link to="/blog" className="inline-flex items-center gap-2 text-primary hover:underline">
-            <ArrowLeft className="w-4 h-4" /> Back to Blog
-          </Link>
-        </div>
+      <div className="container mx-auto px-4 py-20 text-center">
+        <h1 className="text-2xl font-bold text-foreground mb-4">Post Not Found</h1>
+        <p className="text-muted-foreground mb-8">The blog post you're looking for doesn't exist.</p>
+        <Button asChild>
+          <Link to="/blog">Back to Blog</Link>
+        </Button>
       </div>
     );
   }
@@ -39,40 +53,28 @@ export default function BlogPost() {
         defaultTitle={post.metaTitle || post.title}
         defaultDescription={post.metaDescription}
       />
-      <div className="min-h-screen bg-background py-16">
-        <div className="max-w-3xl mx-auto px-6">
-          <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8">
-            <ArrowLeft className="w-4 h-4" /> Back to Blog
-          </Link>
 
-          <header className="mb-8">
-            <h1 className="font-bold text-3xl md:text-4xl mb-4 leading-tight text-foreground">{post.title}</h1>
-            {post.metaDescription && (
-              <p className="text-lg text-muted-foreground leading-relaxed mb-4">{post.metaDescription}</p>
-            )}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4 text-primary" />
-              <span>
-                {new Date(Number(post.timestamp) / 1_000_000).toLocaleDateString('en-US', {
-                  year: 'numeric', month: 'long', day: 'numeric',
-                })}
-              </span>
-            </div>
-          </header>
-
-          <div className="h-px bg-border mb-8" />
-
-          <article className="text-foreground leading-relaxed whitespace-pre-wrap">
-            {post.content}
-          </article>
-
-          <div className="mt-12 pt-8 border-t border-border">
-            <Link to="/blog" className="inline-flex items-center gap-2 text-primary hover:underline">
-              <ArrowLeft className="w-4 h-4" /> Back to Blog
+      <article className="container mx-auto px-4 py-20 max-w-3xl">
+        <div className="mb-8">
+          <Button variant="ghost" asChild className="gap-2 mb-6 -ml-2">
+            <Link to="/blog">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Blog
             </Link>
+          </Button>
+          <Badge variant="secondary" className="mb-4">Article</Badge>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{post.title}</h1>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>{formatDate(post.timestamp)}</span>
           </div>
         </div>
-      </div>
+
+        <div
+          className="prose prose-neutral dark:prose-invert max-w-none"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      </article>
     </>
   );
 }

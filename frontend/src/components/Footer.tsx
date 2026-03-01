@@ -1,44 +1,73 @@
-import React from 'react';
 import { Link } from '@tanstack/react-router';
-import { Smartphone, Heart } from 'lucide-react';
+import { Code2, Heart } from 'lucide-react';
+import { useGetSocialLinks } from '../hooks/useQueries';
+import { SiGithub, SiLinkedin, SiX } from 'react-icons/si';
+
+const footerLinks = [
+  { to: '/about', label: 'About' },
+  { to: '/projects', label: 'Projects' },
+  { to: '/services', label: 'Services' },
+  { to: '/skills', label: 'Skills' },
+  { to: '/experience', label: 'Experience' },
+  { to: '/blog', label: 'Blog' },
+  { to: '/testimonials', label: 'Testimonials' },
+  { to: '/contact', label: 'Contact' },
+];
 
 export default function Footer() {
+  const { data: socialLinks } = useGetSocialLinks();
+  const activeSocialLinks = socialLinks?.filter(l => l.isActive) ?? [];
   const year = new Date().getFullYear();
-  const appId = encodeURIComponent(window.location.hostname || 'unknown-app');
+  const appId = encodeURIComponent(typeof window !== 'undefined' ? window.location.hostname : 'unknown-app');
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform) {
+      case 'github': return <SiGithub className="h-5 w-5" />;
+      case 'linkedin': return <SiLinkedin className="h-5 w-5" />;
+      case 'x': return <SiX className="h-5 w-5" />;
+      default: return null;
+    }
+  };
 
   return (
-    <footer className="bg-card border-t border-border py-10">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+    <footer className="bg-card border-t border-border mt-auto">
+      <div className="container mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand */}
-          <div>
-            <Link to="/" className="flex items-center gap-2 font-bold text-foreground mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <Smartphone className="w-4 h-4 text-primary-foreground" />
-              </div>
-              <span>App Developer</span>
+          <div className="space-y-4">
+            <Link to="/" className="flex items-center gap-2 font-bold text-xl text-primary">
+              <Code2 className="h-6 w-6" />
+              <span>Portfolio</span>
             </Link>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Mobile App Developer crafting exceptional digital experiences for iOS and Android.
+              A professional portfolio showcasing projects, skills, and experience in software development.
             </p>
+            {activeSocialLinks.length > 0 && (
+              <div className="flex items-center gap-3">
+                {activeSocialLinks.map(link => (
+                  <a
+                    key={link.id.toString()}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-muted-foreground hover:text-primary transition-colors"
+                  >
+                    {getSocialIcon(link.platform)}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-3">Quick Links</h3>
+          {/* Navigation */}
+          <div className="space-y-4">
+            <h3 className="font-semibold text-foreground">Navigation</h3>
             <ul className="space-y-2">
-              {[
-                { path: '/', label: 'Home' },
-                { path: '/about', label: 'About' },
-                { path: '/projects', label: 'Projects' },
-                { path: '/services', label: 'Services' },
-                { path: '/experience', label: 'Experience' },
-                { path: '/contact', label: 'Contact' },
-              ].map((link) => (
-                <li key={link.path}>
+              {footerLinks.map(link => (
+                <li key={link.to}>
                   <Link
-                    to={link.path}
-                    className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                    to={link.to}
+                    className="text-muted-foreground hover:text-primary transition-colors text-sm"
                   >
                     {link.label}
                   </Link>
@@ -48,29 +77,26 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div>
-            <h3 className="font-semibold text-foreground mb-3">Get In Touch</h3>
-            <p className="text-muted-foreground text-sm mb-3">
-              Available for freelance projects and collaborations.
+          <div className="space-y-4">
+            <h3 className="font-semibold text-foreground">Get In Touch</h3>
+            <p className="text-muted-foreground text-sm">
+              Interested in working together? Feel free to reach out.
             </p>
             <Link
               to="/contact"
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 text-primary hover:underline text-sm font-medium"
             >
-              Contact Me
+              Contact Me →
             </Link>
           </div>
         </div>
 
-        {/* Bottom */}
-        <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="border-t border-border mt-8 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-muted-foreground text-sm">
-            © {year} Mobile App Developer. All rights reserved.
+            © {year} Portfolio. All rights reserved.
           </p>
           <p className="text-muted-foreground text-sm flex items-center gap-1">
-            Built with{' '}
-            <Heart className="w-3.5 h-3.5 fill-primary text-primary" />{' '}
-            using{' '}
+            Built with <Heart className="h-3 w-3 fill-destructive text-destructive" /> using{' '}
             <a
               href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
               target="_blank"

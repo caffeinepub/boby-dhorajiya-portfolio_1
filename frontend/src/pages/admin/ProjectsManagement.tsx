@@ -1,15 +1,20 @@
-import React, { useState, useRef, useCallback } from 'react';
-import AdminSidebar from '../../components/AdminSidebar';
-import AdminGuard from '../../components/AdminGuard';
+import React, { useState, useRef } from 'react';
+import { Plus, Pencil, Trash2, GripVertical, Loader2, Search, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,18 +25,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Pencil, Trash2, GripVertical, Loader2, ImageIcon } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import AdminGuard from '../../components/AdminGuard';
+import AdminSidebar from '../../components/AdminSidebar';
 import {
   useGetAllProjectsAdmin,
   useGetProjectCategories,
   useAddProject,
   useUpdateProject,
   useDeleteProject,
-  useToggleProjectActive,
   useReorderProjects,
+  useToggleProjectActive,
 } from '../../hooks/useQueries';
-import { ExternalBlob, type Project, type ProjectCategory } from '../../backend';
+import { ExternalBlob } from '../../backend';
+import type { Project } from '../../backend';
 import { toast } from 'sonner';
 
 interface ProjectFormData {
@@ -41,74 +54,50 @@ interface ProjectFormData {
   categoryId: string;
   isActive: boolean;
   imageFile: File | null;
-  imagePreview: string | null;
   existingImage: ExternalBlob | null;
 }
 
-const defaultForm: ProjectFormData = {
+const emptyForm: ProjectFormData = {
   title: '',
   description: '',
   url: '',
-  categoryId: 'none',
+  categoryId: '',
   isActive: true,
   imageFile: null,
-  imagePreview: null,
   existingImage: null,
 };
 
 export default function ProjectsManagement() {
-  return (
-    <AdminGuard>
-      <ProjectsManagementInner />
-    </AdminGuard>
-  );
-}
-
-function ProjectsManagementInner() {
-  const { data: projects = [], isLoading: projectsLoading } = useGetAllProjectsAdmin();
-  const { data: categories = [] } = useGetProjectCategories();
-
+  const { data: projects, isLoading: projectsLoading } = useGetAllProjectsAdmin();
+  const { data: categories } = useGetProjectCategories();
   const addProject = useAddProject();
   const updateProject = useUpdateProject();
   const deleteProject = useDeleteProject();
-  const toggleActive = useToggleProjectActive();
   const reorderProjects = useReorderProjects();
+  const toggleActive = useToggleProjectActive();
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
-  const [form, setForm] = useState<ProjectFormData>(defaultForm);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-
-  // Drag-and-drop state
-  const [localProjects, setLocalProjects] = useState<Project[]>([]);
-  const [draggedId, setDraggedId] = useState<bigint | null>(null);
-  const [dragOverId, setDragOverId] = useState<bigint | null>(null);
-  const dragNodeRef = useRef<HTMLDivElement | null>(null);
-
-  // Sync localProjects with fetched projects (sorted by order)
-  const sortedProjects = React.useMemo(
-    () => [...projects].sort((a, b) => Number(a.order) - Number(b.order)),
-    [projects],
-  );
-
-  // Use localProjects for display if we have them, otherwise use sorted
-  const displayProjects = localProjects.length > 0 ? localProjects : sortedProjects;
-
-  // Keep localProjects in sync when server data changes (but not during drag)
-  React.useEffect(() => {
-    if (draggedId === null) {
-      setLocalProjects([...sortedProjects]);
-    }
-  }, [sortedProjects, draggedId]);
-
+  const [deletingId, setDeletingId] = useState<bigint | null>(null);
+  const [form, setForm] = useState<ProjectFormData>(emptyForm);
+  const [localProjects, setLocalProjects] = useState<Project[] | null>(null);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const openAdd = () => {
+  const displayProjects = (localProjects ?? projects ?? [])
+    .filter(p =>
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      p.description.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) => Number(a.order) - Number(b.order));
+
+  const openCreate = () => {
     setEditingProject(null);
-    setForm(defaultForm);
-    setUploadProgress(0);
-    setIsFormOpen(true);
+    setForm(emptyForm);
+    setDialogOpen(true);
   };
 
   const openEdit = (project: Project) => {
@@ -117,38 +106,33 @@ function ProjectsManagementInner() {
       title: project.title,
       description: project.description,
       url: project.url,
-      categoryId: project.categoryId ? project.categoryId.toString() : 'none',
+      categoryId: project.categoryId ? project.categoryId.toString() : '',
       isActive: project.isActive,
       imageFile: null,
-      imagePreview: project.image ? project.image.getDirectURL() : null,
       existingImage: project.image ?? null,
     });
-    setUploadProgress(0);
-    setIsFormOpen(true);
+    setDialogOpen(true);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const preview = URL.createObjectURL(file);
-    setForm((f) => ({ ...f, imageFile: file, imagePreview: preview }));
+  const openDelete = (id: bigint) => {
+    setDeletingId(id);
+    setDeleteDialogOpen(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim()) {
-      toast.error('Title is required');
-      return;
-    }
 
     let imageBlob: ExternalBlob | null = form.existingImage;
 
     if (form.imageFile) {
       const bytes = new Uint8Array(await form.imageFile.arrayBuffer());
-      imageBlob = ExternalBlob.fromBytes(bytes).withUploadProgress((pct) => setUploadProgress(pct));
+      imageBlob = ExternalBlob.fromBytes(bytes).withUploadProgress(pct => setUploadProgress(pct));
     }
 
-    const categoryId = form.categoryId && form.categoryId !== 'none' ? BigInt(form.categoryId) : null;
+    const categoryId = form.categoryId ? BigInt(form.categoryId) : null;
+    const order = editingProject
+      ? editingProject.order
+      : BigInt((projects?.length ?? 0));
 
     if (editingProject) {
       await updateProject.mutateAsync({
@@ -158,316 +142,236 @@ function ProjectsManagementInner() {
         url: form.url,
         image: imageBlob,
         categoryId,
-        order: editingProject.order,
+        order,
         isActive: form.isActive,
       });
+      toast.success('Project updated!');
     } else {
-      const maxOrder = displayProjects.length > 0 ? Math.max(...displayProjects.map((p) => Number(p.order))) + 1 : 0;
       await addProject.mutateAsync({
         title: form.title,
         description: form.description,
         url: form.url,
         image: imageBlob,
         categoryId,
-        order: BigInt(maxOrder),
+        order,
         isActive: form.isActive,
       });
+      toast.success('Project added!');
     }
 
-    setIsFormOpen(false);
-    setForm(defaultForm);
+    setLocalProjects(null);
     setUploadProgress(0);
+    setDialogOpen(false);
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
-    await deleteProject.mutateAsync(deleteTarget.id);
-    setDeleteTarget(null);
+    if (deletingId === null) return;
+    await deleteProject.mutateAsync(deletingId);
+    setLocalProjects(null);
+    setDeleteDialogOpen(false);
+    setDeletingId(null);
+    toast.success('Project deleted!');
   };
 
   const handleToggleActive = async (project: Project) => {
     await toggleActive.mutateAsync(project);
+    toast.success(project.isActive ? 'Project deactivated' : 'Project activated');
   };
 
-  // ── Drag-and-drop handlers ────────────────────────────────────────────────
-
-  const handleDragStart = useCallback(
-    (e: React.DragEvent<HTMLDivElement>, project: Project) => {
-      setDraggedId(project.id);
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', project.id.toString());
-      dragNodeRef.current = e.currentTarget;
-    },
-    [],
-  );
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent<HTMLDivElement>, project: Project) => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      if (draggedId === null || draggedId === project.id) return;
-      setDragOverId(project.id);
-
-      setLocalProjects((prev) => {
-        const draggedIdx = prev.findIndex((p) => p.id === draggedId);
-        const targetIdx = prev.findIndex((p) => p.id === project.id);
-        if (draggedIdx === -1 || targetIdx === -1) return prev;
-        const next = [...prev];
-        const [removed] = next.splice(draggedIdx, 1);
-        next.splice(targetIdx, 0, removed);
-        return next;
-      });
-    },
-    [draggedId],
-  );
-
-  const handleDragEnd = useCallback(async () => {
-    setDraggedId(null);
-    setDragOverId(null);
-
-    // Save new order to backend
-    if (localProjects.length > 0) {
-      const orderedIds = localProjects.map((p) => p.id);
-      await reorderProjects.mutateAsync(orderedIds);
-    }
-  }, [localProjects, reorderProjects]);
-
-  const handleDragLeave = useCallback(() => {
-    setDragOverId(null);
-  }, []);
-
-  const getCategoryName = (categoryId?: bigint) => {
-    if (!categoryId) return null;
-    const cat = categories.find((c: ProjectCategory) => c.id === categoryId);
-    return cat?.name ?? null;
+  // Drag and drop reordering
+  const handleDragStart = (index: number) => {
+    setDragIndex(index);
   };
 
-  const isMutating =
-    addProject.isPending || updateProject.isPending || deleteProject.isPending;
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === index) return;
+
+    const current = localProjects ?? [...(projects ?? [])].sort((a, b) => Number(a.order) - Number(b.order));
+    const reordered = [...current];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(index, 0, moved);
+    setLocalProjects(reordered);
+    setDragIndex(index);
+  };
+
+  const handleDrop = async () => {
+    if (!localProjects) return;
+    const orderedIds = localProjects.map(p => p.id);
+    await reorderProjects.mutateAsync(orderedIds);
+    setDragIndex(null);
+  };
+
+  const isMutating = addProject.isPending || updateProject.isPending;
 
   return (
-    <TooltipProvider>
+    <AdminGuard>
       <div className="flex min-h-screen bg-background">
         <AdminSidebar />
-        <main className="flex-1 p-6 lg:p-8">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground">Projects</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage your portfolio projects. Drag rows to reorder.
-              </p>
+        <main className="flex-1 p-6 md:p-8">
+          <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Projects Management</h1>
+                <p className="text-muted-foreground mt-1">Manage your portfolio projects. Drag to reorder.</p>
+              </div>
+              <Button onClick={openCreate} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Project
+              </Button>
             </div>
-            <Button onClick={openAdd} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Project
-            </Button>
-          </div>
 
-          {/* Projects List */}
-          {projectsLoading ? (
-            <div className="space-y-3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full rounded-xl" />
-              ))}
+            {/* Search */}
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search projects..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          ) : displayProjects.length === 0 ? (
-            <div className="text-center py-20 text-muted-foreground">
-              <p className="text-lg">No projects yet.</p>
-              <p className="text-sm mt-1">Click "Add Project" to get started.</p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {displayProjects.map((project) => {
-                const isDragging = draggedId === project.id;
-                const isDragOver = dragOverId === project.id;
-                const categoryName = getCategoryName(project.categoryId);
 
-                return (
-                  <div
-                    key={project.id.toString()}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, project)}
-                    onDragOver={(e) => handleDragOver(e, project)}
-                    onDragEnd={handleDragEnd}
-                    onDragLeave={handleDragLeave}
-                    className={`
-                      flex items-center gap-3 p-4 rounded-xl border bg-card transition-all
-                      ${isDragging ? 'opacity-40 scale-95 border-primary' : ''}
-                      ${isDragOver && !isDragging ? 'border-primary bg-primary/5 shadow-md' : ''}
-                      ${!project.isActive ? 'opacity-60' : ''}
-                    `}
-                  >
-                    {/* Drag Handle */}
+            {/* Projects List */}
+            {projectsLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="border border-border rounded-xl p-4">
+                    <Skeleton className="h-5 w-1/3 mb-2" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                ))}
+              </div>
+            ) : displayProjects.length === 0 ? (
+              <div className="text-center py-16 text-muted-foreground">
+                {search ? 'No projects match your search.' : 'No projects yet. Add your first one!'}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {displayProjects.map((project, index) => {
+                  const category = categories?.find(c => c.id === project.categoryId);
+                  return (
                     <div
-                      className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
-                      title="Drag to reorder"
+                      key={String(project.id)}
+                      draggable
+                      onDragStart={() => handleDragStart(index)}
+                      onDragOver={(e) => handleDragOver(e, index)}
+                      onDrop={handleDrop}
+                      className="border border-border rounded-xl p-4 bg-card flex items-center gap-4 cursor-grab active:cursor-grabbing"
                     >
-                      <GripVertical className="w-5 h-5" />
-                    </div>
+                      <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0" />
 
-                    {/* Project Image */}
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0 flex items-center justify-center">
-                      {project.image ? (
+                      {project.image && (
                         <img
                           src={project.image.getDirectURL()}
                           alt={project.title}
-                          className="w-full h-full object-cover"
+                          className="w-16 h-12 object-cover rounded-lg flex-shrink-0"
                         />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
                       )}
-                    </div>
 
-                    {/* Project Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-foreground truncate">{project.title}</span>
-                        {/* Status Badge */}
-                        <Badge
-                          variant={project.isActive ? 'default' : 'secondary'}
-                          className={`text-xs flex-shrink-0 ${
-                            project.isActive
-                              ? 'bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/30'
-                              : 'bg-muted text-muted-foreground border-border'
-                          }`}
-                        >
-                          {project.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                        {categoryName && (
-                          <Badge variant="outline" className="text-xs flex-shrink-0">
-                            {categoryName}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground">{project.title}</h3>
+                          <Badge variant={project.isActive ? 'default' : 'secondary'}>
+                            {project.isActive ? 'Active' : 'Inactive'}
                           </Badge>
+                          {category && (
+                            <Badge variant="outline">{category.name}</Badge>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground text-sm mt-0.5 line-clamp-1">{project.description}</p>
+                        {project.url && (
+                          <a
+                            href={project.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary text-xs hover:underline flex items-center gap-1 mt-0.5"
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <ExternalLink className="w-3 h-3" /> {project.url}
+                          </a>
                         )}
                       </div>
-                      {project.description && (
-                        <p className="text-sm text-muted-foreground truncate mt-0.5">
-                          {project.description}
-                        </p>
-                      )}
-                      {project.url && (
-                        <p className="text-xs text-primary truncate">{project.url}</p>
-                      )}
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Switch
+                          checked={project.isActive}
+                          onCheckedChange={() => handleToggleActive(project)}
+                          disabled={toggleActive.isPending}
+                        />
+                        <Button size="icon" variant="ghost" onClick={() => openEdit(project)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => openDelete(project.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-
-                    {/* Controls */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {/* Active Toggle */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div>
-                            <Switch
-                              checked={project.isActive}
-                              onCheckedChange={() => handleToggleActive(project)}
-                              disabled={toggleActive.isPending}
-                              aria-label={project.isActive ? 'Deactivate project' : 'Activate project'}
-                            />
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {project.isActive ? 'Deactivate project' : 'Activate project'}
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* Edit */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(project)}
-                            disabled={isMutating}
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Edit project</TooltipContent>
-                      </Tooltip>
-
-                      {/* Delete */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setDeleteTarget(project)}
-                            disabled={isMutating}
-                            className="text-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Delete project</TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Reorder saving indicator */}
-          {reorderProjects.isPending && (
-            <div className="fixed bottom-4 right-4 flex items-center gap-2 bg-card border rounded-lg px-4 py-2 shadow-lg text-sm text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Saving order…
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </main>
       </div>
 
       {/* Add/Edit Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingProject ? 'Edit Project' : 'Add Project'}</DialogTitle>
+            <DialogDescription>
+              {editingProject ? 'Update the project details.' : 'Add a new project to your portfolio.'}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title *</Label>
+            <div className="space-y-1">
+              <Label htmlFor="proj-title">Title *</Label>
               <Input
-                id="title"
+                id="proj-title"
                 value={form.title}
-                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Project title"
                 required
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+            <div className="space-y-1">
+              <Label htmlFor="proj-desc">Description</Label>
               <Textarea
-                id="description"
+                id="proj-desc"
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 placeholder="Project description"
                 rows={3}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="url">URL</Label>
+            <div className="space-y-1">
+              <Label htmlFor="proj-url">URL</Label>
               <Input
-                id="url"
+                id="proj-url"
                 value={form.url}
-                onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+                onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
                 placeholder="https://..."
-                type="url"
               />
             </div>
-
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label>Category</Label>
               <Select
                 value={form.categoryId}
-                onValueChange={(val) => setForm((f) => ({ ...f, categoryId: val }))}
+                onValueChange={val => setForm(f => ({ ...f, categoryId: val }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No category</SelectItem>
-                  {categories.map((cat: ProjectCategory) => (
+                  <SelectItem value="">No category</SelectItem>
+                  {categories?.map(cat => (
                     <SelectItem key={cat.id.toString()} value={cat.id.toString()}>
                       {cat.name}
                     </SelectItem>
@@ -475,61 +379,42 @@ function ProjectsManagementInner() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-2">
-              <Label>Project Image</Label>
-              <div
-                className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                {form.imagePreview ? (
-                  <img
-                    src={form.imagePreview}
-                    alt="Preview"
-                    className="max-h-40 mx-auto rounded object-contain"
-                  />
-                ) : (
-                  <div className="text-muted-foreground">
-                    <ImageIcon className="w-8 h-8 mx-auto mb-2" />
-                    <p className="text-sm">Click to upload image</p>
-                  </div>
-                )}
-              </div>
-              <input
-                ref={fileInputRef}
+            <div className="space-y-1">
+              <Label htmlFor="proj-image">Image</Label>
+              <Input
+                id="proj-image"
                 type="file"
                 accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
+                ref={fileInputRef}
+                onChange={e => setForm(f => ({ ...f, imageFile: e.target.files?.[0] ?? null }))}
               />
+              {form.existingImage && !form.imageFile && (
+                <p className="text-xs text-muted-foreground">Current image will be kept unless you select a new one.</p>
+              )}
               {uploadProgress > 0 && uploadProgress < 100 && (
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className="bg-primary h-2 rounded-full transition-all"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
                 </div>
               )}
             </div>
-
             <div className="flex items-center gap-3">
               <Switch
-                id="isActive"
+                id="proj-active"
                 checked={form.isActive}
-                onCheckedChange={(checked) => setForm((f) => ({ ...f, isActive: checked }))}
+                onCheckedChange={val => setForm(f => ({ ...f, isActive: val }))}
               />
-              <Label htmlFor="isActive">Active (visible on public site)</Label>
+              <Label htmlFor="proj-active">Active (visible on portfolio)</Label>
             </div>
-
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsFormOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={addProject.isPending || updateProject.isPending}>
-                {(addProject.isPending || updateProject.isPending) && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Button type="submit" disabled={isMutating}>
+                {isMutating ? (
+                  <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</>
+                ) : (
+                  editingProject ? 'Update' : 'Add'
                 )}
-                {editingProject ? 'Save Changes' : 'Add Project'}
               </Button>
             </DialogFooter>
           </form>
@@ -537,12 +422,12 @@ function ProjectsManagementInner() {
       </Dialog>
 
       {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteTarget?.title}"? This action cannot be undone.
+              Are you sure you want to delete this project? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -552,7 +437,7 @@ function ProjectsManagementInner() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteProject.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Deleting...</>
               ) : (
                 'Delete'
               )}
@@ -560,6 +445,6 @@ function ProjectsManagementInner() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </TooltipProvider>
+    </AdminGuard>
   );
 }

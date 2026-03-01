@@ -10,19 +10,24 @@ interface SEOHeadProps {
 export default function SEOHead({ page, defaultTitle, defaultDescription }: SEOHeadProps) {
   const { data: seoSetting } = useGetSeoSettingByPage(page);
 
-  const title = seoSetting?.metaTitle || defaultTitle || 'Boby Dhorajiya – Flutter & React Native Developer';
-  const description = seoSetting?.metaDescription || defaultDescription || 'Mobile app developer specializing in Flutter, React Native & mobile security.';
-
   useEffect(() => {
-    document.title = title;
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement('meta');
-      metaDesc.setAttribute('name', 'description');
-      document.head.appendChild(metaDesc);
+    const title = seoSetting?.metaTitle || defaultTitle;
+    const description = seoSetting?.metaDescription || defaultDescription;
+
+    if (title) {
+      document.title = title;
     }
-    metaDesc.setAttribute('content', description);
-  }, [title, description]);
+
+    if (description) {
+      let metaDesc = document.querySelector('meta[name="description"]');
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', description);
+    }
+  }, [seoSetting, defaultTitle, defaultDescription]);
 
   return null;
 }

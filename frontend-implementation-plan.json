@@ -1,197 +1,216 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Restore and redeploy Version 12",
+  "title": "Restore frontend app to Version 12 state",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive)",
+      "id": "REQ-5",
+      "summary": "Revert all frontend source files to their Version 12 state by undoing all changes introduced in versions 13 through 16",
       "acceptanceCriteria": [
-        "All frontend files match the state they were in at Version 12",
-        "All backend files match the state they were in at Version 12",
-        "No code or logic from versions 13–16 remains in the codebase",
-        "The application builds and runs successfully after the restore"
+        "All frontend pages match their Version 12 implementations with no code from versions 13–16 present.",
+        "All admin pages match their Version 12 implementations.",
+        "All non-immutable components (Navigation, Footer, Layout, AdminSidebar, AdminGuard, LoginButton, ProfileSetup, SEOHead, ThemeToggle) match their Version 12 state.",
+        "Non-immutable hooks (useActorWrapper.ts, useQueries.ts) match their Version 12 state.",
+        "Global stylesheets (frontend/src/index.css, frontend/index.css) match their Version 12 state.",
+        "Tailwind config and other configuration files match their Version 12 state.",
+        "Immutable paths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui) are unchanged.",
+        "The frontend application builds without errors."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Restore the routing configuration, layout structure, and route registrations to match Version 12 state, removing any routes or layout changes introduced in versions 13-16"
-        },
-        {
-          "path": "frontend/src/components/Navigation.tsx",
-          "operation": "modify",
-          "description": "Restore navigation links, styling, and structure to Version 12 state, reverting any menu items, styling changes, or structural modifications added in later versions"
-        },
-        {
-          "path": "frontend/src/components/Footer.tsx",
-          "operation": "modify",
-          "description": "Restore footer content, links, and layout to Version 12 state, removing any content or structural changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/components/AdminSidebar.tsx",
-          "operation": "modify",
-          "description": "Restore admin sidebar navigation items and structure to Version 12 state, removing any new admin sections or menu modifications introduced in versions 13-16"
-        },
-        {
           "path": "frontend/src/pages/Home.tsx",
           "operation": "modify",
-          "description": "Restore homepage hero section, services preview, projects preview, and all content to Version 12 state, reverting any layout, content, or feature changes from versions 13-16"
+          "description": "Restore Home.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component renders the hero section, services preview, and featured projects as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/About.tsx",
           "operation": "modify",
-          "description": "Restore About page skills display, testimonials section, and content structure to Version 12 state, removing any additions or modifications from later versions"
-        },
-        {
-          "path": "frontend/src/pages/Projects.tsx",
-          "operation": "modify",
-          "description": "Restore Projects page gallery layout, category filtering, and project card rendering to Version 12 state, reverting any UI or functionality changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/pages/Services.tsx",
-          "operation": "modify",
-          "description": "Restore Services page category tabs, service card layout, and filtering logic to Version 12 state, removing any changes introduced in versions 13-16"
+          "description": "Restore About.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays profile hero, skill categories, and testimonials as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/Blog.tsx",
           "operation": "modify",
-          "description": "Restore Blog listing page post card layout and navigation to Version 12 state, reverting any styling or structural changes from later versions"
+          "description": "Restore Blog.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component fetches and displays blog posts as cards with Version 12 structure."
         },
         {
           "path": "frontend/src/pages/BlogPost.tsx",
           "operation": "modify",
-          "description": "Restore individual blog post detail page rendering and layout to Version 12 state, removing any content or styling changes from versions 13-16"
+          "description": "Restore BlogPost.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component fetches and displays individual blog post content as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/Contact.tsx",
           "operation": "modify",
-          "description": "Restore Contact page form fields, validation, submission logic, and contact information display to Version 12 state, reverting any form or layout modifications from versions 13-16"
+          "description": "Restore Contact.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component includes the contact form and static contact info cards as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/Experience.tsx",
           "operation": "modify",
-          "description": "Restore Experience timeline page layout and content rendering to Version 12 state, removing any changes introduced in later versions"
+          "description": "Restore Experience.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays work experience timeline as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/Projects.tsx",
+          "operation": "modify",
+          "description": "Restore Projects.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component renders project gallery with category filtering as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/Services.tsx",
+          "operation": "modify",
+          "description": "Restore Services.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays services with category filtering as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/Skills.tsx",
           "operation": "modify",
-          "description": "Restore Skills page category grouping and progress bar display to Version 12 state, reverting any visualization or layout changes from versions 13-16"
+          "description": "Restore Skills.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component groups skills by category with progress bars as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/Testimonials.tsx",
           "operation": "modify",
-          "description": "Restore Testimonials page grid layout and testimonial card rendering to Version 12 state, removing any styling or structural changes from later versions"
+          "description": "Restore Testimonials.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays testimonials in responsive grid as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/NotFound.tsx",
+          "operation": "modify",
+          "description": "Restore NotFound.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays 404 page as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/admin/Dashboard.tsx",
           "operation": "modify",
-          "description": "Restore admin dashboard summary stats and navigation cards to Version 12 state, reverting any new metrics or layout changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/pages/admin/ProjectsManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin projects management CRUD operations, drag-and-drop functionality, and form fields to Version 12 state, removing any feature additions or modifications from later versions"
-        },
-        {
-          "path": "frontend/src/pages/admin/CategoriesManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin categories management CRUD operations and reordering controls to Version 12 state, reverting any changes from versions 13-16"
+          "description": "Restore Dashboard.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays admin summary stats and navigation cards as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/admin/BlogManagement.tsx",
           "operation": "modify",
-          "description": "Restore admin blog management CRUD operations, search, and pagination to Version 12 state, removing any functionality or UI changes from later versions"
+          "description": "Restore BlogManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component includes CRUD operations for blog posts with search and pagination as defined in Version 12."
         },
         {
-          "path": "frontend/src/pages/admin/SkillsManagement.tsx",
+          "path": "frontend/src/pages/admin/CategoriesManagement.tsx",
           "operation": "modify",
-          "description": "Restore admin skills management CRUD operations and form fields to Version 12 state, reverting any changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/pages/admin/TestimonialsManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin testimonials management CRUD operations to Version 12 state, removing any modifications from later versions"
+          "description": "Restore CategoriesManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages project categories with reordering controls as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/admin/ExperienceManagement.tsx",
           "operation": "modify",
-          "description": "Restore admin experience management CRUD operations and dynamic responsibility fields to Version 12 state, reverting any changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/pages/admin/ServicesManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin services management CRUD operations and dialog forms to Version 12 state, removing any functionality changes from later versions"
-        },
-        {
-          "path": "frontend/src/pages/admin/LeadsManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin leads management view and delete functionality to Version 12 state, reverting any UI or feature changes from versions 13-16"
-        },
-        {
-          "path": "frontend/src/pages/admin/SeoManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin SEO management CRUD operations and per-page settings to Version 12 state, removing any changes from later versions"
-        },
-        {
-          "path": "frontend/src/pages/admin/SocialLinksManagement.tsx",
-          "operation": "modify",
-          "description": "Restore admin social links management CRUD operations to Version 12 state, reverting any modifications from versions 13-16"
+          "description": "Restore ExperienceManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages work experience with dynamic responsibility fields as defined in Version 12."
         },
         {
           "path": "frontend/src/pages/admin/Help.tsx",
           "operation": "modify",
-          "description": "Restore admin help page accordion guide content to Version 12 state, removing any documentation updates from later versions"
+          "description": "Restore Help.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays accordion-based admin guide as defined in Version 12."
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/pages/admin/LeadsManagement.tsx",
           "operation": "modify",
-          "description": "Restore React Query hooks for all backend operations to Version 12 state, reverting any query modifications, new hooks, or mutation logic changes from versions 13-16"
+          "description": "Restore LeadsManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component displays and manages contact leads with search and pagination as defined in Version 12."
         },
         {
-          "path": "frontend/src/components/SEOHead.tsx",
+          "path": "frontend/src/pages/admin/ProjectsManagement.tsx",
           "operation": "modify",
-          "description": "Restore SEO head component fetching and meta tag updates to Version 12 state, removing any changes from later versions"
+          "description": "Restore ProjectsManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages projects with drag-and-drop reordering and image upload as defined in Version 12."
         },
         {
-          "path": "frontend/src/components/ProfileSetup.tsx",
+          "path": "frontend/src/pages/admin/SeoManagement.tsx",
           "operation": "modify",
-          "description": "Restore profile setup modal dialog to Version 12 state, reverting any form field or validation changes from versions 13-16"
+          "description": "Restore SeoManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages per-page SEO settings with CRUD operations as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/admin/ServicesManagement.tsx",
+          "operation": "modify",
+          "description": "Restore ServicesManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages services with search and pagination as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/admin/SkillsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore SkillsManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages skills with category fields as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/admin/SocialLinksManagement.tsx",
+          "operation": "modify",
+          "description": "Restore SocialLinksManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages social links with CRUD operations as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/pages/admin/TestimonialsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore TestimonialsManagement.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component manages testimonials with search and pagination as defined in Version 12."
         },
         {
           "path": "frontend/src/components/AdminGuard.tsx",
           "operation": "modify",
-          "description": "Restore admin route guard logic and authentication checks to Version 12 state, removing any authorization changes from later versions"
+          "description": "Restore AdminGuard.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component checks authentication and admin status as defined in Version 12."
         },
         {
-          "path": "frontend/src/components/LoginButton.tsx",
+          "path": "frontend/src/components/AdminSidebar.tsx",
           "operation": "modify",
-          "description": "Restore login/logout button authentication flow to Version 12 state, reverting any styling or logic changes from versions 13-16"
+          "description": "Restore AdminSidebar.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component renders admin navigation with active-state highlighting as defined in Version 12."
         },
         {
-          "path": "frontend/src/components/ThemeToggle.tsx",
+          "path": "frontend/src/components/Footer.tsx",
           "operation": "modify",
-          "description": "Restore theme toggle button implementation to Version 12 state, removing any changes from later versions"
+          "description": "Restore Footer.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component renders footer with brand info, links, and attribution as defined in Version 12."
         },
         {
           "path": "frontend/src/components/Layout.tsx",
           "operation": "modify",
-          "description": "Restore layout wrapper component structure to Version 12 state, reverting any layout modifications from versions 13-16"
+          "description": "Restore Layout.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component wraps content with Navigation and Footer as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/components/LoginButton.tsx",
+          "operation": "modify",
+          "description": "Restore LoginButton.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component handles Internet Identity login/logout with cache invalidation as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/components/Navigation.tsx",
+          "operation": "modify",
+          "description": "Restore Navigation.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component renders sticky navigation with desktop and mobile menus as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/components/ProfileSetup.tsx",
+          "operation": "modify",
+          "description": "Restore ProfileSetup.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component prompts new users for profile setup as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/components/SEOHead.tsx",
+          "operation": "modify",
+          "description": "Restore SEOHead.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component fetches and updates document title and meta tags as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/components/ThemeToggle.tsx",
+          "operation": "modify",
+          "description": "Restore ThemeToggle.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the component toggles between light and dark themes as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/hooks/useActorWrapper.ts",
+          "operation": "modify",
+          "description": "Restore useActorWrapper.ts to its Version 12 implementation, removing any changes from versions 13-16. Verify the hook provides safe actor wrapper with error handling as defined in Version 12."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Restore useQueries.ts to its Version 12 implementation, removing any changes from versions 13-16. Verify the hook provides React Query hooks for all backend operations as defined in Version 12."
         },
         {
           "path": "frontend/src/index.css",
           "operation": "modify",
-          "description": "Restore global stylesheet CSS custom properties, Tailwind imports, theme colors, and utility classes to Version 12 state, removing any styling additions or modifications from versions 13-16"
+          "description": "Restore frontend/src/index.css to its Version 12 implementation, removing any changes from versions 13-16. Verify the stylesheet includes OKLCH color tokens and utility classes as defined in Version 12."
+        },
+        {
+          "path": "frontend/index.css",
+          "operation": "modify",
+          "description": "Restore frontend/index.css to its Version 12 implementation, removing any changes from versions 13-16. Verify the global CSS defines theme color tokens as defined in Version 12."
         },
         {
           "path": "frontend/tailwind.config.js",
           "operation": "modify",
-          "description": "Restore Tailwind configuration color tokens, fonts, shadows, and plugins to Version 12 state, reverting any config changes from later versions"
+          "description": "Restore tailwind.config.js to its Version 12 implementation, removing any changes from versions 13-16. Verify the configuration includes custom fonts, OKLCH colors, and plugins as defined in Version 12."
         },
         {
-          "path": "frontend/src/utils/urlParams.ts",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Restore URL parameter extraction utilities to Version 12 state, removing any utility function changes from versions 13-16"
+          "description": "Restore frontend/index.html to its Version 12 implementation, removing any changes from versions 13-16. Verify the HTML entry point structure matches Version 12."
+        },
+        {
+          "path": "frontend/src/App.tsx",
+          "operation": "modify",
+          "description": "Restore frontend/src/App.tsx to its Version 12 implementation, removing any changes from versions 13-16. Verify the router setup with layout groups and lazy-loaded pages matches Version 12."
         }
       ]
     }

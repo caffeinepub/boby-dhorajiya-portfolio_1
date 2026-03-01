@@ -1,139 +1,151 @@
 import { useState } from 'react';
-import { useProcessContactForm } from '../hooks/useQueries';
-import { toast } from 'sonner';
-import { Mail, MapPin, Clock, Send, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Loader2, Mail, MapPin, Clock } from 'lucide-react';
+import SEOHead from '../components/SEOHead';
+import { useSubmitLead } from '../hooks/useQueries';
+import { toast } from 'sonner';
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const { mutate, isPending } = useProcessContactForm();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const submitLead = useSubmitLead();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
-      toast.error('Please fill in all fields.');
-      return;
+    try {
+      await submitLead.mutateAsync({ name, email, message });
+      toast.success('Message sent! I\'ll get back to you soon.');
+      setName('');
+      setEmail('');
+      setMessage('');
+    } catch {
+      toast.error('Failed to send message. Please try again.');
     }
-    mutate(form, {
-      onSuccess: () => {
-        toast.success('Message sent! I\'ll get back to you soon.');
-        setForm({ name: '', email: '', message: '' });
-      },
-      onError: () => toast.error('Failed to send message. Please try again.'),
-    });
   };
 
   return (
-    <div className="min-h-screen bg-background py-16">
-      <div className="max-w-5xl mx-auto px-6">
-        <div className="text-center mb-14">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4">Get In Touch</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Have a project in mind? Let's talk. I'm available for freelance work and full-time opportunities.
+    <>
+      <SEOHead page="contact" defaultTitle="Contact - Portfolio" defaultDescription="Get in touch to discuss your project or collaboration." />
+
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 text-center space-y-4 max-w-3xl">
+          <Badge variant="secondary">Contact</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">Get In Touch</h1>
+          <p className="text-lg text-muted-foreground">
+            Have a project in mind? Let's talk about how we can work together.
           </p>
         </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
-          <div>
-            <h2 className="text-2xl font-bold text-foreground mb-6">Contact Information</h2>
-            <div className="space-y-5">
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Mail size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Email</p>
-                  <a href="mailto:dhorajiyaboby8@gmail.com" className="text-muted-foreground hover:text-primary transition-colors text-sm">
-                    dhorajiyaboby8@gmail.com
-                  </a>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <MapPin size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Location</p>
-                  <p className="text-muted-foreground text-sm">India</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Clock size={18} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">Availability</p>
-                  <p className="text-muted-foreground text-sm">🕘 Available: 9:00 AM – 8:00 PM IST</p>
-                  <p className="text-muted-foreground text-xs mt-1">Monday – Saturday</p>
-                </div>
-              </div>
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* Contact Info */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <div className="p-2 w-fit rounded-lg bg-primary/10 mb-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">Email</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">Send me an email anytime</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <div className="p-2 w-fit rounded-lg bg-primary/10 mb-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">Location</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">Available for remote work worldwide</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <div className="p-2 w-fit rounded-lg bg-primary/10 mb-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                  </div>
+                  <CardTitle className="text-base">Response Time</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">Usually within 24 hours</p>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="mt-8 p-5 bg-card border border-border rounded-2xl">
-              <h3 className="font-semibold text-foreground mb-2">Response Time</h3>
-              <p className="text-muted-foreground text-sm">
-                I typically respond within a few hours during working hours. For urgent inquiries, please mention it in your message.
-              </p>
+            {/* Contact Form */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Send a Message</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name *</Label>
+                        <Input
+                          id="name"
+                          value={name}
+                          onChange={e => setName(e.target.value)}
+                          placeholder="Your name"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={email}
+                          onChange={e => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="message">Message *</Label>
+                      <Textarea
+                        id="message"
+                        value={message}
+                        onChange={e => setMessage(e.target.value)}
+                        placeholder="Tell me about your project..."
+                        rows={6}
+                        required
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={submitLead.isPending}
+                    >
+                      {submitLead.isPending ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Sending...
+                        </>
+                      ) : (
+                        'Send Message'
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-
-          {/* Contact Form */}
-          <div className="bg-card border border-border rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Send a Message</h2>
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <Label htmlFor="name" className="text-foreground mb-1.5 block">Your Name</Label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  disabled={isPending}
-                  required
-                  aria-label="Your name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email" className="text-foreground mb-1.5 block">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  disabled={isPending}
-                  required
-                  aria-label="Your email address"
-                />
-              </div>
-              <div>
-                <Label htmlFor="message" className="text-foreground mb-1.5 block">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Tell me about your project..."
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  disabled={isPending}
-                  required
-                  rows={5}
-                  aria-label="Your message"
-                />
-              </div>
-              <Button type="submit" disabled={isPending} className="w-full" size="lg">
-                {isPending ? (
-                  <><Loader2 size={16} className="animate-spin mr-2" /> Sending...</>
-                ) : (
-                  <><Send size={16} className="mr-2" /> Send Message</>
-                )}
-              </Button>
-            </form>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
 }

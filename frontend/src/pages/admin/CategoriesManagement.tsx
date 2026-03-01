@@ -6,7 +6,6 @@ import {
   useAddProjectCategory,
   useUpdateProjectCategory,
   useDeleteProjectCategory,
-  useUpdateCategoryOrder,
 } from '../../hooks/useQueries';
 import { type ProjectCategory } from '../../backend';
 import { Button } from '@/components/ui/button';
@@ -107,7 +106,6 @@ function CategoriesManagementContent() {
   const createCategory = useAddProjectCategory();
   const updateCategory = useUpdateProjectCategory();
   const deleteCategory = useDeleteProjectCategory();
-  const updateCategoryOrder = useUpdateCategoryOrder();
 
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, DEBOUNCE_MS);
@@ -115,6 +113,7 @@ function CategoriesManagementContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ProjectCategory | null>(null);
   const [form, setForm] = useState({ name: '', slug: '' });
+  const [isReordering, setIsReordering] = useState(false);
 
   const prevSearch = useRef(debouncedSearch);
   useEffect(() => {
@@ -205,45 +204,57 @@ function CategoriesManagementContent() {
   const handleMoveUp = useCallback(async (cat: ProjectCategory, index: number) => {
     if (index === 0) return;
     const above = filtered[index - 1];
+    setIsReordering(true);
     try {
-      // Swap orders
       await Promise.all([
-        updateCategoryOrder.mutateAsync({
-          category: cat,
-          newOrder: above.order,
+        updateCategory.mutateAsync({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          order: above.order,
         }),
-        updateCategoryOrder.mutateAsync({
-          category: above,
-          newOrder: cat.order,
+        updateCategory.mutateAsync({
+          id: above.id,
+          name: above.name,
+          slug: above.slug,
+          order: cat.order,
         }),
       ]);
     } catch {
-      // Error handled by mutation hook
+      toast.error('Failed to reorder categories.');
+    } finally {
+      setIsReordering(false);
     }
-  }, [filtered, updateCategoryOrder]);
+  }, [filtered, updateCategory]);
 
   // Move a category down (swap order with the one below it in the sorted list)
   const handleMoveDown = useCallback(async (cat: ProjectCategory, index: number) => {
     if (index === filtered.length - 1) return;
     const below = filtered[index + 1];
+    setIsReordering(true);
     try {
       await Promise.all([
-        updateCategoryOrder.mutateAsync({
-          category: cat,
-          newOrder: below.order,
+        updateCategory.mutateAsync({
+          id: cat.id,
+          name: cat.name,
+          slug: cat.slug,
+          order: below.order,
         }),
-        updateCategoryOrder.mutateAsync({
-          category: below,
-          newOrder: cat.order,
+        updateCategory.mutateAsync({
+          id: below.id,
+          name: below.name,
+          slug: below.slug,
+          order: cat.order,
         }),
       ]);
     } catch {
-      // Error handled by mutation hook
+      toast.error('Failed to reorder categories.');
+    } finally {
+      setIsReordering(false);
     }
-  }, [filtered, updateCategoryOrder]);
+  }, [filtered, updateCategory]);
 
   const isSaving = createCategory.isPending || updateCategory.isPending;
-  const isReordering = updateCategoryOrder.isPending;
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -1,17 +1,12 @@
 import { useActor } from './useActor';
 
-/**
- * Safe wrapper around useActor that catches initialization errors
- * and ensures graceful fallback when actor creation fails.
- */
 export function useActorWrapper() {
-  try {
-    const result = useActor();
-    return result;
-  } catch {
-    return {
-      actor: null,
-      isFetching: false,
-    };
+  const { actor, isFetching } = useActor();
+
+  async function call<T>(fn: () => Promise<T>): Promise<T> {
+    if (!actor) throw new Error('Actor not available');
+    return fn();
   }
+
+  return { actor, isFetching, call };
 }

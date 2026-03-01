@@ -1,111 +1,97 @@
-import React from 'react';
-import { Briefcase, Calendar, Building2, ChevronRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import SEOHead from '../components/SEOHead';
 import { useGetExperiences } from '../hooks/useQueries';
+import { Briefcase, Calendar, CheckCircle2 } from 'lucide-react';
 
 export default function Experience() {
   const { data: experiences, isLoading } = useGetExperiences();
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <Briefcase className="w-4 h-4" />
-            Work History
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-            Professional Experience
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A journey through my career as a Mobile App Developer, building impactful solutions.
+    <>
+      <SEOHead page="experience" defaultTitle="Experience - Portfolio" defaultDescription="My professional work experience and career history." />
+
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 text-center space-y-4 max-w-3xl">
+          <Badge variant="secondary">Career</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">Work Experience</h1>
+          <p className="text-lg text-muted-foreground">
+            A timeline of my professional journey and the companies I've worked with.
           </p>
         </div>
       </section>
 
-      {/* Timeline Section */}
-      <section className="py-16">
+      <section className="py-20">
         <div className="container mx-auto px-4 max-w-4xl">
           {isLoading ? (
-            <div className="space-y-8">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-6">
-                  <div className="flex flex-col items-center">
-                    <Skeleton className="w-12 h-12 rounded-full" />
-                    <Skeleton className="w-0.5 h-32 mt-2" />
-                  </div>
-                  <div className="flex-1 pb-8">
-                    <Skeleton className="h-6 w-48 mb-2" />
-                    <Skeleton className="h-4 w-32 mb-4" />
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-1/2" />
+                    <Skeleton className="h-4 w-1/3 mt-2" />
+                  </CardHeader>
+                  <CardContent>
                     <Skeleton className="h-4 w-full mb-2" />
                     <Skeleton className="h-4 w-3/4" />
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
-          ) : !experiences || experiences.length === 0 ? (
-            <div className="text-center py-20">
-              <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No Experience Added Yet</h3>
-              <p className="text-muted-foreground">Work experience entries will appear here once added.</p>
-            </div>
-          ) : (
+          ) : experiences && experiences.length > 0 ? (
             <div className="relative">
-              {/* Vertical line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
-
-              <div className="space-y-0">
+              {/* Timeline line */}
+              <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-border hidden md:block" />
+              <div className="space-y-8">
                 {experiences.map((exp, index) => (
-                  <div key={String(exp.id)} className="relative flex gap-6 pb-12 last:pb-0">
+                  <div key={exp.id.toString()} className="relative md:pl-20">
                     {/* Timeline dot */}
-                    <div className="relative z-10 flex-shrink-0">
-                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
-                        <Briefcase className="w-5 h-5 text-primary-foreground" />
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                        <div>
-                          <h3 className="text-xl font-bold text-foreground">{exp.title}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Building2 className="w-4 h-4 text-primary" />
-                            <span className="text-primary font-medium">{exp.company}</span>
+                    <div className="absolute left-6 top-6 w-4 h-4 rounded-full bg-primary border-2 border-background hidden md:block" />
+                    <Card className="hover:shadow-md transition-shadow">
+                      <CardHeader>
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                          <div>
+                            <CardTitle className="text-xl flex items-center gap-2">
+                              <Briefcase className="h-5 w-5 text-primary" />
+                              {exp.title}
+                            </CardTitle>
+                            <p className="text-primary font-medium mt-1">{exp.company}</p>
                           </div>
+                          <Badge variant="outline" className="flex items-center gap-1 w-fit">
+                            <Calendar className="h-3 w-3" />
+                            {exp.period}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {exp.period}
-                        </div>
-                      </div>
-
-                      <p className="text-muted-foreground mb-4 leading-relaxed">{exp.description}</p>
-
-                      {exp.responsibilities && exp.responsibilities.length > 0 && (
-                        <div>
-                          <h4 className="text-sm font-semibold text-foreground mb-2 uppercase tracking-wide">
-                            Key Responsibilities
-                          </h4>
-                          <ul className="space-y-1.5">
-                            {exp.responsibilities.map((resp, rIdx) => (
-                              <li key={rIdx} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <ChevronRight className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                                {resp}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <p className="text-muted-foreground">{exp.description}</p>
+                        {exp.responsibilities.length > 0 && (
+                          <div>
+                            <h4 className="font-semibold text-foreground mb-2">Key Responsibilities:</h4>
+                            <ul className="space-y-1">
+                              {exp.responsibilities.map((resp, i) => (
+                                <li key={i} className="flex items-start gap-2 text-muted-foreground text-sm">
+                                  <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                                  {resp}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 ))}
               </div>
             </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground text-lg">No experience entries yet.</p>
+            </div>
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

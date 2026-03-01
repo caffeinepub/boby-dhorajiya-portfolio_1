@@ -1,223 +1,139 @@
-import React, { useState, useMemo } from 'react';
-import { ExternalLink, FolderOpen, Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useGetProjects, useGetCategories } from '../hooks/useQueries';
-import { ExternalBlob } from '../backend';
-
-function ProjectsLoader() {
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Hero skeleton */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="container mx-auto px-4 text-center">
-          <Skeleton className="h-8 w-32 rounded-full mx-auto mb-6" />
-          <Skeleton className="h-12 w-64 mx-auto mb-4" />
-          <Skeleton className="h-6 w-96 mx-auto" />
-        </div>
-      </section>
-
-      {/* Tabs skeleton */}
-      <section className="py-8 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {[1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="h-9 w-24 rounded-full" />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Grid skeleton */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-center gap-3 mb-8 text-muted-foreground">
-            <Loader2 className="w-5 h-5 animate-spin" />
-            <span className="text-sm font-medium">Loading projects...</span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="border border-border rounded-xl overflow-hidden">
-                <Skeleton className="h-48 w-full" />
-                <div className="p-5">
-                  <Skeleton className="h-5 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-full mb-1" />
-                  <Skeleton className="h-4 w-2/3 mb-3" />
-                  <Skeleton className="h-4 w-24" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    </div>
-  );
-}
+import SEOHead from '../components/SEOHead';
+import { useGetProjects, useGetProjectCategories } from '../hooks/useQueries';
+import { Code2, ExternalLink } from 'lucide-react';
 
 export default function Projects() {
-  const {
-    data: projects,
-    isLoading: projectsLoading,
-    isSuccess: projectsSuccess,
-  } = useGetProjects();
-
-  const {
-    data: categories,
-    isLoading: categoriesLoading,
-    isSuccess: categoriesSuccess,
-  } = useGetCategories();
-
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const { data: projects, isLoading: projectsLoading } = useGetProjects();
+  const { data: categories, isLoading: categoriesLoading } = useGetProjectCategories();
 
   const isLoading = projectsLoading || categoriesLoading;
-  const isReady = projectsSuccess && categoriesSuccess;
 
-  // Sort categories by order (backend already sorts, but ensure client-side too)
-  const sortedCategories = useMemo(() => {
-    if (!categories) return [];
-    return [...categories].sort((a, b) => Number(a.order) - Number(b.order));
-  }, [categories]);
+  const activeProjects = projects?.filter(p => p.isActive) ?? [];
+  const sortedProjects = [...activeProjects].sort((a, b) => Number(a.order) - Number(b.order));
+  const sortedCategories = [...(categories ?? [])].sort((a, b) => Number(a.order) - Number(b.order));
 
-  // Filter only active projects and sort by order (backend already does this, but safeguard)
-  const activeProjects = useMemo(() => {
-    if (!projects) return [];
-    return [...projects]
-      .filter((p) => p.isActive)
-      .sort((a, b) => Number(a.order) - Number(b.order));
-  }, [projects]);
+  const filteredProjects = selectedCategory === 'all'
+    ? sortedProjects
+    : sortedProjects.filter(p => {
+        if (!p.categoryId) return false;
+        const cat = categories?.find(c => c.id === p.categoryId);
+        return cat?.slug === selectedCategory;
+      });
 
-  const filteredProjects = useMemo(() => {
-    if (activeCategory === 'all') return activeProjects;
-    const cat = sortedCategories.find((c) => c.slug === activeCategory);
-    if (!cat) return activeProjects;
-    return activeProjects.filter(
-      (p) => p.categoryId !== undefined && p.categoryId !== null && p.categoryId === cat.id
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-20">
+        <div className="text-center mb-12">
+          <Skeleton className="h-8 w-48 mx-auto mb-4" />
+          <Skeleton className="h-12 w-64 mx-auto mb-4" />
+          <Skeleton className="h-4 w-96 mx-auto" />
+        </div>
+        <div className="flex gap-2 justify-center mb-8">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-9 w-24" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Card key={i}>
+              <Skeleton className="h-48 w-full rounded-t-lg" />
+              <CardHeader>
+                <Skeleton className="h-6 w-3/4" />
+                <Skeleton className="h-4 w-full mt-2" />
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      </div>
     );
-  }, [activeProjects, sortedCategories, activeCategory]);
-
-  const tabs = useMemo(() => {
-    const all = { id: 'all', label: 'All Projects' };
-    const cats = sortedCategories.map((c) => ({ id: c.slug, label: c.name }));
-    return [all, ...cats];
-  }, [sortedCategories]);
-
-  // Show full-page loader while data is being fetched
-  if (isLoading || !isReady) {
-    return <ProjectsLoader />;
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero */}
-      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <div className="container mx-auto px-4 text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <FolderOpen className="w-4 h-4" />
-            Portfolio
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">My Projects</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A showcase of my work as a Mobile App Developer — from concept to deployment.
+    <>
+      <SEOHead page="projects" defaultTitle="Projects - Portfolio" defaultDescription="Browse my portfolio of projects across various technologies." />
+
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 text-center space-y-4 max-w-3xl">
+          <Badge variant="secondary">Portfolio</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">My Projects</h1>
+          <p className="text-lg text-muted-foreground">
+            A collection of projects I've built, from web apps to open-source tools.
           </p>
         </div>
       </section>
 
-      {/* Category Tabs */}
-      <section className="py-8 border-b border-border sticky top-0 bg-background/95 backdrop-blur z-10">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveCategory(tab.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-                  activeCategory === tab.id
-                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                    : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-foreground'
-                }`}
+          {/* Category Filter */}
+          <div className="flex flex-wrap gap-2 justify-center mb-10">
+            <Button
+              variant={selectedCategory === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory('all')}
+            >
+              All
+            </Button>
+            {sortedCategories.map(cat => (
+              <Button
+                key={cat.id.toString()}
+                variant={selectedCategory === cat.slug ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat.slug)}
               >
-                {tab.label}
-              </button>
+                {cat.name}
+              </Button>
             ))}
           </div>
-        </div>
-      </section>
 
-      {/* Projects Grid */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          {filteredProjects.length === 0 ? (
-            <div className="text-center py-20">
-              <FolderOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-foreground mb-2">No Projects Found</h3>
-              <p className="text-muted-foreground">
-                {activeCategory !== 'all' ? 'No projects in this category yet.' : 'No projects added yet.'}
-              </p>
+          {filteredProjects.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map(project => (
+                <Card key={project.id.toString()} className="overflow-hidden hover:shadow-md transition-shadow group">
+                  {project.image ? (
+                    <div className="h-48 overflow-hidden">
+                      <img
+                        src={project.image.getDirectURL()}
+                        alt={project.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </div>
+                  ) : (
+                    <div className="h-48 bg-muted flex items-center justify-center">
+                      <Code2 className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                  )}
+                  <CardHeader>
+                    <CardTitle className="text-lg">{project.title}</CardTitle>
+                    <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {project.url && (
+                      <a
+                        href={project.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary hover:underline text-sm font-medium"
+                      >
+                        View Project <ExternalLink className="h-3 w-3" />
+                      </a>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => {
-                const imageUrl =
-                  project.image instanceof ExternalBlob
-                    ? project.image.getDirectURL()
-                    : null;
-                const category = sortedCategories.find((c) => c.id === project.categoryId);
-
-                return (
-                  <article
-                    key={String(project.id)}
-                    className="border border-border rounded-xl overflow-hidden bg-card hover:shadow-lg transition-shadow group"
-                  >
-                    {/* Image */}
-                    <div className="relative h-48 bg-muted overflow-hidden">
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={project.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <FolderOpen className="w-12 h-12 text-muted-foreground" />
-                        </div>
-                      )}
-                      {category && (
-                        <div className="absolute top-3 left-3">
-                          <Badge variant="secondary" className="text-xs">
-                            {category.name}
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-5">
-                      <h3 className="font-semibold text-foreground text-lg mb-2 line-clamp-1">
-                        {project.title}
-                      </h3>
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                        {project.description}
-                      </p>
-                      {project.url && (
-                        <a
-                          href={project.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline font-medium"
-                        >
-                          View Project
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+            <div className="text-center py-20">
+              <p className="text-muted-foreground text-lg">No projects found in this category.</p>
             </div>
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

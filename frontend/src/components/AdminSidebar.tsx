@@ -1,82 +1,66 @@
-import React from 'react';
-import { Link, useLocation } from '@tanstack/react-router';
+import { Link, useRouterState } from '@tanstack/react-router';
 import {
   LayoutDashboard,
   FolderOpen,
-  FileText,
-  MessageSquare,
+  Briefcase,
   Wrench,
+  Star,
+  BookOpen,
   Users,
   Search,
+  Share2,
   HelpCircle,
-  Briefcase,
-  Star,
   Tags,
+  Clock,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
-const navItems = [
-  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { path: '/admin/projects', label: 'Projects', icon: FolderOpen },
-  { path: '/admin/categories', label: 'Categories', icon: Tags },
-  { path: '/admin/experience', label: 'Experience', icon: Briefcase },
-  { path: '/admin/services', label: 'Services', icon: Wrench },
-  { path: '/admin/skills', label: 'Skills', icon: Star },
-  { path: '/admin/blog', label: 'Blog', icon: FileText },
-  { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
-  { path: '/admin/leads', label: 'Leads', icon: Users },
-  { path: '/admin/seo', label: 'SEO', icon: Search },
-  { path: '/admin/help', label: 'Help', icon: HelpCircle },
+const sidebarLinks = [
+  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/projects', label: 'Projects', icon: FolderOpen },
+  { to: '/admin/categories', label: 'Categories', icon: Tags },
+  { to: '/admin/experience', label: 'Experience', icon: Clock },
+  { to: '/admin/services', label: 'Services', icon: Wrench },
+  { to: '/admin/skills', label: 'Skills', icon: Briefcase },
+  { to: '/admin/testimonials', label: 'Testimonials', icon: Star },
+  { to: '/admin/blog', label: 'Blog', icon: BookOpen },
+  { to: '/admin/leads', label: 'Leads', icon: Users },
+  { to: '/admin/seo', label: 'SEO', icon: Search },
+  { to: '/admin/social-links', label: 'Social Links', icon: Share2 },
+  { to: '/admin/help', label: 'Help', icon: HelpCircle },
 ];
 
 export default function AdminSidebar() {
-  const location = useLocation();
-
-  const isActive = (path: string, exact?: boolean) => {
-    if (exact) return location.pathname === path;
-    return location.pathname === path || location.pathname.startsWith(path + '/');
-  };
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
 
   return (
     <aside className="w-64 min-h-screen bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <Link to="/admin" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-bold text-foreground">Admin Panel</span>
+        <Link to="/" className="text-lg font-bold text-primary hover:opacity-80 transition-opacity">
+          ← Portfolio
         </Link>
+        <p className="text-xs text-muted-foreground mt-1">Admin Panel</p>
       </div>
-
       <nav className="flex-1 p-4 space-y-1">
-        {navItems.map((item) => {
-          const active = isActive(item.path, item.exact);
+        {sidebarLinks.map(link => {
+          const Icon = link.icon;
+          const isActive = currentPath === link.to || currentPath.startsWith(link.to + '/');
           return (
             <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                active
+              key={link.to}
+              to={link.to}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-              )}
+              }`}
             >
-              <item.icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              <Icon className="h-4 w-4 flex-shrink-0" />
+              {link.label}
             </Link>
           );
         })}
       </nav>
-
-      <div className="p-4 border-t border-border">
-        <Link
-          to="/"
-          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          ← Back to Portfolio
-        </Link>
-      </div>
     </aside>
   );
 }

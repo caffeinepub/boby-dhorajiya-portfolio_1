@@ -1,80 +1,79 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetCallerUserProfile, useSaveCallerUserProfile } from '../hooks/useQueries';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, User } from 'lucide-react';
-import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 export default function ProfileSetup() {
   const { identity } = useInternetIdentity();
   const isAuthenticated = !!identity;
-  const { data: userProfile, isLoading, isFetched } = useGetCallerUserProfile();
+  const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
   const saveProfile = useSaveCallerUserProfile();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
-  const showModal = isAuthenticated && !isLoading && isFetched && userProfile === null;
+  const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    try {
-      await saveProfile.mutateAsync({ name: name.trim(), email: email.trim() });
-      toast.success('Profile saved successfully!');
-    } catch {
-      toast.error('Failed to save profile. Please try again.');
-    }
+    await saveProfile.mutateAsync({ name: name.trim(), email: email.trim() });
   };
 
   return (
-    <Dialog open={showModal}>
-      <DialogContent className="sm:max-w-md" onInteractOutside={(e) => e.preventDefault()}>
+    <Dialog open={showProfileSetup}>
+      <DialogContent className="sm:max-w-md" onInteractOutside={e => e.preventDefault()}>
         <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-              <User className="w-5 h-5 text-primary" />
-            </div>
-            <DialogTitle className="text-xl font-display">Welcome!</DialogTitle>
-          </div>
+          <DialogTitle>Welcome! Set Up Your Profile</DialogTitle>
           <DialogDescription>
-            Please set up your profile to continue. This helps personalize your experience.
+            Please provide your name to complete your profile setup.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="profile-name">Your Name *</Label>
+            <Label htmlFor="name">Name *</Label>
             <Input
-              id="profile-name"
+              id="name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              onChange={e => setName(e.target.value)}
+              placeholder="Your full name"
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="profile-email">Email (optional)</Label>
+            <Label htmlFor="email">Email (optional)</Label>
             <Input
-              id="profile-email"
+              id="email"
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              onChange={e => setEmail(e.target.value)}
+              placeholder="your@email.com"
             />
           </div>
-          <button
+          <Button
             type="submit"
+            className="w-full"
             disabled={saveProfile.isPending || !name.trim()}
-            className="w-full btn-primary justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saveProfile.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Saving...
+              </>
             ) : (
               'Save Profile'
             )}
-          </button>
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

@@ -1,17 +1,50 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 7,
   "summary": "New project",
   "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
-  "existing_features": [],
+  "existing_features": [
+    {
+      "id": "feature-revert-all-frontend-source-files-to-their-version-12-state-by-undoing-all-changes-introduced-in-versions-13-through-16-including-modifications-to-pages-home-tsx-about-tsx-and-all-other-pages-components-hooks-styles-and-configuration-files",
+      "title": "Revert all frontend source files to their Version 12 state by undoing all changes introduced in versions 13 through 16, including modifications to pages (Home.tsx, About.tsx, and all other pages), components, hooks, styles, and configuration files.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-revert-all-frontend-source-files-to-their-version-12-state-by-undoing-all-changes-introduced-in-versions-13-through-16-this-includes-all-pages-home-tsx-about-tsx-blog-tsx-blogpost-tsx-contact-tsx-experience-tsx-projects-tsx-services-tsx-skills-tsx-testimonials-tsx-notfound-tsx-all-admin-pages-dashboard-tsx-blogmanagement-tsx-categoriesmanagement-tsx-experiencemanagement-tsx-help-tsx-leadsmanagement-tsx-projectsmanagement-tsx-seomanagement-tsx-servicesmanagement-tsx-skillsmanagement-tsx-sociallinksmanagement-tsx-testimonialsmanagement-tsx-all-non-immutable-components-adminguard-tsx-adminsidebar-tsx-footer-tsx-layout-tsx-loginbutton-tsx-navigation-tsx-profilesetup-tsx-seohead-tsx-themetoggle-tsx-all-non-immutable-hooks-useactorwrapper-ts-usequeries-ts-all-styles-frontend-src-index-css-frontend-index-css-and-configuration-files-tailwind-config-js-frontend-index-html-frontend-src-app-tsx-do-not-modify-any-immutable-paths-frontend-src-hooks-useinternetidentity-ts-frontend-src-hooks-useactor-ts-frontend-src-main-tsx-and-frontend-src-components-ui",
+      "title": "Revert all frontend source files to their Version 12 state by undoing all changes introduced in versions 13 through 16. This includes all pages (Home.tsx, About.tsx, Blog.tsx, BlogPost.tsx, Contact.tsx, Experience.tsx, Projects.tsx, Services.tsx, Skills.tsx, Testimonials.tsx, NotFound.tsx), all admin pages (Dashboard.tsx, BlogManagement.tsx, CategoriesManagement.tsx, ExperienceManagement.tsx, Help.tsx, LeadsManagement.tsx, ProjectsManagement.tsx, SeoManagement.tsx, ServicesManagement.tsx, SkillsManagement.tsx, SocialLinksManagement.tsx, TestimonialsManagement.tsx), all non-immutable components (AdminGuard.tsx, AdminSidebar.tsx, Footer.tsx, Layout.tsx, LoginButton.tsx, Navigation.tsx, ProfileSetup.tsx, SEOHead.tsx, ThemeToggle.tsx), all non-immutable hooks (useActorWrapper.ts, useQueries.ts), all styles (frontend/src/index.css, frontend/index.css), and configuration files (tailwind.config.js, frontend/index.html, frontend/src/App.tsx). Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    }
+  ],
   "new_feature_requests": [
     {
       "id": "AR-1",
       "summary": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive) across both the frontend and backend.",
       "reqIds": [
         "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Revert the backend (backend/main.mo) to its Version 12 state by undoing all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Generate a migration.mo file if the backend state shape changed between Version 12 and the current version (16), ensuring stable upgrade without data loss when the canister is redeployed.",
+      "reqIds": [
+        "REQ-4"
       ],
       "status": "pending"
     }

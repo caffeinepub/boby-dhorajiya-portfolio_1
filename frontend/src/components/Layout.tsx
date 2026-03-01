@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { ReactNode } from 'react';
 import Navigation from './Navigation';
 import Footer from './Footer';
+import ProfileSetup from './ProfileSetup';
 
 interface LayoutProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export default function Layout({ children }: LayoutProps) {
@@ -14,6 +15,7 @@ export default function Layout({ children }: LayoutProps) {
         {children}
       </main>
       <Footer />
+      <ProfileSetup />
     </div>
   );
 }

@@ -1,115 +1,92 @@
-import React from 'react';
 import { Link } from '@tanstack/react-router';
-import { ArrowRight, Smartphone, Code2, Globe, Star, ChevronRight } from 'lucide-react';
+import { ArrowRight, Code2, Briefcase, Star, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useGetProjects, useGetServices, useGetTestimonials } from '../hooks/useQueries';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalBlob } from '../backend';
+import SEOHead from '../components/SEOHead';
+import { useGetProjects, useGetServices, useGetTestimonials } from '../hooks/useQueries';
 
 export default function Home() {
   const { data: projects, isLoading: projectsLoading } = useGetProjects();
   const { data: services, isLoading: servicesLoading } = useGetServices();
-  const { data: testimonials } = useGetTestimonials();
+  const { data: testimonials, isLoading: testimonialsLoading } = useGetTestimonials();
 
-  const featuredProjects = projects?.slice(0, 3) ?? [];
+  const featuredProjects = projects?.filter(p => p.isActive).slice(0, 3) ?? [];
   const featuredServices = services?.slice(0, 3) ?? [];
+  const featuredTestimonials = testimonials?.slice(0, 2) ?? [];
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead page="home" defaultTitle="Portfolio - Home" defaultDescription="Professional portfolio showcasing projects, skills, and experience." />
+
       {/* Hero Section */}
-      <section className="relative py-24 md:py-32 overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-10"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/assets/generated/hero-bg.dim_1920x1080.png)' }}
         />
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
-              <Smartphone className="w-4 h-4" />
-              Mobile App Developer
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
-              Building Apps That{' '}
-              <span className="text-primary">Make a Difference</span>
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-              I craft high-quality mobile applications for iOS and Android that deliver 
-              exceptional user experiences and drive real business results.
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Button asChild size="lg" className="gap-2">
-                <Link to="/projects">
-                  View My Work
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg">
-                <Link to="/contact">Get In Touch</Link>
-              </Button>
-            </div>
+        <div className="absolute inset-0 bg-background/70" />
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto space-y-6">
+          <Badge variant="outline" className="text-sm px-4 py-1">
+            Available for Work
+          </Badge>
+          <h1 className="text-5xl md:text-7xl font-bold text-foreground leading-tight">
+            Building Digital
+            <span className="text-primary block">Experiences</span>
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Full-stack developer crafting elegant solutions to complex problems. Passionate about clean code, great UX, and cutting-edge technology.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" asChild className="gap-2">
+              <Link to="/projects">
+                View Projects <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/contact">Get In Touch</Link>
+            </Button>
           </div>
         </div>
       </section>
 
       {/* Services Preview */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-foreground mb-3">What I Do</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              Specialized services to help you build and grow your digital presence.
+          <div className="text-center mb-12 space-y-4">
+            <Badge variant="secondary">What I Do</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">Services</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Comprehensive development services tailored to your needs.
             </p>
           </div>
-          {servicesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-card border border-border rounded-xl p-6">
-                  <Skeleton className="h-10 w-10 rounded-lg mb-4" />
-                  <Skeleton className="h-5 w-3/4 mb-3" />
-                  <Skeleton className="h-4 w-full mb-2" />
-                  <Skeleton className="h-4 w-5/6" />
-                </div>
-              ))}
-            </div>
-          ) : featuredServices.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredServices.map((service) => (
-                <div
-                  key={String(service.id)}
-                  className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <Code2 className="w-5 h-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-foreground text-lg mb-2">{service.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3">
-                    {service.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                { icon: Smartphone, title: 'Mobile App Development', desc: 'Native and cross-platform apps for iOS and Android.' },
-                { icon: Code2, title: 'Custom Software', desc: 'Tailored software solutions for your unique business needs.' },
-                { icon: Globe, title: 'Web Development', desc: 'Modern, responsive web applications built with the latest tech.' },
-              ].map((item, i) => (
-                <div key={i} className="bg-card border border-border rounded-xl p-6 hover:shadow-md transition-shadow">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <item.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <h3 className="font-semibold text-foreground text-lg mb-2">{item.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {servicesLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full mt-2" />
+                    </CardHeader>
+                  </Card>
+                ))
+              : featuredServices.map(service => (
+                  <Card key={service.id.toString()} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="p-2 w-fit rounded-lg bg-primary/10 mb-2">
+                        <Briefcase className="h-5 w-5 text-primary" />
+                      </div>
+                      <CardTitle className="text-lg">{service.title}</CardTitle>
+                      <CardDescription>{service.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                ))}
+          </div>
           <div className="text-center mt-8">
-            <Button asChild variant="outline" className="gap-2">
+            <Button variant="outline" asChild className="gap-2">
               <Link to="/services">
-                View All Services
-                <ChevronRight className="w-4 h-4" />
+                All Services <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -117,111 +94,128 @@ export default function Home() {
       </section>
 
       {/* Featured Projects */}
-      <section className="py-16">
+      <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-foreground mb-3">Featured Projects</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">
-              A selection of my recent work across mobile and web platforms.
+          <div className="text-center mb-12 space-y-4">
+            <Badge variant="secondary">My Work</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground">Featured Projects</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              A selection of projects I'm proud of.
             </p>
           </div>
-          {projectsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="border border-border rounded-xl overflow-hidden">
-                  <Skeleton className="h-48 w-full" />
-                  <div className="p-5">
-                    <Skeleton className="h-5 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : featuredProjects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredProjects.map((project) => {
-                const imageUrl = project.image instanceof ExternalBlob
-                  ? project.image.getDirectURL()
-                  : null;
-                return (
-                  <article
-                    key={String(project.id)}
-                    className="border border-border rounded-xl overflow-hidden bg-card hover:shadow-lg transition-shadow"
-                  >
-                    <div className="h-48 bg-muted overflow-hidden">
-                      {imageUrl ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {projectsLoading
+              ? Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i}>
+                    <Skeleton className="h-48 w-full rounded-t-lg" />
+                    <CardHeader>
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full mt-2" />
+                    </CardHeader>
+                  </Card>
+                ))
+              : featuredProjects.map(project => (
+                  <Card key={project.id.toString()} className="overflow-hidden hover:shadow-md transition-shadow group">
+                    {project.image ? (
+                      <div className="h-48 overflow-hidden">
                         <img
-                          src={imageUrl}
+                          src={project.image.getDirectURL()}
                           alt={project.title}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Globe className="w-12 h-12 text-muted-foreground" />
-                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-48 bg-muted flex items-center justify-center">
+                        <Code2 className="h-12 w-12 text-muted-foreground" />
+                      </div>
+                    )}
+                    <CardHeader>
+                      <CardTitle className="text-lg">{project.title}</CardTitle>
+                      <CardDescription className="line-clamp-2">{project.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {project.url && (
+                        <a
+                          href={project.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline text-sm font-medium"
+                        >
+                          View Project →
+                        </a>
                       )}
-                    </div>
-                    <div className="p-5">
-                      <h3 className="font-semibold text-foreground mb-2">{project.title}</h3>
-                      <p className="text-muted-foreground text-sm line-clamp-2">{project.description}</p>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          ) : null}
+                    </CardContent>
+                  </Card>
+                ))}
+          </div>
           <div className="text-center mt-8">
-            <Button asChild variant="outline" className="gap-2">
+            <Button variant="outline" asChild className="gap-2">
               <Link to="/projects">
-                View All Projects
-                <ChevronRight className="w-4 h-4" />
+                All Projects <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      {testimonials && testimonials.length > 0 && (
-        <section className="py-16 bg-muted/30">
+      {/* Testimonials Preview */}
+      {(testimonialsLoading || featuredTestimonials.length > 0) && (
+        <section className="py-20 bg-muted/30">
           <div className="container mx-auto px-4">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-foreground mb-3">Client Testimonials</h2>
-              <p className="text-muted-foreground">What my clients say about working with me.</p>
+            <div className="text-center mb-12 space-y-4">
+              <Badge variant="secondary">What People Say</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Testimonials</h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-              {testimonials.slice(0, 3).map((t) => (
-                <div key={String(t.id)} className="bg-card border border-border rounded-xl p-5">
-                  <div className="flex gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((s) => (
-                      <Star key={s} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground text-sm leading-relaxed mb-3 italic">"{t.message}"</p>
-                  <p className="font-semibold text-foreground text-sm">— {t.author}</p>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {testimonialsLoading
+                ? Array.from({ length: 2 }).map((_, i) => (
+                    <Card key={i}>
+                      <CardContent className="pt-6">
+                        <Skeleton className="h-4 w-full mb-2" />
+                        <Skeleton className="h-4 w-3/4 mb-4" />
+                        <Skeleton className="h-4 w-1/2" />
+                      </CardContent>
+                    </Card>
+                  ))
+                : featuredTestimonials.map(t => (
+                    <Card key={t.id.toString()} className="hover:shadow-md transition-shadow">
+                      <CardContent className="pt-6 space-y-4">
+                        <div className="flex gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                          ))}
+                        </div>
+                        <p className="text-muted-foreground italic">"{t.message}"</p>
+                        <p className="font-semibold text-foreground">— {t.author}</p>
+                      </CardContent>
+                    </Card>
+                  ))}
+            </div>
+            <div className="text-center mt-8">
+              <Button variant="outline" asChild className="gap-2">
+                <Link to="/testimonials">
+                  All Testimonials <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
       )}
 
-      {/* CTA */}
+      {/* CTA Section */}
       <section className="py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Ready to Build Something Great?</h2>
-          <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-            Let's work together to bring your app idea to life. I'm available for freelance projects.
+        <div className="container mx-auto px-4 text-center space-y-6 max-w-2xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground">Ready to Work Together?</h2>
+          <p className="text-muted-foreground text-lg">
+            Let's build something amazing. Reach out and let's discuss your project.
           </p>
-          <Button asChild size="lg" className="gap-2">
+          <Button size="lg" asChild className="gap-2">
             <Link to="/contact">
-              Start a Project
-              <ArrowRight className="w-4 h-4" />
+              Start a Conversation <ArrowRight className="h-4 w-4" />
             </Link>
           </Button>
         </div>
       </section>
-    </div>
+    </>
   );
 }

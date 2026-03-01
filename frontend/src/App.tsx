@@ -1,158 +1,266 @@
-import React, { lazy, Suspense } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
-  createRouter,
-  createRoute,
   createRootRoute,
+  createRoute,
+  createRouter,
   RouterProvider,
   Outlet,
   redirect,
 } from '@tanstack/react-router';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
+import Layout from './components/Layout';
+import AdminSidebar from './components/AdminSidebar';
+import AdminGuard from './components/AdminGuard';
 import { Toaster } from '@/components/ui/sonner';
-import Navigation from './components/Navigation';
-import Footer from './components/Footer';
-import ProfileSetup from './components/ProfileSetup';
+import { lazy, Suspense } from 'react';
 
-// Public pages
 const Home = lazy(() => import('./pages/Home'));
 const About = lazy(() => import('./pages/About'));
-const Projects = lazy(() => import('./pages/Projects'));
-const Services = lazy(() => import('./pages/Services'));
-const Skills = lazy(() => import('./pages/Skills'));
-const Experience = lazy(() => import('./pages/Experience'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogPost = lazy(() => import('./pages/BlogPost'));
 const Contact = lazy(() => import('./pages/Contact'));
+const Experience = lazy(() => import('./pages/Experience'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Services = lazy(() => import('./pages/Services'));
+const Skills = lazy(() => import('./pages/Skills'));
 const Testimonials = lazy(() => import('./pages/Testimonials'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 
-// Admin pages
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
-const ProjectsManagement = lazy(() => import('./pages/admin/ProjectsManagement'));
-const CategoriesManagement = lazy(() => import('./pages/admin/CategoriesManagement'));
 const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
-const TestimonialsManagement = lazy(() => import('./pages/admin/TestimonialsManagement'));
-const SkillsManagement = lazy(() => import('./pages/admin/SkillsManagement'));
-const ServicesManagement = lazy(() => import('./pages/admin/ServicesManagement'));
-const LeadsManagement = lazy(() => import('./pages/admin/LeadsManagement'));
-const SeoManagement = lazy(() => import('./pages/admin/SeoManagement'));
-const SocialLinksManagement = lazy(() => import('./pages/admin/SocialLinksManagement'));
+const CategoriesManagement = lazy(() => import('./pages/admin/CategoriesManagement'));
 const ExperienceManagement = lazy(() => import('./pages/admin/ExperienceManagement'));
 const Help = lazy(() => import('./pages/admin/Help'));
+const LeadsManagement = lazy(() => import('./pages/admin/LeadsManagement'));
+const ProjectsManagement = lazy(() => import('./pages/admin/ProjectsManagement'));
+const SeoManagement = lazy(() => import('./pages/admin/SeoManagement'));
+const ServicesManagement = lazy(() => import('./pages/admin/ServicesManagement'));
+const SkillsManagement = lazy(() => import('./pages/admin/SkillsManagement'));
+const SocialLinksManagement = lazy(() => import('./pages/admin/SocialLinksManagement'));
+const TestimonialsManagement = lazy(() => import('./pages/admin/TestimonialsManagement'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 30000 },
+    queries: {
+      staleTime: 1000 * 60 * 5,
+      retry: 1,
+    },
   },
 });
 
-const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-screen bg-background">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-  </div>
-);
-
-// ─── Root route ───────────────────────────────────────────────────────────────
-const rootRoute = createRootRoute({
-  component: () => (
-    <>
-      <Outlet />
-      <ProfileSetup />
-      <Toaster richColors position="top-right" />
-    </>
-  ),
-});
-
-// ─── Public layout ────────────────────────────────────────────────────────────
-const publicLayoutRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  id: 'public',
-  component: () => (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Navigation />
-      <main className="flex-1">
-        <Suspense fallback={<PageLoader />}>
-          <Outlet />
-        </Suspense>
-      </main>
-      <Footer />
-    </div>
-  ),
-});
-
-// ─── Admin layout ─────────────────────────────────────────────────────────────
-const adminLayoutRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  id: 'admin',
-  component: () => (
-    <div className="min-h-screen bg-background text-foreground">
-      <Suspense fallback={<PageLoader />}>
+function PublicLayout() {
+  return (
+    <Layout>
+      <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
         <Outlet />
       </Suspense>
-    </div>
-  ),
+    </Layout>
+  );
+}
+
+function AdminLayout() {
+  return (
+    <AdminGuard>
+      <div className="flex min-h-screen bg-background">
+        <AdminSidebar />
+        <main className="flex-1 overflow-auto">
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+            <Outlet />
+          </Suspense>
+        </main>
+      </div>
+    </AdminGuard>
+  );
+}
+
+const rootRoute = createRootRoute();
+
+const publicLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'public-layout',
+  component: PublicLayout,
 });
 
-// ─── Public routes ────────────────────────────────────────────────────────────
-const homeRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/', component: Home });
-const aboutRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/about', component: About });
-const projectsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/projects', component: Projects });
-const servicesRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/services', component: Services });
-const skillsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/skills', component: Skills });
-const experienceRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/experience', component: Experience });
-const blogRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/blog', component: Blog });
-const blogPostRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/blog/$slug', component: BlogPost });
-const contactRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/contact', component: Contact });
-const testimonialsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/testimonials', component: Testimonials });
+const homeRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/',
+  component: Home,
+});
 
-// ─── Admin routes ─────────────────────────────────────────────────────────────
+const aboutRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/about',
+  component: About,
+});
+
+const blogRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/blog',
+  component: Blog,
+});
+
+const blogPostRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/blog/$slug',
+  component: BlogPost,
+});
+
+const contactRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/contact',
+  component: Contact,
+});
+
+const experienceRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/experience',
+  component: Experience,
+});
+
+const projectsRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/projects',
+  component: Projects,
+});
+
+const servicesRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/services',
+  component: Services,
+});
+
+const skillsRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/skills',
+  component: Skills,
+});
+
+const testimonialsRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '/testimonials',
+  component: Testimonials,
+});
+
+const notFoundRoute = createRoute({
+  getParentRoute: () => publicLayoutRoute,
+  path: '*',
+  component: NotFound,
+});
+
+const adminLayoutRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/admin',
+  component: AdminLayout,
+});
+
 const adminIndexRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
-  path: '/admin',
+  path: '/',
   beforeLoad: () => {
     throw redirect({ to: '/admin/dashboard' });
   },
 });
-const adminDashboardRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/dashboard', component: Dashboard });
-const adminProjectsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/projects', component: ProjectsManagement });
-const adminCategoriesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/categories', component: CategoriesManagement });
-const adminBlogRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/blog', component: BlogManagement });
-const adminTestimonialsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/testimonials', component: TestimonialsManagement });
-const adminSkillsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/skills', component: SkillsManagement });
-const adminServicesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/services', component: ServicesManagement });
-const adminLeadsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/leads', component: LeadsManagement });
-const adminSeoRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/seo', component: SeoManagement });
-const adminSocialLinksRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/social-links', component: SocialLinksManagement });
-const adminExperienceRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/experience', component: ExperienceManagement });
-const adminHelpRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/help', component: Help });
+
+const adminDashboardRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/dashboard',
+  component: Dashboard,
+});
+
+const adminBlogRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/blog',
+  component: BlogManagement,
+});
+
+const adminCategoriesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/categories',
+  component: CategoriesManagement,
+});
+
+const adminExperienceRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/experience',
+  component: ExperienceManagement,
+});
+
+const adminHelpRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/help',
+  component: Help,
+});
+
+const adminLeadsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/leads',
+  component: LeadsManagement,
+});
+
+const adminProjectsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/projects',
+  component: ProjectsManagement,
+});
+
+const adminSeoRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/seo',
+  component: SeoManagement,
+});
+
+const adminServicesRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/services',
+  component: ServicesManagement,
+});
+
+const adminSkillsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/skills',
+  component: SkillsManagement,
+});
+
+const adminSocialLinksRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/social-links',
+  component: SocialLinksManagement,
+});
+
+const adminTestimonialsRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: '/testimonials',
+  component: TestimonialsManagement,
+});
 
 const routeTree = rootRoute.addChildren([
   publicLayoutRoute.addChildren([
     homeRoute,
     aboutRoute,
-    projectsRoute,
-    servicesRoute,
-    skillsRoute,
-    experienceRoute,
     blogRoute,
     blogPostRoute,
     contactRoute,
+    experienceRoute,
+    projectsRoute,
+    servicesRoute,
+    skillsRoute,
     testimonialsRoute,
+    notFoundRoute,
   ]),
   adminLayoutRoute.addChildren([
     adminIndexRoute,
     adminDashboardRoute,
-    adminProjectsRoute,
-    adminCategoriesRoute,
     adminBlogRoute,
-    adminTestimonialsRoute,
-    adminSkillsRoute,
-    adminServicesRoute,
-    adminLeadsRoute,
-    adminSeoRoute,
-    adminSocialLinksRoute,
+    adminCategoriesRoute,
     adminExperienceRoute,
     adminHelpRoute,
+    adminLeadsRoute,
+    adminProjectsRoute,
+    adminSeoRoute,
+    adminServicesRoute,
+    adminSkillsRoute,
+    adminSocialLinksRoute,
+    adminTestimonialsRoute,
   ]),
 ]);
 
@@ -166,9 +274,10 @@ declare module '@tanstack/react-router' {
 
 export default function App() {
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
+        <Toaster />
       </QueryClientProvider>
     </ThemeProvider>
   );

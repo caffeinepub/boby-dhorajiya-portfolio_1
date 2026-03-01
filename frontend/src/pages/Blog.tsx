@@ -1,89 +1,90 @@
-import React from 'react';
-import { Link, useNavigate } from '@tanstack/react-router';
-import { Calendar, ArrowRight, BookOpen, Loader2 } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import SEOHead from '../components/SEOHead';
-import { useGetBlogs } from '../hooks/useQueries';
+import { useGetBlogPosts } from '../hooks/useQueries';
+import { Calendar, ArrowRight } from 'lucide-react';
 
 export default function Blog() {
-  const { data: blogs, isLoading, error } = useGetBlogs();
+  const { data: posts, isLoading } = useGetBlogPosts();
   const navigate = useNavigate();
+
+  const formatDate = (timestamp: bigint) => {
+    return new Date(Number(timestamp) / 1_000_000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
 
   return (
     <>
-      <SEOHead page="blog" defaultTitle="Blog – Boby Dhorajiya" defaultDescription="Articles on Flutter, React Native, and mobile security." />
+      <SEOHead page="blog" defaultTitle="Blog - Portfolio" defaultDescription="Articles, tutorials, and thoughts on software development." />
 
-      <div className="pt-24 section-padding">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">Insights</span>
-            <h1 className="section-title font-display mt-2">
-              The <span className="gradient-text">Blog</span>
-            </h1>
-            <p className="section-subtitle text-muted-foreground mx-auto">
-              Thoughts on mobile development, security best practices, and the tech industry.
-            </p>
-          </div>
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4 text-center space-y-4 max-w-3xl">
+          <Badge variant="secondary">Blog</Badge>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">Articles & Insights</h1>
+          <p className="text-lg text-muted-foreground">
+            Thoughts, tutorials, and insights on software development and technology.
+          </p>
+        </div>
+      </section>
 
-          {isLoading && (
-            <div className="flex justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          )}
-
-          {error && (
-            <div className="text-center py-16 text-muted-foreground">
-              <p>Failed to load blog posts.</p>
-            </div>
-          )}
-
-          {!isLoading && !error && blogs && blogs.length === 0 && (
-            <div className="text-center py-16">
-              <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground">No blog posts yet. Check back soon!</p>
-            </div>
-          )}
-
-          {blogs && blogs.length > 0 && (
-            <div className="space-y-6">
-              {blogs.map((post, idx) => (
-                <button
-                  key={post.id.toString()}
-                  onClick={() => navigate({ to: '/blog/$slug', params: { slug: post.slug } })}
-                  className="w-full text-left p-6 rounded-2xl border border-border bg-card card-hover group animate-slide-up"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 space-y-2">
-                      <h2 className="font-display font-bold text-xl group-hover:text-primary transition-colors">
-                        {post.title}
-                      </h2>
-                      {post.metaDescription && (
-                        <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
-                          {post.metaDescription}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="w-3.5 h-3.5" />
-                        <span>
-                          {new Date(Number(post.timestamp) / 1_000_000).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                          })}
-                        </span>
-                      </div>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all flex-shrink-0 mt-1" />
-                  </div>
-                </button>
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full mt-2" />
+                    <Skeleton className="h-4 w-2/3 mt-1" />
+                  </CardHeader>
+                  <CardContent>
+                    <Skeleton className="h-4 w-1/3" />
+                  </CardContent>
+                </Card>
               ))}
+            </div>
+          ) : posts && posts.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {posts.map(post => (
+                <Card
+                  key={post.id.toString()}
+                  className="hover:shadow-md transition-shadow cursor-pointer group"
+                  onClick={() => navigate({ to: '/blog/$slug', params: { slug: post.slug } })}
+                >
+                  <CardHeader>
+                    <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
+                      {post.title}
+                    </CardTitle>
+                    <CardDescription className="line-clamp-3">
+                      {post.metaDescription}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <Calendar className="h-4 w-4" />
+                      {formatDate(post.timestamp)}
+                    </div>
+                    <Button variant="ghost" size="sm" className="gap-1 group-hover:text-primary">
+                      Read <ArrowRight className="h-3 w-3" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-muted-foreground text-lg">No blog posts yet. Check back soon!</p>
             </div>
           )}
         </div>
-      </div>
+      </section>
     </>
   );
 }
