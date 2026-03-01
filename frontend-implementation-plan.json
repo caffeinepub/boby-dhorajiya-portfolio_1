@@ -1,6 +1,24 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Generate migration.mo to transition canister state from Version 16 schema to Version 12 schema",
-  "requirements": []
+  "title": "Remove 'Senior' word from Projects section",
+  "requirements": [
+    {
+      "id": "REQ-11",
+      "summary": "Remove all occurrences of the word 'Senior' from static text in the Projects page",
+      "acceptanceCriteria": [
+        "The word 'Senior' (in any casing) does not appear in any static/hardcoded text on the Projects page.",
+        "All project cards and section headings render correctly without the word 'Senior'.",
+        "Dynamically fetched project data from the backend is not altered or filtered.",
+        "No other pages or components are modified."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/Projects.tsx",
+          "operation": "modify",
+          "description": "Remove every occurrence of the word 'Senior' (case-sensitive and case-insensitive variants) from all static text, labels, headings, and hardcoded strings displayed in the Projects page. This includes page titles, section headings, descriptions, and any other hardcoded UI text. Do not modify or filter any data fetched dynamically from the backend via useGetProjects or useGetProjectCategories hooks. Ensure all project cards and UI elements continue to render correctly after the removal."
+        }
+      ]
+    }
+  ]
 }

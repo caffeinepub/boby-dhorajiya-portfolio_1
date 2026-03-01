@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 13,
-  "summary": "Restore backend/main.mo to its exact Version 12 state (completed in v22). Now building migration.mo to safely transition canister state from Version 16 schema back to Version 12 schema without data loss.",
+  "projectStateVersion": 15,
+  "summary": "Removing the word 'Senior' from the Projects section/page of the application.",
   "architectural_notes": [],
   "known_issues": [],
-  "isFixRequest": true,
+  "isFixRequest": false,
   "existing_features": [
     {
       "id": "feature-revert-all-frontend-source-files-to-their-version-12-state-by-undoing-all-changes-introduced-in-versions-13-through-16-including-modifications-to-pages-home-tsx-about-tsx-and-all-other-pages-components-hooks-styles-and-configuration-files",
@@ -83,6 +83,20 @@
       "summary": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
       "reqIds": [
         "REQ-10"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Remove the word 'Senior' wherever it appears in the Projects section/page of the application.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "In frontend/src/pages/Projects.tsx, remove every occurrence of the word 'Senior' (case-sensitive and case-insensitive variants) from all static text, labels, headings, and any hardcoded strings displayed in the Projects page and its project cards. Do not alter data fetched dynamically from the backend.",
+      "reqIds": [
+        "REQ-11"
       ],
       "status": "pending"
     }

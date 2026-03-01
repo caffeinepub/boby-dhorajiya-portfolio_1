@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:32:16.533Z",
+  "generatedAt": "2026-03-01T22:38:33.688Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -11,24 +11,20 @@
     "implemented": 0,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
-        "status": "unknown",
-        "plannedFiles": [],
+        "id": "REQ-11",
+        "summary": "In frontend/src/pages/Projects.tsx, remove every occurrence of the word 'Senior' (case-sensitive and case-insensitive variants) from all static text, labels, headings, and any hardcoded strings displayed in the Projects page and its project cards. Do not alter data fetched dynamically from the backend.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/pages/Projects.tsx"
+        ],
         "matchedFiles": []
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

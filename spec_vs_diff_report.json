@@ -1,55 +1,21 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:32:16.530Z",
-  "summary": "The diff adds backend/migration.mo and modifies backend/main.mo. The migration.mo file exists and defines the correct type shapes matching the Version 12 schema, and main.mo wires it up with `(with migration = Migration.run)`. However, the core migration logic in migration.mo is essentially a no-op — Migration.run simply returns `old` unchanged — meaning it does not perform any actual field conversion, dropping of Version 16-only fields, initialization of Version 12 defaults, or handling of type shape differences between Version 16 and Version 12. Most acceptance criteria for REQ-10 are therefore not met.",
+  "generatedAt": "2026-03-01T22:38:33.686Z",
+  "summary": "The diff only shows a modification to project_state.json, which is a metadata/tracking file. There is no evidence of any changes to frontend/src/pages/Projects.tsx or any related component files. The actual requirement (REQ-11) to remove the word 'Senior' from static text in Projects.tsx does not appear to have been implemented based on the provided diff.",
   "missing_requirements": [
     {
-      "id": "REQ-10",
-      "requirement": "Fields that existed in Version 16 but not in Version 12 are safely dropped without causing upgrade panics, and conversion logic must explicitly handle type shape differences",
-      "reason": "The Migration.run function is a pure identity function returning old unchanged. It contains no logic to drop Version 16-only fields, initialize missing Version 12 defaults, or convert type shape differences such as optional vs non-optional fields or restructured records.",
+      "id": "REQ-11",
+      "requirement": "In frontend/src/pages/Projects.tsx, remove every occurrence of the word 'Senior' (case-sensitive and case-insensitive variants) from all static text, labels, headings, and any hardcoded strings displayed in the Projects page and its project cards.",
+      "reason": "The diff shows only a modification to project_state.json. There is no evidence of any changes to frontend/src/pages/Projects.tsx or any Projects-specific component files where 'Senior' would need to be removed.",
       "evidence": [
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "requirement": "Fields that existed in Version 12 but were absent in Version 16 are initialized with appropriate default values",
-      "reason": "No default value initialization logic is present in Migration.run. The function simply returns the old state as-is without adding any missing fields.",
-      "evidence": [
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "requirement": "Type shape differences (e.g., optional vs non-optional fields, changed record structures) are explicitly handled with conversion logic",
-      "reason": "Migration.run is defined as public func run(old : Actor) : Actor { old; } with zero conversion logic. No field mapping, record reconstruction, or type coercion is performed.",
-      "evidence": [
-        "backend/migration.mo"
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "requirement": "All existing blog posts, projects, services, skills, leads, SEO settings, social links, experiences, and user records survive the upgrade intact via explicit migration logic",
-      "reason": "The identity function provides no safety net for schema mismatches between V16 and V12. Data survival depends entirely on the schemas already being identical, which contradicts the purpose of the migration file.",
-      "evidence": [
-        "backend/migration.mo"
+        "project_state.json"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Import of blob-storage/Storage module in migration.mo",
-      "reason": "The migration.mo file imports Storage from blob-storage/Storage and uses Storage.ExternalBlob in the Project type definition. This internal module dependency in a standalone migration file was not specified in the build request.",
-      "evidence": [
-        "backend/migration.mo"
-      ]
-    }
-  ],
-  "confidence": 0.88,
+  "hallucinated_features": [],
+  "confidence": 0.85,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "project_state.json"
   ]
 }

@@ -1,43 +1,38 @@
 {
   "kind": "build_request",
-  "title": "Generate migration.mo to transition canister state from Version 16 schema to Version 12 schema",
-  "projectName": "Portfolio Backend",
-  "priority": "high",
+  "title": "Remove 'Senior' word from Projects section",
+  "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-10",
-      "text": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
-      "target": "backend",
+      "id": "REQ-11",
+      "text": "In frontend/src/pages/Projects.tsx, remove every occurrence of the word 'Senior' (case-sensitive and case-insensitive variants) from all static text, labels, headings, and any hardcoded strings displayed in the Projects page and its project cards. Do not alter data fetched dynamically from the backend.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-6",
+          "msg-8"
         ],
         "quotes": [
-          "build",
-          "Building the migration file to safely transition the canister state from the Version 16 schema back to the Version 12 schema, ensuring a stable upgrade without data loss when redeployed."
+          "remove senior word from project"
         ]
       },
       "acceptanceCriteria": [
-        "backend/migration.mo exists and compiles without errors alongside backend/main.mo",
-        "All stable variables present in the Version 16 schema that also exist in the Version 12 schema are correctly mapped and preserved",
-        "Fields that existed in Version 16 but not in Version 12 are safely dropped without causing upgrade panics",
-        "Fields that existed in Version 12 but were absent in Version 16 are initialized with appropriate default values",
-        "Type shape differences (e.g., optional vs non-optional fields, changed record structures) are explicitly handled with conversion logic",
-        "Canister can be upgraded from a Version 16 state to Version 12 main.mo without a trap or data wipe",
-        "All existing blog posts, projects, services, skills, leads, SEO settings, social links, experiences, and user records survive the upgrade intact"
+        "The word 'Senior' (in any casing) does not appear in any static/hardcoded text on the Projects page.",
+        "All project cards and section headings render correctly without the word 'Senior'.",
+        "Dynamically fetched project data from the backend is not altered or filtered.",
+        "No other pages or components are modified."
       ]
     }
   ],
   "constraints": [
-    "Do not modify backend/main.mo — it has already been restored to its Version 12 state",
-    "Do not modify any frontend files",
-    "Do not modify any immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui"
+    "Only modify frontend/src/pages/Projects.tsx (and any directly related Projects-specific components if 'Senior' appears there).",
+    "Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
+    "Do not modify backend files."
   ],
   "nonGoals": [
-    "Modifying backend/main.mo",
-    "Making any frontend changes",
-    "Adding new backend features or endpoints",
-    "Migrating forward to a newer schema version"
+    "Removing 'Senior' from backend data or the database.",
+    "Modifying any pages other than the Projects section.",
+    "Changing any styling, layout, or other content on the Projects page."
   ],
   "imageRequirements": {
     "required": [],

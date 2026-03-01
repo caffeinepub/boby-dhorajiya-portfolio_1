@@ -1,12 +1,9 @@
 # Specification
 
 ## Summary
-**Goal:** Create a `backend/migration.mo` file that safely migrates canister stable state from the Version 16 schema back to the Version 12 schema, preserving all existing data during the upgrade.
+**Goal:** Remove all occurrences of the word "Senior" from the static/hardcoded text in the Projects page.
 
 **Planned changes:**
-- Create `backend/migration.mo` with logic to map all stable variables from the Version 16 schema to the Version 12 schema
-- Handle dropped fields (present in V16 but not V12) safely to avoid upgrade panics
-- Initialize missing fields (present in V12 but absent in V16) with appropriate default values
-- Add explicit type conversion logic for shape differences (e.g., optional vs non-optional fields, restructured records) across BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User types
+- Remove every occurrence of "Senior" (any casing) from all static text, labels, headings, and hardcoded strings in `frontend/src/pages/Projects.tsx` and any directly related Projects-specific components.
 
-**User-visible outcome:** The canister can be upgraded from a Version 16 deployment to the Version 12 `main.mo` without data loss, traps, or deserialization errors — all blog posts, projects, services, skills, leads, SEO settings, social links, experiences, and user records are preserved.
+**User-visible outcome:** The Projects page and its project cards no longer display the word "Senior" in any static text or headings.
