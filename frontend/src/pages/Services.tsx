@@ -1,135 +1,94 @@
-import React from 'react';
-import { Smartphone, Shield, Code2, Flame, Globe, Lock, Zap, Loader2 } from 'lucide-react';
-import SEOHead from '../components/SEOHead';
-import { useGetServices } from '../hooks/useQueries';
-import type { Service } from '../backend';
+import React, { useState } from 'react';
+import { Wrench, CheckCircle2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useListServices } from '../hooks/useQueries';
 
-const staticServices = [
-  {
-    icon: Smartphone,
-    title: 'Flutter App Development',
-    description: 'Build beautiful, natively compiled applications for mobile, web, and desktop from a single codebase using Flutter and Dart.',
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
-    borderColor: 'border-primary/20',
-  },
-  {
-    icon: Code2,
-    title: 'React Native Development',
-    description: 'Create cross-platform mobile apps with React Native, leveraging JavaScript expertise for iOS and Android development.',
-    color: 'text-chart-2',
-    bgColor: 'bg-chart-2/10',
-    borderColor: 'border-chart-2/20',
-  },
-  {
-    icon: Shield,
-    title: 'Secure Mobile App Architecture',
-    description: 'Design and implement security-first mobile architectures with threat modeling, secure data flows, and defense-in-depth strategies.',
-    color: 'text-chart-3',
-    bgColor: 'bg-chart-3/10',
-    borderColor: 'border-chart-3/20',
-  },
-  {
-    icon: Zap,
-    title: 'API Integration',
-    description: 'Seamlessly integrate RESTful APIs, GraphQL, and third-party services with secure authentication and efficient data handling.',
-    color: 'text-chart-4',
-    bgColor: 'bg-chart-4/10',
-    borderColor: 'border-chart-4/20',
-  },
-  {
-    icon: Flame,
-    title: 'Firebase Integration',
-    description: 'Implement Firebase services including Authentication, Firestore, Cloud Functions, and Analytics for scalable mobile backends.',
-    color: 'text-chart-5',
-    bgColor: 'bg-chart-5/10',
-    borderColor: 'border-chart-5/20',
-  },
-  {
-    icon: Lock,
-    title: 'Mobile App Security Consulting',
-    description: 'Comprehensive security audits, penetration testing guidance, and implementation of OWASP Mobile Top 10 mitigations.',
-    color: 'text-primary',
-    bgColor: 'bg-primary/10',
-    borderColor: 'border-primary/20',
-  },
-  {
-    icon: Globe,
-    title: 'Web Development Support',
-    description: 'Extend your mobile app with responsive web interfaces using React, ensuring consistent UX across all platforms.',
-    color: 'text-chart-2',
-    bgColor: 'bg-chart-2/10',
-    borderColor: 'border-chart-2/20',
-  },
+const serviceCategories = [
+  { id: 'all', label: 'All Services' },
+  { id: 'mobile', label: 'Mobile' },
+  { id: 'web', label: 'Web' },
+  { id: 'consulting', label: 'Consulting' },
 ];
 
 export default function Services() {
-  const { data: backendServices, isLoading } = useGetServices();
-
-  const displayServices = backendServices && backendServices.length > 0 ? null : staticServices;
+  const { data: services, isLoading } = useListServices();
+  const [activeTab, setActiveTab] = useState('all');
 
   return (
-    <>
-      <SEOHead page="services" defaultTitle="Services – Boby Dhorajiya" defaultDescription="Mobile app development services including Flutter, React Native, and security consulting." />
-
-      <div className="pt-24 section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">What I Offer</span>
-            <h1 className="section-title font-display mt-2">
-              My <span className="gradient-text">Services</span>
-            </h1>
-            <p className="section-subtitle text-muted-foreground mx-auto">
-              End-to-end mobile development services with a focus on security, performance, and scalability.
-            </p>
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="container mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Wrench className="w-4 h-4" />
+            What I Offer
           </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">My Services</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Professional mobile app development services tailored to your needs.
+          </p>
+        </div>
+      </section>
 
-          {isLoading && (
-            <div className="flex justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          )}
+      {/* Category Tabs */}
+      <section className="py-8 border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {serviceCategories.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+                  activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'bg-background text-muted-foreground border-border hover:border-primary hover:text-foreground'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          {/* Backend services */}
-          {backendServices && backendServices.length > 0 && (
+      {/* Services Grid */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {backendServices.map((service: Service, idx: number) => (
-                <div
-                  key={service.id.toString()}
-                  className="p-6 rounded-2xl border border-border bg-card card-hover animate-slide-up"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-4">
-                    <Zap className="w-5 h-5 text-primary" />
-                  </div>
-                  <h3 className="font-display font-bold text-lg mb-2">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="border border-border rounded-xl p-6">
+                  <Skeleton className="h-10 w-10 rounded-lg mb-4" />
+                  <Skeleton className="h-5 w-3/4 mb-3" />
+                  <Skeleton className="h-4 w-full mb-2" />
+                  <Skeleton className="h-4 w-5/6" />
                 </div>
               ))}
             </div>
-          )}
-
-          {/* Static services */}
-          {displayServices && !isLoading && (
+          ) : !services || services.length === 0 ? (
+            <div className="text-center py-20">
+              <Wrench className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No Services Added Yet</h3>
+              <p className="text-muted-foreground">Services will appear here once added from the admin panel.</p>
+            </div>
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {displayServices.map((service, idx) => (
+              {services.map((service) => (
                 <div
-                  key={service.title}
-                  className={`p-6 rounded-2xl border ${service.borderColor} bg-card card-hover animate-slide-up`}
-                  style={{ animationDelay: `${idx * 0.1}s` }}
+                  key={String(service.id)}
+                  className="border border-border rounded-xl p-6 bg-card hover:shadow-md transition-shadow"
                 >
-                  <div className={`w-10 h-10 rounded-xl ${service.bgColor} border ${service.borderColor} flex items-center justify-center mb-4`}>
-                    <service.icon className={`w-5 h-5 ${service.color}`} />
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <CheckCircle2 className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="font-display font-bold text-lg mb-2">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{service.description}</p>
+                  <h3 className="font-semibold text-foreground text-lg mb-2">{service.title}</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{service.description}</p>
                 </div>
               ))}
             </div>
           )}
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }

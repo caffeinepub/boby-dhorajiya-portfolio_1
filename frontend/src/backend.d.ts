@@ -14,38 +14,19 @@ export class ExternalBlob {
     static fromBytes(blob: Uint8Array<ArrayBuffer>): ExternalBlob;
     withUploadProgress(onProgress: (percentage: number) => void): ExternalBlob;
 }
-export interface Testimonial {
-    id: bigint;
-    author: string;
-    message: string;
-}
 export interface ProjectsResult {
     data?: Array<Project>;
     error?: string;
     success: boolean;
 }
-export interface Project {
-    id: bigint;
-    url: string;
-    categoryId?: bigint;
-    title: string;
-    description: string;
-    timestamp: bigint;
-    image?: ExternalBlob;
+export interface UserProfile {
+    name: string;
+    email: string;
 }
 export interface CategoryResult {
     data?: ProjectCategory;
     error?: string;
     success: boolean;
-}
-export interface BlogPost {
-    id: bigint;
-    metaDescription: string;
-    title: string;
-    content: string;
-    slug: string;
-    metaTitle: string;
-    timestamp: bigint;
 }
 export interface SocialLink {
     id: bigint;
@@ -59,25 +40,11 @@ export interface ServicesResult {
     error?: string;
     success: boolean;
 }
-export interface Service {
-    id: bigint;
-    title: string;
-    description: string;
-}
-export interface SeoSetting {
-    metaDescription: string;
-    page: string;
-    metaTitle: string;
-}
 export interface ProjectCategory {
     id: bigint;
+    order: bigint;
     name: string;
     slug: string;
-}
-export interface CategoriesResult {
-    data?: Array<ProjectCategory>;
-    error?: string;
-    success: boolean;
 }
 export interface Lead {
     id: bigint;
@@ -91,20 +58,79 @@ export interface ProjectResult {
     error?: string;
     success: boolean;
 }
-export interface Skill {
-    id: bigint;
-    name: string;
-    experience: bigint;
-    category: SkillCategory;
+export interface ExperiencesResult {
+    data?: Array<Experience>;
+    error?: string;
+    success: boolean;
 }
 export interface ServiceResult {
     data?: Service;
     error?: string;
     success: boolean;
 }
-export interface UserProfile {
+export interface BlogPost {
+    id: bigint;
+    metaDescription: string;
+    title: string;
+    content: string;
+    slug: string;
+    metaTitle: string;
+    timestamp: bigint;
+}
+export interface Service {
+    id: bigint;
+    title: string;
+    description: string;
+}
+export interface CategoriesResult {
+    data?: Array<ProjectCategory>;
+    error?: string;
+    success: boolean;
+}
+export interface SeoSetting {
+    metaDescription: string;
+    page: string;
+    metaTitle: string;
+}
+export interface CrudResponse {
+    data?: boolean;
+    error?: string;
+    success: boolean;
+}
+export interface Skill {
+    id: bigint;
     name: string;
-    email: string;
+    experience: bigint;
+    category: SkillCategory;
+}
+export interface Experience {
+    id: bigint;
+    title: string;
+    responsibilities: Array<string>;
+    period: string;
+    description: string;
+    company: string;
+}
+export interface ExperienceResult {
+    data?: Experience;
+    error?: string;
+    success: boolean;
+}
+export interface Project {
+    id: bigint;
+    url: string;
+    categoryId?: bigint;
+    title: string;
+    order: bigint;
+    description: string;
+    isActive: boolean;
+    timestamp: bigint;
+    image?: ExternalBlob;
+}
+export interface Testimonial {
+    id: bigint;
+    author: string;
+    message: string;
 }
 export enum ClaimAdminResult {
     notAuthenticated = "notAuthenticated",
@@ -128,59 +154,52 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
-    addBlog(title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<void>;
-    addSkill(name: string, experience: bigint, category: SkillCategory): Promise<void>;
-    addTestimonial(author: string, message: string): Promise<void>;
+    addBlogPost(title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<BlogPost>;
+    addExperience(title: string, company: string, period: string, description: string, responsibilities: Array<string>): Promise<ExperienceResult>;
+    addProject(title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null, order: bigint, isActive: boolean): Promise<ProjectResult>;
+    addProjectCategory(name: string, slug: string, order: bigint): Promise<CategoryResult>;
+    addService(title: string, description: string): Promise<ServiceResult>;
+    addSkill(name: string, experience: bigint, category: SkillCategory): Promise<Skill>;
+    addSocialLink(platform: SocialPlatform, url: string, icon: string, isActive: boolean): Promise<SocialLink>;
+    addTestimonial(author: string, message: string): Promise<Testimonial>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    checkAdminStatus(): Promise<boolean>;
     claimAdmin(): Promise<ClaimAdminResult>;
-    createCategory(name: string, slug: string): Promise<CategoryResult>;
-    createProject(title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null): Promise<ProjectResult>;
-    createService(title: string, description: string): Promise<ServiceResult>;
-    createSocialLink(platform: SocialPlatform, url: string, icon: string): Promise<void>;
-    deleteBlog(id: bigint): Promise<void>;
-    deleteCategory(id: bigint): Promise<CategoryResult>;
-    deleteLead(id: bigint): Promise<void>;
-    deleteProject(id: bigint): Promise<ProjectResult>;
-    deleteSeoSetting(page: string): Promise<void>;
-    deleteService(id: bigint): Promise<ServiceResult>;
-    deleteSkill(id: bigint): Promise<void>;
-    deleteSocialLink(id: bigint): Promise<void>;
-    deleteTestimonial(id: bigint): Promise<void>;
-    getBlogBySlug(slug: string): Promise<BlogPost | null>;
-    getBlogs(): Promise<Array<BlogPost>>;
+    deleteBlogPost(id: bigint): Promise<boolean>;
+    deleteExperience(id: bigint): Promise<CrudResponse>;
+    deleteLead(id: bigint): Promise<boolean>;
+    deleteProject(id: bigint): Promise<CrudResponse>;
+    deleteProjectCategory(id: bigint): Promise<CrudResponse>;
+    deleteService(id: bigint): Promise<CrudResponse>;
+    deleteSkill(id: bigint): Promise<boolean>;
+    deleteSocialLink(id: bigint): Promise<boolean>;
+    deleteTestimonial(id: bigint): Promise<boolean>;
+    getBlogPost(id: bigint): Promise<BlogPost | null>;
+    getBlogPosts(): Promise<Array<BlogPost>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getCategory(id: bigint): Promise<CategoryResult>;
-    getDashboardStats(): Promise<{
-        leadCount: bigint;
-        projectCount: bigint;
-        blogCount: bigint;
-    }>;
+    getExperiences(): Promise<ExperiencesResult>;
     getLeads(): Promise<Array<Lead>>;
     getProject(id: bigint): Promise<ProjectResult>;
-    getProjects(): Promise<Array<Project>>;
-    getSeoSettingByPage(page: string): Promise<SeoSetting | null>;
+    getProjectCategories(): Promise<CategoriesResult>;
+    getProjects(): Promise<ProjectsResult>;
+    getSeoSetting(page: string): Promise<SeoSetting | null>;
     getSeoSettings(): Promise<Array<SeoSetting>>;
-    getService(id: bigint): Promise<ServiceResult>;
+    getServices(): Promise<ServicesResult>;
+    getSkills(): Promise<Array<Skill>>;
+    getSocialLinks(): Promise<Array<SocialLink>>;
     getTestimonials(): Promise<Array<Testimonial>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    listCategories(): Promise<CategoriesResult>;
-    listProjects(): Promise<ProjectsResult>;
-    listServices(): Promise<ServicesResult>;
-    listSkills(): Promise<Array<Skill>>;
-    listSocialLinks(): Promise<Array<SocialLink>>;
-    processContactForm(name: string, email: string, message: string): Promise<void>;
-    resetAdmin(): Promise<void>;
+    reorderProjects(orderedIds: Array<bigint>): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    setSeoSetting(page: string, metaTitle: string, metaDescription: string): Promise<void>;
-    toggleSocialLink(id: bigint): Promise<void>;
-    updateBlog(id: bigint, title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<void>;
-    updateCategory(id: bigint, name: string, slug: string): Promise<CategoryResult>;
-    updateProject(id: bigint, title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null): Promise<ProjectResult>;
+    saveSeoSetting(page: string, metaTitle: string, metaDescription: string): Promise<SeoSetting>;
+    submitLead(name: string, email: string, message: string): Promise<Lead>;
+    updateBlogPost(id: bigint, title: string, slug: string, metaTitle: string, metaDescription: string, content: string): Promise<BlogPost | null>;
+    updateExperience(id: bigint, title: string, company: string, period: string, description: string, responsibilities: Array<string>): Promise<ExperienceResult>;
+    updateProject(id: bigint, title: string, description: string, url: string, image: ExternalBlob | null, categoryId: bigint | null, order: bigint, isActive: boolean): Promise<ProjectResult>;
+    updateProjectCategory(id: bigint, name: string, slug: string, order: bigint): Promise<CategoryResult>;
     updateService(id: bigint, title: string, description: string): Promise<ServiceResult>;
-    updateSkill(id: bigint, name: string, experience: bigint, category: SkillCategory): Promise<void>;
-    updateSocialLink(id: bigint, url: string, icon: string): Promise<void>;
-    updateTestimonial(id: bigint, author: string, message: string): Promise<void>;
+    updateSkill(id: bigint, name: string, experience: bigint, category: SkillCategory): Promise<Skill | null>;
+    updateSocialLink(id: bigint, platform: SocialPlatform, url: string, icon: string, isActive: boolean): Promise<SocialLink | null>;
+    updateTestimonial(id: bigint, author: string, message: string): Promise<Testimonial | null>;
 }

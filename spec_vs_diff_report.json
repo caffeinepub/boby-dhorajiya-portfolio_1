@@ -1,27 +1,50 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T08:51:14.990Z",
-  "summary": "The diff addresses all three requirements. REQ-1 is handled in backend/main.mo with claimAdmin storing the caller principal and checkAdminStatus comparing caller against stored admin. REQ-2 is partially addressed in useQueries.ts with identity checks on mutations and actor invalidation in LoginButton.tsx, but useActor.ts and useActorWrapper.ts themselves are not shown as modified in the diff. REQ-3 is addressed in AdminGuard.tsx with React Query scoped to the current principal, re-fetch on actor change, and invalidation on logout.",
+  "generatedAt": "2026-03-01T20:55:01.441Z",
+  "summary": "The diff shows only 2 modified files: backend/main.mo (truncated) and project_state.json. The project_state.json merely records the request as 'pending', and backend/main.mo shows a partial view of the backend. There is no evidence of frontend files being restored, no evidence that all backend files were fully restored to Version 12 state, no confirmation that versions 13–16 changes were removed, and no evidence the application builds and runs successfully. The diff is severely incomplete relative to what a full Version 12 restore would require.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Audit frontend/src/hooks/useActor.ts and frontend/src/hooks/useActorWrapper.ts to ensure the actor is always initialized with the authenticated identity and rebuilt whenever the identity changes.",
-      "reason": "The diff shows neither useActor.ts nor useActorWrapper.ts in the modified files list. The requirement explicitly calls for auditing and fixing these two files, but no changes to them are evidenced in the diff.",
+      "id": "REQ-1",
+      "requirement": "All frontend files match the state they were in at Version 12",
+      "reason": "No frontend files appear in the diff at all. Files like useInternetIdentity.ts, useActor.ts, main.tsx, components/ui, and any other frontend files are absent from the diff, so there is no evidence they were restored.",
+      "evidence": []
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "All backend files match the state they were in at Version 12",
+      "reason": "Only backend/main.mo is shown (truncated). Other backend files such as authorization and blob-storage modules are not present in the diff, so it cannot be verified they match Version 12. Additionally, main.mo is truncated and cannot be fully verified.",
       "evidence": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/components/LoginButton.tsx"
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "No code or logic from versions 13–16 remains in the codebase",
+      "reason": "With only one truncated backend file visible and no frontend files in the diff, there is no evidence that all version 13–16 changes have been removed across the full codebase.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "The application builds and runs successfully after the restore",
+      "reason": "The diff provides no build artifacts, CI results, or any other evidence that the application was built and verified to run successfully.",
+      "evidence": []
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "project_state.json records the restore request as 'pending' with status tracking",
+      "reason": "The BuildRequest does not ask for a project_state.json file or any status-tracking mechanism. This file appears to be an internal scaffolding artifact not requested by the spec.",
+      "evidence": [
+        "project_state.json"
       ]
     }
   ],
-  "hallucinated_features": [],
-  "confidence": 0.72,
+  "confidence": 0.75,
   "changed_files": [
     "backend/main.mo",
-    "frontend-file-summaries.txt",
-    "frontend/src/components/AdminGuard.tsx",
-    "frontend/src/components/LoginButton.tsx",
-    "frontend/src/hooks/useQueries.ts",
     "project_state.json"
   ]
 }

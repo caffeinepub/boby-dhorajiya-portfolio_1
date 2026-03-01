@@ -32,6 +32,29 @@ export interface CategoryResult {
 export type ClaimAdminResult = { 'notAuthenticated' : null } |
   { 'success' : null } |
   { 'alreadyClaimed' : null };
+export interface CrudResponse {
+  'data' : [] | [boolean],
+  'error' : [] | [string],
+  'success' : boolean,
+}
+export interface Experience {
+  'id' : bigint,
+  'title' : string,
+  'responsibilities' : Array<string>,
+  'period' : string,
+  'description' : string,
+  'company' : string,
+}
+export interface ExperienceResult {
+  'data' : [] | [Experience],
+  'error' : [] | [string],
+  'success' : boolean,
+}
+export interface ExperiencesResult {
+  'data' : [] | [Array<Experience>],
+  'error' : [] | [string],
+  'success' : boolean,
+}
 export type ExternalBlob = Uint8Array;
 export interface Lead {
   'id' : bigint,
@@ -45,12 +68,15 @@ export interface Project {
   'url' : string,
   'categoryId' : [] | [bigint],
   'title' : string,
+  'order' : bigint,
   'description' : string,
+  'isActive' : boolean,
   'timestamp' : bigint,
   'image' : [] | [ExternalBlob],
 }
 export interface ProjectCategory {
   'id' : bigint,
+  'order' : bigint,
   'name' : string,
   'slug' : string,
 }
@@ -141,72 +167,104 @@ export interface _SERVICE {
   >,
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'addBlog' : ActorMethod<[string, string, string, string, string], undefined>,
-  'addSkill' : ActorMethod<[string, bigint, SkillCategory], undefined>,
-  'addTestimonial' : ActorMethod<[string, string], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'checkAdminStatus' : ActorMethod<[], boolean>,
-  'claimAdmin' : ActorMethod<[], ClaimAdminResult>,
-  'createCategory' : ActorMethod<[string, string], CategoryResult>,
-  'createProject' : ActorMethod<
-    [string, string, string, [] | [ExternalBlob], [] | [bigint]],
+  'addBlogPost' : ActorMethod<
+    [string, string, string, string, string],
+    BlogPost
+  >,
+  'addExperience' : ActorMethod<
+    [string, string, string, string, Array<string>],
+    ExperienceResult
+  >,
+  'addProject' : ActorMethod<
+    [
+      string,
+      string,
+      string,
+      [] | [ExternalBlob],
+      [] | [bigint],
+      bigint,
+      boolean,
+    ],
     ProjectResult
   >,
-  'createService' : ActorMethod<[string, string], ServiceResult>,
-  'createSocialLink' : ActorMethod<[SocialPlatform, string, string], undefined>,
-  'deleteBlog' : ActorMethod<[bigint], undefined>,
-  'deleteCategory' : ActorMethod<[bigint], CategoryResult>,
-  'deleteLead' : ActorMethod<[bigint], undefined>,
-  'deleteProject' : ActorMethod<[bigint], ProjectResult>,
-  'deleteSeoSetting' : ActorMethod<[string], undefined>,
-  'deleteService' : ActorMethod<[bigint], ServiceResult>,
-  'deleteSkill' : ActorMethod<[bigint], undefined>,
-  'deleteSocialLink' : ActorMethod<[bigint], undefined>,
-  'deleteTestimonial' : ActorMethod<[bigint], undefined>,
-  'getBlogBySlug' : ActorMethod<[string], [] | [BlogPost]>,
-  'getBlogs' : ActorMethod<[], Array<BlogPost>>,
+  'addProjectCategory' : ActorMethod<[string, string, bigint], CategoryResult>,
+  'addService' : ActorMethod<[string, string], ServiceResult>,
+  'addSkill' : ActorMethod<[string, bigint, SkillCategory], Skill>,
+  'addSocialLink' : ActorMethod<
+    [SocialPlatform, string, string, boolean],
+    SocialLink
+  >,
+  'addTestimonial' : ActorMethod<[string, string], Testimonial>,
+  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'claimAdmin' : ActorMethod<[], ClaimAdminResult>,
+  'deleteBlogPost' : ActorMethod<[bigint], boolean>,
+  'deleteExperience' : ActorMethod<[bigint], CrudResponse>,
+  'deleteLead' : ActorMethod<[bigint], boolean>,
+  'deleteProject' : ActorMethod<[bigint], CrudResponse>,
+  'deleteProjectCategory' : ActorMethod<[bigint], CrudResponse>,
+  'deleteService' : ActorMethod<[bigint], CrudResponse>,
+  'deleteSkill' : ActorMethod<[bigint], boolean>,
+  'deleteSocialLink' : ActorMethod<[bigint], boolean>,
+  'deleteTestimonial' : ActorMethod<[bigint], boolean>,
+  'getBlogPost' : ActorMethod<[bigint], [] | [BlogPost]>,
+  'getBlogPosts' : ActorMethod<[], Array<BlogPost>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getCategory' : ActorMethod<[bigint], CategoryResult>,
-  'getDashboardStats' : ActorMethod<
-    [],
-    { 'leadCount' : bigint, 'projectCount' : bigint, 'blogCount' : bigint }
-  >,
+  'getExperiences' : ActorMethod<[], ExperiencesResult>,
   'getLeads' : ActorMethod<[], Array<Lead>>,
   'getProject' : ActorMethod<[bigint], ProjectResult>,
-  'getProjects' : ActorMethod<[], Array<Project>>,
-  'getSeoSettingByPage' : ActorMethod<[string], [] | [SeoSetting]>,
+  'getProjectCategories' : ActorMethod<[], CategoriesResult>,
+  'getProjects' : ActorMethod<[], ProjectsResult>,
+  'getSeoSetting' : ActorMethod<[string], [] | [SeoSetting]>,
   'getSeoSettings' : ActorMethod<[], Array<SeoSetting>>,
-  'getService' : ActorMethod<[bigint], ServiceResult>,
+  'getServices' : ActorMethod<[], ServicesResult>,
+  'getSkills' : ActorMethod<[], Array<Skill>>,
+  'getSocialLinks' : ActorMethod<[], Array<SocialLink>>,
   'getTestimonials' : ActorMethod<[], Array<Testimonial>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'listCategories' : ActorMethod<[], CategoriesResult>,
-  'listProjects' : ActorMethod<[], ProjectsResult>,
-  'listServices' : ActorMethod<[], ServicesResult>,
-  'listSkills' : ActorMethod<[], Array<Skill>>,
-  'listSocialLinks' : ActorMethod<[], Array<SocialLink>>,
-  'processContactForm' : ActorMethod<[string, string, string], undefined>,
-  'resetAdmin' : ActorMethod<[], undefined>,
+  'reorderProjects' : ActorMethod<[Array<bigint>], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'setSeoSetting' : ActorMethod<[string, string, string], undefined>,
-  'toggleSocialLink' : ActorMethod<[bigint], undefined>,
-  'updateBlog' : ActorMethod<
+  'saveSeoSetting' : ActorMethod<[string, string, string], SeoSetting>,
+  'submitLead' : ActorMethod<[string, string, string], Lead>,
+  'updateBlogPost' : ActorMethod<
     [bigint, string, string, string, string, string],
-    undefined
+    [] | [BlogPost]
   >,
-  'updateCategory' : ActorMethod<[bigint, string, string], CategoryResult>,
+  'updateExperience' : ActorMethod<
+    [bigint, string, string, string, string, Array<string>],
+    ExperienceResult
+  >,
   'updateProject' : ActorMethod<
-    [bigint, string, string, string, [] | [ExternalBlob], [] | [bigint]],
+    [
+      bigint,
+      string,
+      string,
+      string,
+      [] | [ExternalBlob],
+      [] | [bigint],
+      bigint,
+      boolean,
+    ],
     ProjectResult
+  >,
+  'updateProjectCategory' : ActorMethod<
+    [bigint, string, string, bigint],
+    CategoryResult
   >,
   'updateService' : ActorMethod<[bigint, string, string], ServiceResult>,
   'updateSkill' : ActorMethod<
     [bigint, string, bigint, SkillCategory],
-    undefined
+    [] | [Skill]
   >,
-  'updateSocialLink' : ActorMethod<[bigint, string, string], undefined>,
-  'updateTestimonial' : ActorMethod<[bigint, string, string], undefined>,
+  'updateSocialLink' : ActorMethod<
+    [bigint, SocialPlatform, string, string, boolean],
+    [] | [SocialLink]
+  >,
+  'updateTestimonial' : ActorMethod<
+    [bigint, string, string],
+    [] | [Testimonial]
+  >,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

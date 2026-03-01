@@ -1,94 +1,111 @@
-import { Briefcase, Calendar, MapPin, CheckCircle } from 'lucide-react';
+import React from 'react';
+import { Briefcase, Calendar, Building2, ChevronRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useGetExperiences } from '../hooks/useQueries';
 
 export default function Experience() {
+  const { data: experiences, isLoading } = useGetExperiences();
+
   return (
-    <div className="min-h-screen bg-background py-16">
-      <div className="max-w-4xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-14">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-foreground mb-4">Experience</h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            My professional journey building secure, cross-platform mobile applications.
+    <div className="min-h-screen bg-background">
+      {/* Hero Section */}
+      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="container mx-auto px-4 text-center">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-6">
+            <Briefcase className="w-4 h-4" />
+            Work History
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+            Professional Experience
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            A journey through my career as a Mobile App Developer, building impactful solutions.
           </p>
         </div>
+      </section>
 
-        {/* Single Experience Entry */}
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border hidden sm:block" />
-
-          <div className="relative sm:pl-16">
-            {/* Timeline dot */}
-            <div className="hidden sm:flex absolute left-0 top-6 w-12 h-12 rounded-full bg-primary/10 border-2 border-primary items-center justify-center">
-              <Briefcase size={20} className="text-primary" />
+      {/* Timeline Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          {isLoading ? (
+            <div className="space-y-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-6">
+                  <div className="flex flex-col items-center">
+                    <Skeleton className="w-12 h-12 rounded-full" />
+                    <Skeleton className="w-0.5 h-32 mt-2" />
+                  </div>
+                  <div className="flex-1 pb-8">
+                    <Skeleton className="h-6 w-48 mb-2" />
+                    <Skeleton className="h-4 w-32 mb-4" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4" />
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : !experiences || experiences.length === 0 ? (
+            <div className="text-center py-20">
+              <Briefcase className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">No Experience Added Yet</h3>
+              <p className="text-muted-foreground">Work experience entries will appear here once added.</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Vertical line */}
+              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
-            <div className="bg-card border border-border rounded-2xl p-8 hover:border-primary/40 transition-colors">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-                <div>
-                  <h2 className="text-2xl font-bold text-foreground mb-1">Senior Mobile App Developer</h2>
-                  <div className="flex items-center gap-2 text-primary font-semibold text-lg">
-                    <Briefcase size={16} />
-                    Nexus IT Solution
+              <div className="space-y-0">
+                {experiences.map((exp, index) => (
+                  <div key={String(exp.id)} className="relative flex gap-6 pb-12 last:pb-0">
+                    {/* Timeline dot */}
+                    <div className="relative z-10 flex-shrink-0">
+                      <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+                        <Briefcase className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 bg-card border border-border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold text-foreground">{exp.title}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Building2 className="w-4 h-4 text-primary" />
+                            <span className="text-primary font-medium">{exp.company}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {exp.period}
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground mb-4 leading-relaxed">{exp.description}</p>
+
+                      {exp.responsibilities && exp.responsibilities.length > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-2 uppercase tracking-wide">
+                            Key Responsibilities
+                          </h4>
+                          <ul className="space-y-1.5">
+                            {exp.responsibilities.map((resp, rIdx) => (
+                              <li key={rIdx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                                <ChevronRight className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                                {resp}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={14} />
-                    <span>2022 – Present</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin size={14} />
-                    <span>India (Remote / On-site)</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-muted-foreground leading-relaxed mb-6">
-                Leading mobile application development at Nexus IT Solution, delivering high-quality cross-platform apps
-                for enterprise and consumer clients. Responsible for full-cycle development from architecture design to
-                App Store deployment, with a strong emphasis on security, performance, and maintainability.
-              </p>
-
-              {/* Key Responsibilities */}
-              <div>
-                <h3 className="font-semibold text-foreground mb-4">Key Responsibilities & Achievements</h3>
-                <ul className="space-y-3">
-                  {[
-                    'Architected and developed production Flutter applications for iOS and Android, serving thousands of active users with 60fps performance.',
-                    'Built cross-platform React Native apps with shared business logic, reducing development time by 40% compared to native development.',
-                    'Implemented secure API handling with JWT authentication, token refresh flows, and certificate pinning to prevent MITM attacks.',
-                    'Designed and integrated mobile authentication security including OAuth 2.0, biometric authentication (Face ID / Fingerprint), and multi-factor authentication.',
-                    'Implemented secure storage solutions using platform-native encrypted storage (Keychain on iOS, Keystore on Android) for sensitive user data.',
-                    'Applied web application security practices including input validation, XSS prevention, and OWASP Mobile Top 10 compliance across all projects.',
-                    'Conducted security code reviews and vulnerability assessments, identifying and remediating critical security issues before production deployment.',
-                    'Mentored junior developers on Flutter best practices, clean architecture patterns, and security-first development principles.',
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-3 text-muted-foreground text-sm">
-                      <CheckCircle size={16} className="text-cyan-400 flex-shrink-0 mt-0.5" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Tech Tags */}
-              <div className="mt-6 flex flex-wrap gap-2">
-                {['Flutter', 'Dart', 'React Native', 'JavaScript', 'TypeScript', 'Firebase', 'REST APIs', 'OAuth 2.0', 'Biometrics', 'Secure Storage', 'OWASP', 'Git'].map((tag) => (
-                  <span
-                    key={tag}
-                    className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full border border-primary/20"
-                  >
-                    {tag}
-                  </span>
                 ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </section>
     </div>
   );
 }

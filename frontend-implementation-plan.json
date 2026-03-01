@@ -1,48 +1,197 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Fix 401 Unauthorized error on admin CRUD operations",
+  "title": "Restore and redeploy Version 12",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Ensure actor is initialized with authenticated identity before mutations",
+      "id": "REQ-1",
+      "summary": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive)",
       "acceptanceCriteria": [
-        "After login, the actor used by mutation hooks carries the authenticated Internet Identity principal, not the anonymous identity.",
-        "If a user logs in and immediately attempts to create a resource, the actor is initialized with the correct identity before the call is made.",
-        "Logging out and back in produces a fresh actor with the new identity.",
-        "No mutation hook in useQueries.ts falls back silently to an anonymous actor when an authenticated identity is available."
+        "All frontend files match the state they were in at Version 12",
+        "All backend files match the state they were in at Version 12",
+        "No code or logic from versions 13–16 remains in the codebase",
+        "The application builds and runs successfully after the restore"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useActorWrapper.ts",
+          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Add explicit identity validation to ensure the actor wrapper never returns an actor initialized with an anonymous identity when an authenticated identity is available from the InternetIdentityProvider. Add a state check that waits for identity resolution before returning the actor, preventing race conditions where mutations are dispatched before authentication completes."
+          "description": "Restore the routing configuration, layout structure, and route registrations to match Version 12 state, removing any routes or layout changes introduced in versions 13-16"
+        },
+        {
+          "path": "frontend/src/components/Navigation.tsx",
+          "operation": "modify",
+          "description": "Restore navigation links, styling, and structure to Version 12 state, reverting any menu items, styling changes, or structural modifications added in later versions"
+        },
+        {
+          "path": "frontend/src/components/Footer.tsx",
+          "operation": "modify",
+          "description": "Restore footer content, links, and layout to Version 12 state, removing any content or structural changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/components/AdminSidebar.tsx",
+          "operation": "modify",
+          "description": "Restore admin sidebar navigation items and structure to Version 12 state, removing any new admin sections or menu modifications introduced in versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Home.tsx",
+          "operation": "modify",
+          "description": "Restore homepage hero section, services preview, projects preview, and all content to Version 12 state, reverting any layout, content, or feature changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/About.tsx",
+          "operation": "modify",
+          "description": "Restore About page skills display, testimonials section, and content structure to Version 12 state, removing any additions or modifications from later versions"
+        },
+        {
+          "path": "frontend/src/pages/Projects.tsx",
+          "operation": "modify",
+          "description": "Restore Projects page gallery layout, category filtering, and project card rendering to Version 12 state, reverting any UI or functionality changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Services.tsx",
+          "operation": "modify",
+          "description": "Restore Services page category tabs, service card layout, and filtering logic to Version 12 state, removing any changes introduced in versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Blog.tsx",
+          "operation": "modify",
+          "description": "Restore Blog listing page post card layout and navigation to Version 12 state, reverting any styling or structural changes from later versions"
+        },
+        {
+          "path": "frontend/src/pages/BlogPost.tsx",
+          "operation": "modify",
+          "description": "Restore individual blog post detail page rendering and layout to Version 12 state, removing any content or styling changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Contact.tsx",
+          "operation": "modify",
+          "description": "Restore Contact page form fields, validation, submission logic, and contact information display to Version 12 state, reverting any form or layout modifications from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Experience.tsx",
+          "operation": "modify",
+          "description": "Restore Experience timeline page layout and content rendering to Version 12 state, removing any changes introduced in later versions"
+        },
+        {
+          "path": "frontend/src/pages/Skills.tsx",
+          "operation": "modify",
+          "description": "Restore Skills page category grouping and progress bar display to Version 12 state, reverting any visualization or layout changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/Testimonials.tsx",
+          "operation": "modify",
+          "description": "Restore Testimonials page grid layout and testimonial card rendering to Version 12 state, removing any styling or structural changes from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/Dashboard.tsx",
+          "operation": "modify",
+          "description": "Restore admin dashboard summary stats and navigation cards to Version 12 state, reverting any new metrics or layout changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/ProjectsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin projects management CRUD operations, drag-and-drop functionality, and form fields to Version 12 state, removing any feature additions or modifications from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/CategoriesManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin categories management CRUD operations and reordering controls to Version 12 state, reverting any changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/BlogManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin blog management CRUD operations, search, and pagination to Version 12 state, removing any functionality or UI changes from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/SkillsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin skills management CRUD operations and form fields to Version 12 state, reverting any changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/TestimonialsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin testimonials management CRUD operations to Version 12 state, removing any modifications from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/ExperienceManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin experience management CRUD operations and dynamic responsibility fields to Version 12 state, reverting any changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/ServicesManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin services management CRUD operations and dialog forms to Version 12 state, removing any functionality changes from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/LeadsManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin leads management view and delete functionality to Version 12 state, reverting any UI or feature changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/SeoManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin SEO management CRUD operations and per-page settings to Version 12 state, removing any changes from later versions"
+        },
+        {
+          "path": "frontend/src/pages/admin/SocialLinksManagement.tsx",
+          "operation": "modify",
+          "description": "Restore admin social links management CRUD operations to Version 12 state, reverting any modifications from versions 13-16"
+        },
+        {
+          "path": "frontend/src/pages/admin/Help.tsx",
+          "operation": "modify",
+          "description": "Restore admin help page accordion guide content to Version 12 state, removing any documentation updates from later versions"
         },
         {
           "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Add explicit identity checks to all mutation hooks (addSkill, updateSkill, deleteSkill, createProject, updateProject, deleteProject, createService, updateService, deleteService, addBlog, updateBlog, deleteBlog, createCategory, updateCategory, deleteCategory, createSocialLink, updateSocialLink, deleteSocialLink, setSeoSetting, deleteSeoSetting, addTestimonial, updateTestimonial, deleteTestimonial) to ensure the actor is available and authenticated before dispatching the mutation. Include error handling that prevents mutations from executing with an anonymous identity."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Fix AdminGuard admin status verification and state persistence",
-      "acceptanceCriteria": [
-        "AdminGuard correctly confirms admin status on each protected route before rendering the management UI.",
-        "The admin status is not lost on page navigation or React Query cache invalidation.",
-        "If the user is not admin, AdminGuard shows the appropriate UI instead of silently allowing mutations that will fail."
-      ],
-      "file_operations": [
+          "description": "Restore React Query hooks for all backend operations to Version 12 state, reverting any query modifications, new hooks, or mutation logic changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/components/SEOHead.tsx",
+          "operation": "modify",
+          "description": "Restore SEO head component fetching and meta tag updates to Version 12 state, removing any changes from later versions"
+        },
+        {
+          "path": "frontend/src/components/ProfileSetup.tsx",
+          "operation": "modify",
+          "description": "Restore profile setup modal dialog to Version 12 state, reverting any form field or validation changes from versions 13-16"
+        },
         {
           "path": "frontend/src/components/AdminGuard.tsx",
           "operation": "modify",
-          "description": "Replace the imperative useEffect-based admin status check with a proper React Query hook (useIsCallerAdmin) to ensure admin status is cached and persisted across navigations. Add dependency on the authenticated identity to trigger re-verification when the user logs in or out. Ensure the guard waits for both actor initialization and admin status resolution before rendering admin-protected content or showing the access denied UI."
+          "description": "Restore admin route guard logic and authentication checks to Version 12 state, removing any authorization changes from later versions"
         },
         {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/src/components/LoginButton.tsx",
           "operation": "modify",
-          "description": "Ensure the useIsCallerAdmin query hook (if not already present, add it) uses proper query key scoping and is enabled only when the actor is available. Configure the query to use staleTime and cacheTime so admin status persists across page navigations without unnecessary re-fetches, while still invalidating when the identity changes."
+          "description": "Restore login/logout button authentication flow to Version 12 state, reverting any styling or logic changes from versions 13-16"
+        },
+        {
+          "path": "frontend/src/components/ThemeToggle.tsx",
+          "operation": "modify",
+          "description": "Restore theme toggle button implementation to Version 12 state, removing any changes from later versions"
+        },
+        {
+          "path": "frontend/src/components/Layout.tsx",
+          "operation": "modify",
+          "description": "Restore layout wrapper component structure to Version 12 state, reverting any layout modifications from versions 13-16"
+        },
+        {
+          "path": "frontend/src/index.css",
+          "operation": "modify",
+          "description": "Restore global stylesheet CSS custom properties, Tailwind imports, theme colors, and utility classes to Version 12 state, removing any styling additions or modifications from versions 13-16"
+        },
+        {
+          "path": "frontend/tailwind.config.js",
+          "operation": "modify",
+          "description": "Restore Tailwind configuration color tokens, fonts, shadows, and plugins to Version 12 state, reverting any config changes from later versions"
+        },
+        {
+          "path": "frontend/src/utils/urlParams.ts",
+          "operation": "modify",
+          "description": "Restore URL parameter extraction utilities to Version 12 state, removing any utility function changes from versions 13-16"
         }
       ]
     }

@@ -1,45 +1,22 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Web application with admin panel and sidebar navigation. User is experiencing a 401 Unauthorized error on POST requests to create projects, services, or skills despite successful login.",
-  "architectural_notes": [
-    "Authentication uses JWT tokens; authorization headers must be sent correctly with POST requests",
-    "Role-based access control (RBAC) or guards may be restricting POST endpoints for creating projects, services, and skills"
-  ],
-  "known_issues": [
-    "401 Unauthorized error on POST requests to create projects, services, or skills — login works but JWT may not be attached to requests or RBAC guards may be misconfigured"
-  ],
-  "isFixRequest": true,
-  "existing_features": [
-    {
-      "id": "feature-audit-frontend-src-hooks-useactor-ts-and-frontend-src-hooks-useactorwrapper-ts-to-ensure-the-actor-is-always-initialized-with-the-authenticated-identity-not-anonymous-when-the-user-is-logged-in-via-internet-identity-the-actor-instance-must-be-rebuilt-whenever-the-identity-changes-login-logout-and-all-mutation-hooks-in-usequeries-ts-must-use-this-authenticated-actor-if-the-actor-is-falling-back-to-anonymous-due-to-a-race-condition-or-stale-cache-add-proper-invalidation-and-re-initialization-logic-so-the-identity-is-attached-before-any-mutation-is-dispatched",
-      "title": "Audit `frontend/src/hooks/useActor.ts` and `frontend/src/hooks/useActorWrapper.ts` to ensure the actor is always initialized with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. The actor instance must be rebuilt whenever the identity changes (login/logout), and all mutation hooks in `useQueries.ts` must use this authenticated actor. If the actor is falling back to anonymous due to a race condition or stale cache, add proper invalidation and re-initialization logic so the identity is attached before any mutation is dispatched.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-in-frontend-src-components-adminguard-tsx-ensure-that-the-admin-status-check-call-to-isadmin-or-equivalent-backend-function-completes-successfully-and-does-not-incorrectly-block-or-bypass-authorization-before-mutations-are-made-if-the-guard-is-short-circuiting-or-the-admin-state-is-not-being-persisted-correctly-across-navigations-fix-the-state-management-so-admin-protected-pages-reliably-confirm-admin-status-before-rendering-mutation-controls",
-      "title": "In `frontend/src/components/AdminGuard.tsx`, ensure that the admin status check (call to `isAdmin` or equivalent backend function) completes successfully and does not incorrectly block or bypass authorization before mutations are made. If the guard is short-circuiting or the admin state is not being persisted correctly across navigations, fix the state management so admin-protected pages reliably confirm admin status before rendering mutation controls.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    }
-  ],
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [],
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Audit and fix the backend admin authorization check in `backend/main.mo` so that all mutation functions (addProject, updateProject, deleteProject, addService, updateService, deleteService, addSkill, updateSkill, deleteSkill, and equivalents for blogs, categories, testimonials, social links, SEO settings) correctly validate the caller's principal against the stored admin principal. The `isAdmin` check must use `caller` (the implicit argument) — not a hardcoded or stale principal — and must return a proper `#err(\"Unauthorized\")` variant only when the caller is genuinely not the admin. Ensure the admin claim logic (`claimAdmin`) stores the principal correctly and that subsequent calls from the same authenticated identity are recognized.",
+      "summary": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive) across both the frontend and backend.",
       "reqIds": [
         "REQ-1"
       ],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Fix 401 Unauthorized error on admin CRUD operations (projects, services, skills)",
+  "projectName": "Restore and redeploy Version 12",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

@@ -1,46 +1,58 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-28T08:51:14.992Z",
+  "generatedAt": "2026-03-01T20:55:01.445Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 0,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Audit and fix the backend admin authorization check in `backend/main.mo` so that all mutation functions (addProject, updateProject, deleteProject, addService, updateService, deleteService, addSkill, updateSkill, deleteSkill, and equivalents for blogs, categories, testimonials, social links, SEO settings) correctly validate the caller's principal against the stored admin principal. The `isAdmin` check must use `caller` (the implicit argument) — not a hardcoded or stale principal — and must return a proper `#err(\"Unauthorized\")` variant only when the caller is genuinely not the admin. Ensure the admin claim logic (`claimAdmin`) stores the principal correctly and that subsequent calls from the same authenticated identity are recognized.",
-        "status": "unknown",
-        "plannedFiles": [],
+        "summary": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive) across both the frontend and backend.",
+        "status": "missing",
+        "plannedFiles": [
+          "frontend/src/App.tsx",
+          "frontend/src/components/Navigation.tsx",
+          "frontend/src/components/Footer.tsx",
+          "frontend/src/components/AdminSidebar.tsx",
+          "frontend/src/pages/Home.tsx",
+          "frontend/src/pages/About.tsx",
+          "frontend/src/pages/Projects.tsx",
+          "frontend/src/pages/Services.tsx",
+          "frontend/src/pages/Blog.tsx",
+          "frontend/src/pages/BlogPost.tsx",
+          "frontend/src/pages/Contact.tsx",
+          "frontend/src/pages/Experience.tsx",
+          "frontend/src/pages/Skills.tsx",
+          "frontend/src/pages/Testimonials.tsx",
+          "frontend/src/pages/admin/Dashboard.tsx",
+          "frontend/src/pages/admin/ProjectsManagement.tsx",
+          "frontend/src/pages/admin/CategoriesManagement.tsx",
+          "frontend/src/pages/admin/BlogManagement.tsx",
+          "frontend/src/pages/admin/SkillsManagement.tsx",
+          "frontend/src/pages/admin/TestimonialsManagement.tsx",
+          "frontend/src/pages/admin/ExperienceManagement.tsx",
+          "frontend/src/pages/admin/ServicesManagement.tsx",
+          "frontend/src/pages/admin/LeadsManagement.tsx",
+          "frontend/src/pages/admin/SeoManagement.tsx",
+          "frontend/src/pages/admin/SocialLinksManagement.tsx",
+          "frontend/src/pages/admin/Help.tsx",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/components/SEOHead.tsx",
+          "frontend/src/components/ProfileSetup.tsx",
+          "frontend/src/components/AdminGuard.tsx",
+          "frontend/src/components/LoginButton.tsx",
+          "frontend/src/components/ThemeToggle.tsx",
+          "frontend/src/components/Layout.tsx",
+          "frontend/src/index.css",
+          "frontend/tailwind.config.js",
+          "frontend/src/utils/urlParams.ts"
+        ],
         "matchedFiles": []
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Audit `frontend/src/hooks/useActor.ts` and `frontend/src/hooks/useActorWrapper.ts` to ensure the actor is always initialized with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. The actor instance must be rebuilt whenever the identity changes (login/logout), and all mutation hooks in `useQueries.ts` must use this authenticated actor. If the actor is falling back to anonymous due to a race condition or stale cache, add proper invalidation and re-initialization logic so the identity is attached before any mutation is dispatched.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/hooks/useActorWrapper.ts",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/hooks/useQueries.ts"
-        ]
-      },
-      {
-        "id": "REQ-3",
-        "summary": "In `frontend/src/components/AdminGuard.tsx`, ensure that the admin status check (call to `isAdmin` or equivalent backend function) completes successfully and does not incorrectly block or bypass authorization before mutations are made. If the guard is short-circuiting or the admin state is not being persisted correctly across navigations, fix the state management so admin-protected pages reliably confirm admin status before rendering mutation controls.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/AdminGuard.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/AdminGuard.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ]
       }
     ]
   },
@@ -48,11 +60,7 @@
     "backend/main.mo",
     "build-request.json",
     "feature_evidence.json",
-    "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/AdminGuard.tsx",
-    "frontend/src/components/LoginButton.tsx",
-    "frontend/src/hooks/useQueries.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

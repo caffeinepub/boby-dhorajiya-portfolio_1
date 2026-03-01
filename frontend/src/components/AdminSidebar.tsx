@@ -1,120 +1,82 @@
-import { Link, useRouter } from '@tanstack/react-router';
+import React from 'react';
+import { Link, useLocation } from '@tanstack/react-router';
 import {
-  LayoutDashboard, FolderOpen, Tag, Zap, Briefcase, BookOpen,
-  MessageSquare, Users, Share2, Search, HelpCircle, LogOut, Menu, X
+  LayoutDashboard,
+  FolderOpen,
+  FileText,
+  MessageSquare,
+  Wrench,
+  Users,
+  Search,
+  HelpCircle,
+  Briefcase,
+  Star,
+  Tags,
 } from 'lucide-react';
-import { useState } from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useQueryClient } from '@tanstack/react-query';
+import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-  { label: 'Projects', path: '/admin/projects', icon: FolderOpen },
-  { label: 'Categories', path: '/admin/categories', icon: Tag },
-  { label: 'Skills', path: '/admin/skills', icon: Zap },
-  { label: 'Services', path: '/admin/services', icon: Briefcase },
-  { label: 'Blogs', path: '/admin/blog', icon: BookOpen },
-  { label: 'Testimonials', path: '/admin/testimonials', icon: MessageSquare },
-  { label: 'Leads', path: '/admin/leads', icon: Users },
-  { label: 'Social Links', path: '/admin/social-links', icon: Share2 },
-  { label: 'SEO Settings', path: '/admin/seo', icon: Search },
-  { label: 'Help', path: '/admin/help', icon: HelpCircle },
+  { path: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { path: '/admin/projects', label: 'Projects', icon: FolderOpen },
+  { path: '/admin/categories', label: 'Categories', icon: Tags },
+  { path: '/admin/experience', label: 'Experience', icon: Briefcase },
+  { path: '/admin/services', label: 'Services', icon: Wrench },
+  { path: '/admin/skills', label: 'Skills', icon: Star },
+  { path: '/admin/blog', label: 'Blog', icon: FileText },
+  { path: '/admin/testimonials', label: 'Testimonials', icon: MessageSquare },
+  { path: '/admin/leads', label: 'Leads', icon: Users },
+  { path: '/admin/seo', label: 'SEO', icon: Search },
+  { path: '/admin/help', label: 'Help', icon: HelpCircle },
 ];
 
 export default function AdminSidebar() {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const { clear } = useInternetIdentity();
-  const queryClient = useQueryClient();
-  const router = useRouter();
-  const currentPath = router.state.location.pathname;
+  const location = useLocation();
 
-  const handleLogout = async () => {
-    await clear();
-    queryClient.clear();
-    router.navigate({ to: '/admin/dashboard' });
+  const isActive = (path: string, exact?: boolean) => {
+    if (exact) return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  const isActive = (path: string) => {
-    // Match /admin/dashboard also when on /admin
-    if (path === '/admin/dashboard') {
-      return currentPath === '/admin/dashboard' || currentPath === '/admin';
-    }
-    return currentPath === path;
-  };
-
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-sidebar-border">
-        <h2 className="text-xl font-bold text-sidebar-foreground">Admin Panel</h2>
-        <p className="text-xs text-sidebar-foreground/60 mt-1">Portfolio Management</p>
+  return (
+    <aside className="w-64 min-h-screen bg-card border-r border-border flex flex-col">
+      <div className="p-6 border-b border-border">
+        <Link to="/admin" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
+          </div>
+          <span className="font-bold text-foreground">Admin Panel</span>
+        </Link>
       </div>
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+
+      <nav className="flex-1 p-4 space-y-1">
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.path);
+          const active = isActive(item.path, item.exact);
           return (
             <Link
               key={item.path}
               to={item.path}
-              onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
-              }`}
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+              )}
             >
-              <Icon size={18} />
+              <item.icon className="w-4 h-4 flex-shrink-0" />
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-sidebar-border">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors w-full"
+
+      <div className="p-4 border-t border-border">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          <LogOut size={18} />
-          Logout
-        </button>
+          ← Back to Portfolio
+        </Link>
       </div>
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:flex flex-col w-64 min-h-screen bg-sidebar border-r border-sidebar-border flex-shrink-0">
-        <SidebarContent />
-      </aside>
-
-      {/* Mobile hamburger */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg bg-card border border-border text-foreground shadow-lg"
-          aria-label="Toggle sidebar"
-        >
-          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
-      </div>
-
-      {/* Mobile overlay */}
-      {mobileOpen && (
-        <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/60"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
-
-      {/* Mobile sidebar */}
-      <aside
-        className={`lg:hidden fixed top-0 left-0 z-50 w-64 h-full bg-sidebar border-r border-sidebar-border transform transition-transform duration-300 ${
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
-      >
-        <SidebarContent />
-      </aside>
-    </>
+    </aside>
   );
 }

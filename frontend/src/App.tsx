@@ -1,43 +1,44 @@
-import { lazy, Suspense } from 'react';
-import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet, redirect } from '@tanstack/react-router';
+import React, { lazy, Suspense } from 'react';
+import {
+  createRouter,
+  createRoute,
+  createRootRoute,
+  RouterProvider,
+  Outlet,
+  redirect,
+} from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from '@/components/ui/sonner';
 import { ThemeProvider } from 'next-themes';
-import { Loader2 } from 'lucide-react';
+import { Toaster } from '@/components/ui/sonner';
 import Navigation from './components/Navigation';
 import Footer from './components/Footer';
-
-// Public pages - static imports for fast initial load
-import Home from './pages/Home';
-import About from './pages/About';
-import Projects from './pages/Projects';
-import Services from './pages/Services';
-import Skills from './pages/Skills';
-import Experience from './pages/Experience';
-import Blog from './pages/Blog';
-import BlogPost from './pages/BlogPost';
-import Contact from './pages/Contact';
-import Testimonials from './pages/Testimonials';
 import ProfileSetup from './components/ProfileSetup';
 
-// Admin pages - lazy loaded for code splitting
+// Public pages
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Projects = lazy(() => import('./pages/Projects'));
+const Services = lazy(() => import('./pages/Services'));
+const Skills = lazy(() => import('./pages/Skills'));
+const Experience = lazy(() => import('./pages/Experience'));
+const Blog = lazy(() => import('./pages/Blog'));
+const BlogPost = lazy(() => import('./pages/BlogPost'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Testimonials = lazy(() => import('./pages/Testimonials'));
+
+// Admin pages
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const ProjectsManagement = lazy(() => import('./pages/admin/ProjectsManagement'));
 const CategoriesManagement = lazy(() => import('./pages/admin/CategoriesManagement'));
-const SkillsManagement = lazy(() => import('./pages/admin/SkillsManagement'));
-const ServicesManagement = lazy(() => import('./pages/admin/ServicesManagement'));
 const BlogManagement = lazy(() => import('./pages/admin/BlogManagement'));
 const TestimonialsManagement = lazy(() => import('./pages/admin/TestimonialsManagement'));
+const SkillsManagement = lazy(() => import('./pages/admin/SkillsManagement'));
+const ServicesManagement = lazy(() => import('./pages/admin/ServicesManagement'));
 const LeadsManagement = lazy(() => import('./pages/admin/LeadsManagement'));
 const SeoManagement = lazy(() => import('./pages/admin/SeoManagement'));
 const SocialLinksManagement = lazy(() => import('./pages/admin/SocialLinksManagement'));
+const ExperienceManagement = lazy(() => import('./pages/admin/ExperienceManagement'));
 const Help = lazy(() => import('./pages/admin/Help'));
-
-const AdminLoadingFallback = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-  </div>
-);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,7 +46,13 @@ const queryClient = new QueryClient({
   },
 });
 
-// Root route
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+  </div>
+);
+
+// ─── Root route ───────────────────────────────────────────────────────────────
 const rootRoute = createRootRoute({
   component: () => (
     <>
@@ -56,7 +63,7 @@ const rootRoute = createRootRoute({
   ),
 });
 
-// Public layout with nav/footer
+// ─── Public layout ────────────────────────────────────────────────────────────
 const publicLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'public',
@@ -64,27 +71,29 @@ const publicLayoutRoute = createRoute({
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Navigation />
       <main className="flex-1">
-        <Outlet />
+        <Suspense fallback={<PageLoader />}>
+          <Outlet />
+        </Suspense>
       </main>
       <Footer />
     </div>
   ),
 });
 
-// Admin layout (no public nav/footer)
+// ─── Admin layout ─────────────────────────────────────────────────────────────
 const adminLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'admin',
   component: () => (
     <div className="min-h-screen bg-background text-foreground">
-      <Suspense fallback={<AdminLoadingFallback />}>
+      <Suspense fallback={<PageLoader />}>
         <Outlet />
       </Suspense>
     </div>
   ),
 });
 
-// Public routes
+// ─── Public routes ────────────────────────────────────────────────────────────
 const homeRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/', component: Home });
 const aboutRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/about', component: About });
 const projectsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/projects', component: Projects });
@@ -96,7 +105,7 @@ const blogPostRoute = createRoute({ getParentRoute: () => publicLayoutRoute, pat
 const contactRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/contact', component: Contact });
 const testimonialsRoute = createRoute({ getParentRoute: () => publicLayoutRoute, path: '/testimonials', component: Testimonials });
 
-// Admin routes - /admin redirects to /admin/dashboard
+// ─── Admin routes ─────────────────────────────────────────────────────────────
 const adminIndexRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: '/admin',
@@ -104,20 +113,17 @@ const adminIndexRoute = createRoute({
     throw redirect({ to: '/admin/dashboard' });
   },
 });
-const adminDashboardRoute = createRoute({
-  getParentRoute: () => adminLayoutRoute,
-  path: '/admin/dashboard',
-  component: Dashboard,
-});
+const adminDashboardRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/dashboard', component: Dashboard });
 const adminProjectsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/projects', component: ProjectsManagement });
 const adminCategoriesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/categories', component: CategoriesManagement });
-const adminSkillsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/skills', component: SkillsManagement });
-const adminServicesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/services', component: ServicesManagement });
 const adminBlogRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/blog', component: BlogManagement });
 const adminTestimonialsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/testimonials', component: TestimonialsManagement });
+const adminSkillsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/skills', component: SkillsManagement });
+const adminServicesRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/services', component: ServicesManagement });
 const adminLeadsRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/leads', component: LeadsManagement });
 const adminSeoRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/seo', component: SeoManagement });
 const adminSocialLinksRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/social-links', component: SocialLinksManagement });
+const adminExperienceRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/experience', component: ExperienceManagement });
 const adminHelpRoute = createRoute({ getParentRoute: () => adminLayoutRoute, path: '/admin/help', component: Help });
 
 const routeTree = rootRoute.addChildren([
@@ -138,13 +144,14 @@ const routeTree = rootRoute.addChildren([
     adminDashboardRoute,
     adminProjectsRoute,
     adminCategoriesRoute,
-    adminSkillsRoute,
-    adminServicesRoute,
     adminBlogRoute,
     adminTestimonialsRoute,
+    adminSkillsRoute,
+    adminServicesRoute,
     adminLeadsRoute,
     adminSeoRoute,
     adminSocialLinksRoute,
+    adminExperienceRoute,
     adminHelpRoute,
   ]),
 ]);

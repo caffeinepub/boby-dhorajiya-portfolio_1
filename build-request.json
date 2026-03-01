@@ -1,78 +1,35 @@
 {
   "kind": "build_request",
-  "title": "Fix 401 Unauthorized error on admin CRUD operations (projects, services, skills)",
+  "title": "Restore and redeploy Version 12",
   "priority": "high",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Audit and fix the backend admin authorization check in `backend/main.mo` so that all mutation functions (addProject, updateProject, deleteProject, addService, updateService, deleteService, addSkill, updateSkill, deleteSkill, and equivalents for blogs, categories, testimonials, social links, SEO settings) correctly validate the caller's principal against the stored admin principal. The `isAdmin` check must use `caller` (the implicit argument) — not a hardcoded or stale principal — and must return a proper `#err(\"Unauthorized\")` variant only when the caller is genuinely not the admin. Ensure the admin claim logic (`claimAdmin`) stores the principal correctly and that subsequent calls from the same authenticated identity are recognized.",
-      "target": "backend",
+      "text": "Restore the application to the exact state of Version 12, reverting all changes introduced in versions 13 through 16 (inclusive) across both the frontend and backend.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-user-401"
+          "msg-last"
         ],
         "quotes": [
-          "Unauthorized: Only admins can add skills",
-          "whenever I attempt to submit a POST request to create any of these resources, the server responds with an unauthorized error"
+          "I want reuploade version 12 so please restore version 12 and reuploade this version"
         ]
       },
       "acceptanceCriteria": [
-        "A logged-in admin user can successfully create a skill, project, and service without receiving a 401/Unauthorized error.",
-        "The `isAdmin` function in `main.mo` compares the transaction `caller` principal against the stored admin principal.",
-        "Non-admin callers still correctly receive an Unauthorized error.",
-        "The `claimAdmin` function stores the caller's principal, and subsequent mutation calls from the same identity pass the admin check."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Audit `frontend/src/hooks/useActor.ts` and `frontend/src/hooks/useActorWrapper.ts` to ensure the actor is always initialized with the authenticated identity (not anonymous) when the user is logged in via Internet Identity. The actor instance must be rebuilt whenever the identity changes (login/logout), and all mutation hooks in `useQueries.ts` must use this authenticated actor. If the actor is falling back to anonymous due to a race condition or stale cache, add proper invalidation and re-initialization logic so the identity is attached before any mutation is dispatched.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-user-401"
-        ],
-        "quotes": [
-          "Authentication appears to be working correctly because I am able to log in successfully",
-          "Verify if the authorization headers are being sent correctly in the request"
-        ]
-      },
-      "acceptanceCriteria": [
-        "After login, the actor used by mutation hooks carries the authenticated Internet Identity principal, not the anonymous identity.",
-        "If a user logs in and immediately attempts to create a resource, the actor is initialized with the correct identity before the call is made.",
-        "Logging out and back in produces a fresh actor with the new identity.",
-        "No mutation hook in `useQueries.ts` falls back silently to an anonymous actor when an authenticated identity is available."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "In `frontend/src/components/AdminGuard.tsx`, ensure that the admin status check (call to `isAdmin` or equivalent backend function) completes successfully and does not incorrectly block or bypass authorization before mutations are made. If the guard is short-circuiting or the admin state is not being persisted correctly across navigations, fix the state management so admin-protected pages reliably confirm admin status before rendering mutation controls.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-user-401"
-        ],
-        "quotes": [
-          "Check whether it could be related to JWT token handling, middleware, guards, or role-based permissions"
-        ]
-      },
-      "acceptanceCriteria": [
-        "AdminGuard correctly confirms admin status on each protected route before rendering the management UI.",
-        "The admin status is not lost on page navigation or React Query cache invalidation.",
-        "If the user is not admin, AdminGuard shows the appropriate UI instead of silently allowing mutations that will fail."
+        "All frontend files match the state they were in at Version 12",
+        "All backend files match the state they were in at Version 12",
+        "No code or logic from versions 13–16 remains in the codebase",
+        "The application builds and runs successfully after the restore"
       ]
     }
   ],
   "constraints": [
-    "Do not change the Internet Identity authentication flow in `frontend/src/hooks/useInternetIdentity.ts` (immutable path).",
-    "Do not change `frontend/src/hooks/useActor.ts` directly if it is under immutable paths — propose a wrapper-level fix in `useActorWrapper.ts` instead.",
-    "All backend logic must remain in the single actor in `backend/main.mo`.",
-    "Do not introduce JWT, external auth services, or middleware — authentication is solely via Internet Identity and ICP caller principals."
+    "Do not carry over any changes from versions 13, 14, 15, or 16",
+    "Immutable frontend paths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui) must remain untouched"
   ],
   "nonGoals": [
-    "Adding new admin roles or role-based access control beyond the existing single-admin model.",
-    "Changing the visual design or layout of any admin management pages.",
-    "Adding new CRUD features or fields to projects, services, or skills.",
-    "Modifying public-facing pages."
+    "Introducing any new features during this restore",
+    "Merging or cherry-picking individual changes from later versions"
   ],
   "imageRequirements": {
     "required": [],

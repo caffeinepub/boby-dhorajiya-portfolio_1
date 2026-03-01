@@ -1,62 +1,45 @@
+import React from 'react';
 import { Link } from '@tanstack/react-router';
-import { Heart, Clock, Mail, MapPin } from 'lucide-react';
-import { SiGithub, SiLinkedin, SiX } from 'react-icons/si';
-import { useGetSocialLinks } from '../hooks/useQueries';
-import { SocialPlatform } from '../backend';
-
-function SocialIcon({ platform }: { platform: SocialPlatform }) {
-  if (platform === SocialPlatform.github) return <SiGithub size={18} />;
-  if (platform === SocialPlatform.linkedin) return <SiLinkedin size={18} />;
-  if (platform === SocialPlatform.x) return <SiX size={18} />;
-  return null;
-}
+import { Smartphone, Heart } from 'lucide-react';
 
 export default function Footer() {
-  const { data: socialLinks } = useGetSocialLinks();
-  const activeLinks = (socialLinks ?? []).filter((l) => l.isActive);
-  const appId = encodeURIComponent(typeof window !== 'undefined' ? window.location.hostname : 'boby-portfolio');
+  const year = new Date().getFullYear();
+  const appId = encodeURIComponent(window.location.hostname || 'unknown-app');
 
   return (
-    <footer className="bg-card border-t border-border mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <footer className="bg-card border-t border-border py-10">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-3">Boby Dhorajiya</h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Senior Mobile App Developer specializing in Flutter, React Native, and security-first development.
-            </p>
-            {activeLinks.length > 0 && (
-              <div className="flex gap-3 mt-4">
-                {activeLinks.map((link) => (
-                  <a
-                    key={String(link.id)}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Visit ${link.platform} profile`}
-                    className="text-muted-foreground hover:text-primary transition-colors"
-                  >
-                    <SocialIcon platform={link.platform} />
-                  </a>
-                ))}
+            <Link to="/" className="flex items-center gap-2 font-bold text-foreground mb-3">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                <Smartphone className="w-4 h-4 text-primary-foreground" />
               </div>
-            )}
+              <span>App Developer</span>
+            </Link>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Mobile App Developer crafting exceptional digital experiences for iOS and Android.
+            </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-3">Quick Links</h3>
+            <h3 className="font-semibold text-foreground mb-3">Quick Links</h3>
             <ul className="space-y-2">
               {[
-                { label: 'About', path: '/about' },
-                { label: 'Projects', path: '/projects' },
-                { label: 'Skills', path: '/skills' },
-                { label: 'Blog', path: '/blog' },
-                { label: 'Contact', path: '/contact' },
+                { path: '/', label: 'Home' },
+                { path: '/about', label: 'About' },
+                { path: '/projects', label: 'Projects' },
+                { path: '/services', label: 'Services' },
+                { path: '/experience', label: 'Experience' },
+                { path: '/contact', label: 'Contact' },
               ].map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="text-muted-foreground hover:text-primary text-sm transition-colors">
+                  <Link
+                    to={link.path}
+                    className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                  >
                     {link.label}
                   </Link>
                 </li>
@@ -64,35 +47,35 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact Info */}
+          {/* Contact */}
           <div>
-            <h3 className="text-lg font-bold text-foreground mb-3">Contact</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li className="flex items-center gap-2">
-                <Mail size={14} />
-                <span>dhorajiyaboby8@gmail.com</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <MapPin size={14} />
-                <span>India</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Clock size={14} />
-                <span>🕘 Available: 9:00 AM – 8:00 PM</span>
-              </li>
-            </ul>
+            <h3 className="font-semibold text-foreground mb-3">Get In Touch</h3>
+            <p className="text-muted-foreground text-sm mb-3">
+              Available for freelance projects and collaborations.
+            </p>
+            <Link
+              to="/contact"
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Contact Me
+            </Link>
           </div>
         </div>
 
-        <div className="border-t border-border mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Boby Dhorajiya. All rights reserved.</p>
-          <p className="flex items-center gap-1">
-            Built with <Heart size={14} className="text-red-500 fill-red-500" /> using{' '}
+        {/* Bottom */}
+        <div className="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm">
+            © {year} Mobile App Developer. All rights reserved.
+          </p>
+          <p className="text-muted-foreground text-sm flex items-center gap-1">
+            Built with{' '}
+            <Heart className="w-3.5 h-3.5 fill-primary text-primary" />{' '}
+            using{' '}
             <a
               href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary hover:underline"
+              className="text-primary hover:underline font-medium"
             >
               caffeine.ai
             </a>

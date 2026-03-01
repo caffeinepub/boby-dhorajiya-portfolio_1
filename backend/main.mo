@@ -6,18 +6,17 @@ import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
+
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 
 actor {
-  // Mixin core components
   include MixinStorage();
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Type definitions
   public type UserProfile = {
     name : Text;
     email : Text;
@@ -43,6 +42,7 @@ actor {
     id : Nat;
     name : Text;
     slug : Text;
+    order : Nat;
   };
 
   public type Project = {
@@ -53,6 +53,8 @@ actor {
     timestamp : Int;
     image : ?Storage.ExternalBlob;
     categoryId : ?Nat;
+    order : Nat;
+    isActive : Bool;
   };
 
   public type Service = {
@@ -94,6 +96,15 @@ actor {
     isActive : Bool;
   };
 
+  public type Experience = {
+    id : Nat;
+    title : Text;
+    company : Text;
+    period : Text;
+    description : Text;
+    responsibilities : [Text];
+  };
+
   public type ClaimAdminResult = {
     #success;
     #alreadyClaimed;
@@ -115,7 +126,9 @@ actor {
   public type ServiceResult = CrudResponse<Service>;
   public type ServicesResult = CrudResponse<[Service]>;
 
-  // Data stores
+  public type ExperienceResult = CrudResponse<Experience>;
+  public type ExperiencesResult = CrudResponse<[Experience]>;
+
   let userProfiles = Map.empty<Principal, UserProfile>();
   let testimonials = Map.empty<Nat, Testimonial>();
   let blogPosts = Map.empty<Nat, BlogPost>();
@@ -126,6 +139,7 @@ actor {
   let seoSettings = Map.empty<Text, SeoSetting>();
   let projectCategories = Map.empty<Nat, ProjectCategory>();
   let socialLinks = Map.empty<Nat, SocialLink>();
+  let experiences = Map.empty<Nat, Experience>();
 
   var nextTestimonialId = 1;
   var nextBlogPostId = 1;
@@ -135,51 +149,15 @@ actor {
   var nextLeadId = 1;
   var nextCategoryId = 1;
   var nextSocialLinkId = 1;
+  var nextExperienceId = 1;
 
   var adminPrincipal : ?Principal = null;
 
-  // Returns true and stores adminPrincipal if not set. Once set, returns true only for that principal.
-  public shared ({ caller }) func claimAdmin() : async ClaimAdminResult {
-    switch (adminPrincipal) {
-      case (null) {
-        if (caller.isAnonymous()) {
-          return #notAuthenticated;
-        };
-        adminPrincipal := ?caller;
-        return #success;
-      };
-      case (?p) {
-        if (caller == p) { #success } else { #alreadyClaimed };
-      };
-    };
-  };
+  // ── User Profile ──────────────────────────────────────────────────────────
 
-  // Never trap, just return false
-  public query ({ caller }) func checkAdminStatus() : async Bool {
-    switch (adminPrincipal) {
-      case (null) { false };
-      case (?p) { caller == p };
-    };
-  };
-
-  public shared ({ caller }) func resetAdmin() : async () {
-    switch (adminPrincipal) {
-      case (?p) {
-        if (caller != p) {
-          Runtime.trap("Unauthorized: Only admin can reset admin status");
-        };
-        adminPrincipal := null;
-      };
-      case (null) {
-        Runtime.trap("No admin to reset");
-      };
-    };
-  };
-
-  // User profile methods
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
-      Runtime.trap("Unauthorized: Only users can get profiles");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can get their profile");
     };
     userProfiles.get(caller);
   };
@@ -192,63 +170,96 @@ actor {
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not AccessControl.hasPermission(accessControlState, caller, #user)) {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
     };
     userProfiles.add(caller, profile);
   };
 
-  // Testimonial CRUD
-  // Public read - anyone can view testimonials (portfolio data)
-  public query func getTestimonials() : async [Testimonial] {
-    testimonials.values().toArray();
-  };
+  // ── Admin claim ───────────────────────────────────────────────────────────
 
-  public shared ({ caller }) func addTestimonial(author : Text, message : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can add testimonials");
+  public shared ({ caller }) func claimAdmin() : async ClaimAdminResult {
+    if (caller.isAnonymous()) {
+      return #notAuthenticated;
     };
-    let testimonial : Testimonial = { id = nextTestimonialId; author; message };
-    testimonials.add(nextTestimonialId, testimonial);
-    nextTestimonialId += 1;
-  };
-
-  public shared ({ caller }) func updateTestimonial(id : Nat, author : Text, message : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update testimonials");
-    };
-    switch (testimonials.get(id)) {
-      case (null) { Runtime.trap("Testimonial not found") };
-      case (?_) {
-        let updated : Testimonial = { id; author; message };
-        testimonials.add(id, updated);
+    switch (adminPrincipal) {
+      case (?_) { #alreadyClaimed };
+      case (null) {
+        adminPrincipal := ?caller;
+        AccessControl.assignRole(accessControlState, caller, caller, #admin);
+        #success;
       };
     };
   };
 
-  public shared ({ caller }) func deleteTestimonial(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete testimonials");
-    };
-    testimonials.remove(id);
+  // ── Testimonials ──────────────────────────────────────────────────────────
+
+  public query func getTestimonials() : async [Testimonial] {
+    testimonials.values().toArray();
   };
 
-  // Blog methods
-  // Public read - anyone can view blog posts (portfolio data)
-  public query func getBlogs() : async [BlogPost] {
+  public shared ({ caller }) func addTestimonial(author : Text, message : Text) : async Testimonial {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add testimonials");
+    };
+    let id = nextTestimonialId;
+    nextTestimonialId += 1;
+    let t : Testimonial = { id; author; message };
+    testimonials.add(id, t);
+    t;
+  };
+
+  public shared ({ caller }) func updateTestimonial(id : Nat, author : Text, message : Text) : async ?Testimonial {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update testimonials");
+    };
+    switch (testimonials.get(id)) {
+      case (null) { null };
+      case (?_) {
+        let t : Testimonial = { id; author; message };
+        testimonials.add(id, t);
+        ?t;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteTestimonial(id : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete testimonials");
+    };
+    switch (testimonials.get(id)) {
+      case (null) { false };
+      case (?_) {
+        testimonials.remove(id);
+        true;
+      };
+    };
+  };
+
+  // ── Blog Posts ────────────────────────────────────────────────────────────
+
+  public query func getBlogPosts() : async [BlogPost] {
     blogPosts.values().toArray();
   };
 
-  public query func getBlogBySlug(slug : Text) : async ?BlogPost {
-    blogPosts.values().find(func(blog) { blog.slug == slug });
+  public query func getBlogPost(id : Nat) : async ?BlogPost {
+    blogPosts.get(id);
   };
 
-  public shared ({ caller }) func addBlog(title : Text, slug : Text, metaTitle : Text, metaDescription : Text, content : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can add blogs");
+  public shared ({ caller }) func addBlogPost(
+    title : Text,
+    slug : Text,
+    metaTitle : Text,
+    metaDescription : Text,
+    content : Text,
+  ) : async BlogPost {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add blog posts");
     };
-    let blog : BlogPost = {
-      id = nextBlogPostId;
+    let id = nextBlogPostId;
+    nextBlogPostId += 1;
+    let post : BlogPost = {
+      id;
       title;
       slug;
       metaTitle;
@@ -256,502 +267,441 @@ actor {
       content;
       timestamp = Time.now();
     };
-    blogPosts.add(nextBlogPostId, blog);
-    nextBlogPostId += 1;
+    blogPosts.add(id, post);
+    post;
   };
 
-  public shared ({ caller }) func updateBlog(id : Nat, title : Text, slug : Text, metaTitle : Text, metaDescription : Text, content : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update blogs");
+  public shared ({ caller }) func updateBlogPost(
+    id : Nat,
+    title : Text,
+    slug : Text,
+    metaTitle : Text,
+    metaDescription : Text,
+    content : Text,
+  ) : async ?BlogPost {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update blog posts");
     };
     switch (blogPosts.get(id)) {
-      case (null) { Runtime.trap("Blog post not found") };
-      case (?_) {
-        let updated : BlogPost = {
+      case (null) { null };
+      case (?existing) {
+        let post : BlogPost = {
           id;
           title;
           slug;
           metaTitle;
           metaDescription;
           content;
-          timestamp = Time.now();
+          timestamp = existing.timestamp;
         };
-        blogPosts.add(id, updated);
+        blogPosts.add(id, post);
+        ?post;
       };
     };
   };
 
-  public shared ({ caller }) func deleteBlog(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete blogs");
+  public shared ({ caller }) func deleteBlogPost(id : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete blog posts");
     };
-    blogPosts.remove(id);
-  };
-
-  // Category CRUD Operations
-  // Public read - anyone can view categories (portfolio data)
-  public query func getCategory(id : Nat) : async CategoryResult {
-    switch (projectCategories.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Category not found";
-        };
-      };
-      case (?category) {
-        {
-          success = true;
-          data = ?category;
-          error = null;
-        };
-      };
-    };
-  };
-
-  public query func listCategories() : async CategoriesResult {
-    let categoriesArray = projectCategories.values().toArray();
-    {
-      success = true;
-      data = ?categoriesArray;
-      error = null;
-    };
-  };
-
-  public shared ({ caller }) func createCategory(name : Text, slug : Text) : async CategoryResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can create categories");
-    };
-
-    let category : ProjectCategory = { id = nextCategoryId; name; slug };
-    projectCategories.add(nextCategoryId, category);
-    nextCategoryId += 1;
-
-    {
-      success = true;
-      data = ?category;
-      error = null;
-    };
-  };
-
-  public shared ({ caller }) func updateCategory(id : Nat, name : Text, slug : Text) : async CategoryResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update categories");
-    };
-
-    switch (projectCategories.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Category not found";
-        };
-      };
+    switch (blogPosts.get(id)) {
+      case (null) { false };
       case (?_) {
-        let updated : ProjectCategory = { id; name; slug };
-        projectCategories.add(id, updated);
-        {
-          success = true;
-          data = ?updated;
-          error = null;
-        };
+        blogPosts.remove(id);
+        true;
       };
     };
   };
 
-  public shared ({ caller }) func deleteCategory(id : Nat) : async CategoryResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete categories");
-    };
+  // ── Project Categories ────────────────────────────────────────────────────
 
+  public query func getProjectCategories() : async CategoriesResult {
+    let cats = projectCategories.values().toArray();
+    { success = true; data = ?cats; error = null };
+  };
+
+  public shared ({ caller }) func addProjectCategory(name : Text, slug : Text, order : Nat) : async CategoryResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add project categories");
+    };
+    let id = nextCategoryId;
+    nextCategoryId += 1;
+    let cat : ProjectCategory = { id; name; slug; order };
+    projectCategories.add(id, cat);
+    { success = true; data = ?cat; error = null };
+  };
+
+  public shared ({ caller }) func updateProjectCategory(id : Nat, name : Text, slug : Text, order : Nat) : async CategoryResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update project categories");
+    };
     switch (projectCategories.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Category not found";
-        };
-      };
-      case (?category) {
-        projectCategories.remove(id);
-        {
-          success = true;
-          data = ?category;
-          error = null;
-        };
+      case (null) { { success = false; data = null; error = ?"Category not found" } };
+      case (?_) {
+        let cat : ProjectCategory = { id; name; slug; order };
+        projectCategories.add(id, cat);
+        { success = true; data = ?cat; error = null };
       };
     };
   };
 
-  // Project CRUD Operations
-  // Public read - anyone can view projects (portfolio data)
-  public query func getProjects() : async [Project] {
-    projects.values().toArray();
+  public shared ({ caller }) func deleteProjectCategory(id : Nat) : async CrudResponse<Bool> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete project categories");
+    };
+    switch (projectCategories.get(id)) {
+      case (null) { { success = false; data = ?false; error = ?"Category not found" } };
+      case (?_) {
+        projectCategories.remove(id);
+        { success = true; data = ?true; error = null };
+      };
+    };
+  };
+
+  // ── Projects ──────────────────────────────────────────────────────────────
+
+  public query func getProjects() : async ProjectsResult {
+    let ps = projects.values().toArray();
+    { success = true; data = ?ps; error = null };
   };
 
   public query func getProject(id : Nat) : async ProjectResult {
     switch (projects.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Project not found";
-        };
-      };
-      case (?project) {
-        {
-          success = true;
-          data = ?project;
-          error = null;
-        };
-      };
+      case (null) { { success = false; data = null; error = ?"Project not found" } };
+      case (?p) { { success = true; data = ?p; error = null } };
     };
   };
 
-  public query func listProjects() : async ProjectsResult {
-    let projectsArray = projects.values().toArray();
-    {
-      success = true;
-      data = ?projectsArray;
-      error = null;
+  public shared ({ caller }) func addProject(
+    title : Text,
+    description : Text,
+    url : Text,
+    image : ?Storage.ExternalBlob,
+    categoryId : ?Nat,
+    order : Nat,
+    isActive : Bool,
+  ) : async ProjectResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add projects");
     };
-  };
-
-  public shared ({ caller }) func createProject(title : Text, description : Text, url : Text, image : ?Storage.ExternalBlob, categoryId : ?Nat) : async ProjectResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can create projects");
-    };
-
-    let project : Project = {
-      id = nextProjectId;
+    let id = nextProjectId;
+    nextProjectId += 1;
+    let p : Project = {
+      id;
       title;
       description;
       url;
-      image;
       timestamp = Time.now();
+      image;
       categoryId;
+      order;
+      isActive;
     };
-    projects.add(nextProjectId, project);
-    nextProjectId += 1;
-
-    {
-      success = true;
-      data = ?project;
-      error = null;
-    };
+    projects.add(id, p);
+    { success = true; data = ?p; error = null };
   };
 
-  public shared ({ caller }) func updateProject(id : Nat, title : Text, description : Text, url : Text, image : ?Storage.ExternalBlob, categoryId : ?Nat) : async ProjectResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update projects");
+  public shared ({ caller }) func updateProject(
+    id : Nat,
+    title : Text,
+    description : Text,
+    url : Text,
+    image : ?Storage.ExternalBlob,
+    categoryId : ?Nat,
+    order : Nat,
+    isActive : Bool,
+  ) : async ProjectResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update projects");
     };
-
     switch (projects.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Project not found";
-        };
-      };
-      case (?_) {
-        let updated : Project = {
+      case (null) { { success = false; data = null; error = ?"Project not found" } };
+      case (?existing) {
+        let p : Project = {
           id;
           title;
           description;
           url;
+          timestamp = existing.timestamp;
           image;
-          timestamp = Time.now();
           categoryId;
+          order;
+          isActive;
         };
-        projects.add(id, updated);
-        {
-          success = true;
-          data = ?updated;
-          error = null;
-        };
+        projects.add(id, p);
+        { success = true; data = ?p; error = null };
       };
     };
   };
 
-  public shared ({ caller }) func deleteProject(id : Nat) : async ProjectResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete projects");
+  public shared ({ caller }) func deleteProject(id : Nat) : async CrudResponse<Bool> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete projects");
     };
-
     switch (projects.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Project not found";
-        };
-      };
-      case (?project) {
+      case (null) { { success = false; data = ?false; error = ?"Project not found" } };
+      case (?_) {
         projects.remove(id);
-        {
-          success = true;
-          data = ?project;
-          error = null;
-        };
+        { success = true; data = ?true; error = null };
       };
     };
   };
 
-  // Service CRUD Operations
-  // Public read - anyone can view services (portfolio data)
-  public query func getService(id : Nat) : async ServiceResult {
-    switch (services.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Service not found";
+  // Project drag-and-drop reordering
+  public shared ({ caller }) func reorderProjects(orderedIds : [Nat]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can reorder projects");
+    };
+    var index = 0;
+    for (id in orderedIds.vals()) {
+      switch (projects.get(id)) {
+        case (?project) {
+          let updatedProject : Project = { project with order = index };
+          projects.add(id, updatedProject);
         };
+        case (null) {};
       };
-      case (?service) {
-        {
-          success = true;
-          data = ?service;
-          error = null;
-        };
-      };
+      index += 1;
     };
   };
 
-  public query func listServices() : async ServicesResult {
-    let servicesArray = services.values().toArray();
-    {
-      success = true;
-      data = ?servicesArray;
-      error = null;
-    };
+  // ── Services ──────────────────────────────────────────────────────────────
+
+  public query func getServices() : async ServicesResult {
+    let ss = services.values().toArray();
+    { success = true; data = ?ss; error = null };
   };
 
-  public shared ({ caller }) func createService(title : Text, description : Text) : async ServiceResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can create services");
+  public shared ({ caller }) func addService(title : Text, description : Text) : async ServiceResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add services");
     };
-
-    let service : Service = { id = nextServiceId; title; description };
-    services.add(nextServiceId, service);
+    let id = nextServiceId;
     nextServiceId += 1;
-
-    {
-      success = true;
-      data = ?service;
-      error = null;
-    };
+    let s : Service = { id; title; description };
+    services.add(id, s);
+    { success = true; data = ?s; error = null };
   };
 
   public shared ({ caller }) func updateService(id : Nat, title : Text, description : Text) : async ServiceResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update services");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update services");
     };
-
     switch (services.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Service not found";
-        };
-      };
+      case (null) { { success = false; data = null; error = ?"Service not found" } };
       case (?_) {
-        let updated : Service = { id; title; description };
-        services.add(id, updated);
-        {
-          success = true;
-          data = ?updated;
-          error = null;
-        };
+        let s : Service = { id; title; description };
+        services.add(id, s);
+        { success = true; data = ?s; error = null };
       };
     };
   };
 
-  public shared ({ caller }) func deleteService(id : Nat) : async ServiceResult {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete services");
+  public shared ({ caller }) func deleteService(id : Nat) : async CrudResponse<Bool> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete services");
     };
-
     switch (services.get(id)) {
-      case (null) {
-        {
-          success = false;
-          data = null;
-          error = ?"Service not found";
-        };
-      };
-      case (?service) {
+      case (null) { { success = false; data = ?false; error = ?"Service not found" } };
+      case (?_) {
         services.remove(id);
-        {
-          success = true;
-          data = ?service;
-          error = null;
-        };
+        { success = true; data = ?true; error = null };
       };
     };
   };
 
-  // Skill methods
-  // Public read - anyone can view skills (portfolio data)
-  public query func listSkills() : async [Skill] {
+  // ── Skills ────────────────────────────────────────────────────────────────
+
+  public query func getSkills() : async [Skill] {
     skills.values().toArray();
   };
 
-  public shared ({ caller }) func addSkill(name : Text, experience : Int, category : SkillCategory) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can add skills");
+  public shared ({ caller }) func addSkill(name : Text, experience : Int, category : SkillCategory) : async Skill {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add skills");
     };
-    let skill : Skill = { id = nextSkillId; name; experience; category };
-    skills.add(nextSkillId, skill);
+    let id = nextSkillId;
     nextSkillId += 1;
+    let sk : Skill = { id; name; experience; category };
+    skills.add(id, sk);
+    sk;
   };
 
-  public shared ({ caller }) func updateSkill(id : Nat, name : Text, experience : Int, category : SkillCategory) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update skills");
+  public shared ({ caller }) func updateSkill(id : Nat, name : Text, experience : Int, category : SkillCategory) : async ?Skill {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update skills");
     };
     switch (skills.get(id)) {
-      case (null) { Runtime.trap("Skill not found") };
+      case (null) { null };
       case (?_) {
-        let updated : Skill = { id; name; experience; category };
-        skills.add(id, updated);
+        let sk : Skill = { id; name; experience; category };
+        skills.add(id, sk);
+        ?sk;
       };
     };
   };
 
-  public shared ({ caller }) func deleteSkill(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete skills");
+  public shared ({ caller }) func deleteSkill(id : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete skills");
     };
-    skills.remove(id);
+    switch (skills.get(id)) {
+      case (null) { false };
+      case (?_) {
+        skills.remove(id);
+        true;
+      };
+    };
   };
 
-  // Lead (Contact Form) methods
-  // Anyone (including guests) can submit a contact form
-  public shared func processContactForm(name : Text, email : Text, message : Text) : async () {
-    let newLead : Lead = {
-      id = nextLeadId;
-      name;
-      email;
-      message;
-      timestamp = Time.now();
-    };
-    leads.add(nextLeadId, newLead);
-    nextLeadId += 1;
-  };
+  // ── Leads ─────────────────────────────────────────────────────────────────
 
   public query ({ caller }) func getLeads() : async [Lead] {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can view leads");
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can view leads");
     };
     leads.values().toArray();
   };
 
-  public shared ({ caller }) func deleteLead(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete leads");
-    };
-    leads.remove(id);
+  public shared func submitLead(name : Text, email : Text, message : Text) : async Lead {
+    let id = nextLeadId;
+    nextLeadId += 1;
+    let lead : Lead = { id; name; email; message; timestamp = Time.now() };
+    leads.add(id, lead);
+    lead;
   };
 
-  // SEO Setting methods
-  // Public read - anyone can view SEO settings (used by frontend for meta tags)
+  public shared ({ caller }) func deleteLead(id : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete leads");
+    };
+    switch (leads.get(id)) {
+      case (null) { false };
+      case (?_) {
+        leads.remove(id);
+        true;
+      };
+    };
+  };
+
+  // ── SEO Settings ──────────────────────────────────────────────────────────
+
   public query func getSeoSettings() : async [SeoSetting] {
     seoSettings.values().toArray();
   };
 
-  public query func getSeoSettingByPage(page : Text) : async ?SeoSetting {
+  public query func getSeoSetting(page : Text) : async ?SeoSetting {
     seoSettings.get(page);
   };
 
-  public shared ({ caller }) func setSeoSetting(page : Text, metaTitle : Text, metaDescription : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update SEO settings");
+  public shared ({ caller }) func saveSeoSetting(page : Text, metaTitle : Text, metaDescription : Text) : async SeoSetting {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can save SEO settings");
     };
     let setting : SeoSetting = { page; metaTitle; metaDescription };
     seoSettings.add(page, setting);
+    setting;
   };
 
-  public shared ({ caller }) func deleteSeoSetting(page : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete SEO settings");
-    };
-    seoSettings.remove(page);
-  };
+  // ── Social Links ──────────────────────────────────────────────────────────
 
-  // Social Links methods
-  // Public read - anyone can view social links (portfolio data)
-  public query func listSocialLinks() : async [SocialLink] {
+  public query func getSocialLinks() : async [SocialLink] {
     socialLinks.values().toArray();
   };
 
-  public shared ({ caller }) func createSocialLink(platform : SocialPlatform, url : Text, icon : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can create social links");
+  public shared ({ caller }) func addSocialLink(platform : SocialPlatform, url : Text, icon : Text, isActive : Bool) : async SocialLink {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add social links");
     };
-    let socialLink : SocialLink = {
-      id = nextSocialLinkId;
-      platform;
-      url;
-      icon;
-      isActive = true;
-    };
-    socialLinks.add(nextSocialLinkId, socialLink);
+    let id = nextSocialLinkId;
     nextSocialLinkId += 1;
+    let sl : SocialLink = { id; platform; url; icon; isActive };
+    socialLinks.add(id, sl);
+    sl;
   };
 
-  public shared ({ caller }) func updateSocialLink(id : Nat, url : Text, icon : Text) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can update social links");
+  public shared ({ caller }) func updateSocialLink(id : Nat, platform : SocialPlatform, url : Text, icon : Text, isActive : Bool) : async ?SocialLink {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update social links");
     };
     switch (socialLinks.get(id)) {
-      case (null) { Runtime.trap("Social link not found") };
-      case (?link) {
-        let updated : SocialLink = { link with url; icon };
-        socialLinks.add(id, updated);
+      case (null) { null };
+      case (?_) {
+        let sl : SocialLink = { id; platform; url; icon; isActive };
+        socialLinks.add(id, sl);
+        ?sl;
       };
     };
   };
 
-  public shared ({ caller }) func toggleSocialLink(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can toggle social links");
+  public shared ({ caller }) func deleteSocialLink(id : Nat) : async Bool {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete social links");
     };
     switch (socialLinks.get(id)) {
-      case (null) { Runtime.trap("Social link not found") };
-      case (?link) {
-        let updated : SocialLink = { link with isActive = not link.isActive };
-        socialLinks.add(id, updated);
-      };
-    };
-  };
-
-  public shared ({ caller }) func deleteSocialLink(id : Nat) : async () {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can delete social links");
-    };
-    socialLinks.remove(id);
-  };
-
-  // Dashboard stats - admin only
-  public query ({ caller }) func getDashboardStats() : async { projectCount : Nat; leadCount : Nat; blogCount : Nat } {
-    if (not isAdmin(caller)) {
-      Runtime.trap("Unauthorized: Only admin can view dashboard stats");
-    };
-    {
-      projectCount = projects.size();
-      leadCount = leads.size();
-      blogCount = blogPosts.size();
-    };
-  };
-
-  // Helper Functions
-  func isAdmin(caller : Principal) : Bool {
-    switch (adminPrincipal) {
       case (null) { false };
-      case (?admin) { caller == admin };
+      case (?_) {
+        socialLinks.remove(id);
+        true;
+      };
+    };
+  };
+
+  // ── Experiences ───────────────────────────────────────────────────────────
+
+  public query func getExperiences() : async ExperiencesResult {
+    let exps = experiences.values().toArray();
+    { success = true; data = ?exps; error = null };
+  };
+
+  public shared ({ caller }) func addExperience(
+    title : Text,
+    company : Text,
+    period : Text,
+    description : Text,
+    responsibilities : [Text],
+  ) : async ExperienceResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can add experiences");
+    };
+    let id = nextExperienceId;
+    nextExperienceId += 1;
+    let exp : Experience = { id; title; company; period; description; responsibilities };
+    experiences.add(id, exp);
+    { success = true; data = ?exp; error = null };
+  };
+
+  public shared ({ caller }) func updateExperience(
+    id : Nat,
+    title : Text,
+    company : Text,
+    period : Text,
+    description : Text,
+    responsibilities : [Text],
+  ) : async ExperienceResult {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can update experiences");
+    };
+    switch (experiences.get(id)) {
+      case (null) { { success = false; data = null; error = ?"Experience not found" } };
+      case (?_) {
+        let exp : Experience = { id; title; company; period; description; responsibilities };
+        experiences.add(id, exp);
+        { success = true; data = ?exp; error = null };
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteExperience(id : Nat) : async CrudResponse<Bool> {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can delete experiences");
+    };
+    switch (experiences.get(id)) {
+      case (null) { { success = false; data = ?false; error = ?"Experience not found" } };
+      case (?_) {
+        experiences.remove(id);
+        { success = true; data = ?true; error = null };
+      };
     };
   };
 };

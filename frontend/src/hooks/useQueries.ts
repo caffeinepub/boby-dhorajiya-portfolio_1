@@ -1,80 +1,50 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import { useInternetIdentity } from './useInternetIdentity';
+import { toast } from 'sonner';
 import type {
-  Skill,
-  SkillCategory,
   Project,
-  Service,
+  ProjectCategory,
   BlogPost,
   Testimonial,
+  Service,
+  Skill,
+  SkillCategory,
   Lead,
   SeoSetting,
   SocialLink,
   SocialPlatform,
-  ProjectCategory,
+  Experience,
   UserProfile,
-  ClaimAdminResult,
 } from '../backend';
 import { ExternalBlob } from '../backend';
 
-// ─── Auth / Admin ────────────────────────────────────────────────────────────
+// ── Admin ─────────────────────────────────────────────────────────────────────
 
-export function useClaimAdmin() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-  const { identity } = useInternetIdentity();
-  const principalStr = identity?.getPrincipal().toString() ?? 'anonymous';
-
-  return useMutation<ClaimAdminResult, Error>({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.claimAdmin();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
-      queryClient.invalidateQueries({ queryKey: ['isAdmin', principalStr] });
-    },
-  });
-}
-
-export function useIsCallerAdmin() {
-  const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-  const principalStr = identity?.getPrincipal().toString() ?? 'anonymous';
-
+export function useIsAdmin() {
+  const { actor, isFetching } = useActor();
   return useQuery<boolean>({
-    queryKey: ['isAdmin', principalStr],
+    queryKey: ['isAdmin'],
     queryFn: async () => {
       if (!actor) return false;
-      try {
-        return await actor.checkAdminStatus();
-      } catch {
-        return false;
-      }
+      return actor.isCallerAdmin();
     },
-    enabled: !!actor && !actorFetching && !!identity,
-    staleTime: 1000 * 60 * 5,
-    retry: false,
+    enabled: !!actor && !isFetching,
   });
 }
 
-// ─── User Profile ─────────────────────────────────────────────────────────────
+// ── User Profile ──────────────────────────────────────────────────────────────
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
   const query = useQuery<UserProfile | null>({
     queryKey: ['currentUserProfile'],
     queryFn: async () => {
       if (!actor) throw new Error('Actor not available');
       return actor.getCallerUserProfile();
     },
-    enabled: !!actor && !actorFetching && !!identity,
+    enabled: !!actor && !actorFetching,
     retry: false,
   });
-
   return {
     ...query,
     isLoading: actorFetching || query.isLoading,
@@ -85,97 +55,50 @@ export function useGetCallerUserProfile() {
 export function useSaveCallerUserProfile() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, UserProfile>({
-    mutationFn: async (profile) => {
+  return useMutation({
+    mutationFn: async (profile: UserProfile) => {
       if (!actor) throw new Error('Actor not available');
       return actor.saveCallerUserProfile(profile);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+      toast.success('Profile saved!');
     },
+    onError: () => toast.error('Failed to save profile'),
   });
 }
 
-// ─── Skills ───────────────────────────────────────────────────────────────────
+// ── Projects ──────────────────────────────────────────────────────────────────
 
-export function useListSkills() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<Skill[]>({
-    queryKey: ['skills'],
-    queryFn: async () => {
-      if (!actor) return [];
-      return actor.listSkills();
-    },
-    enabled: !!actor && !isFetching,
-  });
-}
-
-/** @alias useListSkills — kept for backward compatibility */
-export const useGetSkills = useListSkills;
-
-export function useCreateSkill() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { name: string; experience: bigint; category: SkillCategory }>({
-    mutationFn: async ({ name, experience, category }) => {
-      if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.addSkill(name, experience, category);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills'] });
-    },
-  });
-}
-
-export function useUpdateSkill() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { id: bigint; name: string; experience: bigint; category: SkillCategory }>({
-    mutationFn: async ({ id, name, experience, category }) => {
-      if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.updateSkill(id, name, experience, category);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills'] });
-    },
-  });
-}
-
-export function useDeleteSkill() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
-      if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.deleteSkill(id);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['skills'] });
-    },
-  });
-}
-
-// ─── Projects ─────────────────────────────────────────────────────────────────
-
+/** Returns all projects (active + inactive) — used by both admin and public pages */
 export function useGetProjects() {
   const { actor, isFetching } = useActor();
-
   return useQuery<Project[]>({
     queryKey: ['projects'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getProjects();
+      try {
+        const result = await actor.getProjects();
+        return result.data ?? [];
+      } catch (e) {
+        console.warn('Failed to fetch projects:', e);
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false,
+  });
+}
+
+/** Admin version — returns all projects (active + inactive) */
+export function useGetAllProjectsAdmin() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Project[]>({
+    queryKey: ['projects-admin'],
+    queryFn: async () => {
+      if (!actor) return [];
+      const result = await actor.getProjects();
+      return result.data ?? [];
     },
     enabled: !!actor && !isFetching,
   });
@@ -183,156 +106,320 @@ export function useGetProjects() {
 
 export function useAddProject() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    Error,
-    { title: string; description: string; url: string; image: ExternalBlob | null; categoryId: bigint | null }
-  >({
-    mutationFn: async ({ title, description, url, image, categoryId }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      title: string;
+      description: string;
+      url: string;
+      image: ExternalBlob | null;
+      categoryId: bigint | null;
+      order: bigint;
+      isActive: boolean;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.createProject(title, description, url, image, categoryId);
+      const result = await actor.addProject(
+        data.title,
+        data.description,
+        data.url,
+        data.image,
+        data.categoryId,
+        data.order,
+        data.isActive,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to add project');
+      return result.data!;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+      toast.success('Project added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useUpdateProject() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    Error,
-    { id: bigint; title: string; description: string; url: string; image: ExternalBlob | null; categoryId: bigint | null }
-  >({
-    mutationFn: async ({ id, title, description, url, image, categoryId }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      id: bigint;
+      title: string;
+      description: string;
+      url: string;
+      image: ExternalBlob | null;
+      categoryId: bigint | null;
+      order: bigint;
+      isActive: boolean;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.updateProject(id, title, description, url, image, categoryId);
+      const result = await actor.updateProject(
+        data.id,
+        data.title,
+        data.description,
+        data.url,
+        data.image,
+        data.categoryId,
+        data.order,
+        data.isActive,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to update project');
+      return result.data!;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+      toast.success('Project updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteProject() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.deleteProject(id);
+      const result = await actor.deleteProject(id);
+      if (!result.success) throw new Error(result.error ?? 'Failed to delete project');
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+      toast.success('Project deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Services ─────────────────────────────────────────────────────────────────
+export function useToggleProjectActive() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (project: Project) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.updateProject(
+        project.id,
+        project.title,
+        project.description,
+        project.url,
+        project.image ?? null,
+        project.categoryId ?? null,
+        project.order,
+        !project.isActive,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to toggle project');
+      return result.data!;
+    },
+    onSuccess: (_, project) => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+      toast.success(project.isActive ? 'Project deactivated' : 'Project activated');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
 
-export function useListServices() {
+export function useReorderProjects() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (orderedIds: bigint[]) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.reorderProjects(orderedIds);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+    },
+    onError: (e: Error) => toast.error('Failed to save order: ' + e.message),
+  });
+}
+
+export function useUpdateProjectOrder() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { project: Project; newOrder: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.updateProject(
+        data.project.id,
+        data.project.title,
+        data.project.description,
+        data.project.url,
+        data.project.image ?? null,
+        data.project.categoryId ?? null,
+        data.newOrder,
+        data.project.isActive,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to update order');
+      return result.data!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+      queryClient.invalidateQueries({ queryKey: ['projects-admin'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+// ── Project Categories ────────────────────────────────────────────────────────
+
+export function useGetProjectCategories() {
   const { actor, isFetching } = useActor();
-
-  return useQuery<Service[]>({
-    queryKey: ['services'],
+  return useQuery<ProjectCategory[]>({
+    queryKey: ['categories'],
     queryFn: async () => {
       if (!actor) return [];
-      const result = await actor.listServices();
-      return result.data ?? [];
+      try {
+        const result = await actor.getProjectCategories();
+        return result.data ?? [];
+      } catch (e) {
+        console.warn('Failed to fetch categories:', e);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
-/** @alias useListServices — kept for backward compatibility */
-export const useGetServices = useListServices;
+/** Aliases for backward compatibility */
+export const useGetCategories = useGetProjectCategories;
+export const useListCategories = useGetProjectCategories;
 
-export function useAddService() {
+export function useAddProjectCategory() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { title: string; description: string }>({
-    mutationFn: async ({ title, description }) => {
+  return useMutation({
+    mutationFn: async (data: { name: string; slug: string; order: bigint }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.createService(title, description);
+      const result = await actor.addProjectCategory(data.name, data.slug, data.order);
+      if (!result.success) throw new Error(result.error ?? 'Failed to add category');
+      return result.data!;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-export function useUpdateService() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
+/** Alias for backward compatibility */
+export const useCreateCategory = useAddProjectCategory;
 
-  return useMutation<void, Error, { id: bigint; title: string; description: string }>({
-    mutationFn: async ({ id, title, description }) => {
+export function useUpdateProjectCategory() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: bigint; name: string; slug: string; order: bigint }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.updateService(id, title, description);
+      const result = await actor.updateProjectCategory(data.id, data.name, data.slug, data.order);
+      if (!result.success) throw new Error(result.error ?? 'Failed to update category');
+      return result.data!;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-export function useDeleteService() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
+/** Alias for backward compatibility */
+export const useUpdateCategory = useUpdateProjectCategory;
 
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+export function useDeleteProjectCategory() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.deleteService(id);
+      const result = await actor.deleteProjectCategory(id);
+      if (!result.success) throw new Error(result.error ?? 'Failed to delete category');
+      return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['services'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      toast.success('Category deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Blog ─────────────────────────────────────────────────────────────────────
+/** Alias for backward compatibility */
+export const useDeleteCategory = useDeleteProjectCategory;
 
-export function useGetBlogs() {
+export function useUpdateCategoryOrder() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { category: ProjectCategory; newOrder: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.updateProjectCategory(
+        data.category.id,
+        data.category.name,
+        data.category.slug,
+        data.newOrder,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to update order');
+      return result.data!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+// ── Blog Posts ────────────────────────────────────────────────────────────────
+
+export function useGetBlogPosts() {
   const { actor, isFetching } = useActor();
-
   return useQuery<BlogPost[]>({
-    queryKey: ['blogs'],
+    queryKey: ['blogPosts'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getBlogs();
+      try {
+        return await actor.getBlogPosts();
+      } catch (e) {
+        console.warn('Failed to fetch blog posts:', e);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
-export function useGetBlogBySlug(slug: string) {
-  const { actor, isFetching } = useActor();
+/** Alias for backward compatibility */
+export const useGetBlogs = useGetBlogPosts;
 
+export function useGetBlogPost(id: bigint) {
+  const { actor, isFetching } = useActor();
   return useQuery<BlogPost | null>({
-    queryKey: ['blog', slug],
+    queryKey: ['blogPost', id.toString()],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getBlogBySlug(slug);
+      return actor.getBlogPost(id);
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+/** Fetch a blog post by slug — finds it from the full list */
+export function useGetBlogBySlug(slug: string) {
+  const { actor, isFetching } = useActor();
+  return useQuery<BlogPost | null>({
+    queryKey: ['blogPost', 'slug', slug],
+    queryFn: async () => {
+      if (!actor || !slug) return null;
+      const posts = await actor.getBlogPosts();
+      return posts.find((p) => p.slug === slug) ?? null;
     },
     enabled: !!actor && !isFetching && !!slug,
   });
@@ -340,178 +427,335 @@ export function useGetBlogBySlug(slug: string) {
 
 export function useAddBlog() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    Error,
-    { title: string; slug: string; metaTitle: string; metaDescription: string; content: string }
-  >({
-    mutationFn: async ({ title, slug, metaTitle, metaDescription, content }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      title: string;
+      slug: string;
+      metaTitle: string;
+      metaDescription: string;
+      content: string;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.addBlog(title, slug, metaTitle, metaDescription, content);
+      return actor.addBlogPost(data.title, data.slug, data.metaTitle, data.metaDescription, data.content);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+      toast.success('Blog post added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useUpdateBlog() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<
-    void,
-    Error,
-    { id: bigint; title: string; slug: string; metaTitle: string; metaDescription: string; content: string }
-  >({
-    mutationFn: async ({ id, title, slug, metaTitle, metaDescription, content }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      id: bigint;
+      title: string;
+      slug: string;
+      metaTitle: string;
+      metaDescription: string;
+      content: string;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.updateBlog(id, title, slug, metaTitle, metaDescription, content);
+      return actor.updateBlogPost(data.id, data.title, data.slug, data.metaTitle, data.metaDescription, data.content);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+      toast.success('Blog post updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteBlog() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.deleteBlog(id);
+      return actor.deleteBlogPost(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['blogs'] });
+      queryClient.invalidateQueries({ queryKey: ['blogPosts'] });
+      toast.success('Blog post deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Testimonials ─────────────────────────────────────────────────────────────
+// ── Testimonials ──────────────────────────────────────────────────────────────
 
 export function useGetTestimonials() {
   const { actor, isFetching } = useActor();
-
   return useQuery<Testimonial[]>({
     queryKey: ['testimonials'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getTestimonials();
+      try {
+        return await actor.getTestimonials();
+      } catch (e) {
+        console.warn('Failed to fetch testimonials:', e);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
 export function useAddTestimonial() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { author: string; message: string }>({
-    mutationFn: async ({ author, message }) => {
+  return useMutation({
+    mutationFn: async (data: { author: string; message: string }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.addTestimonial(author, message);
+      return actor.addTestimonial(data.author, data.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success('Testimonial added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useUpdateTestimonial() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { id: bigint; author: string; message: string }>({
-    mutationFn: async ({ id, author, message }) => {
+  return useMutation({
+    mutationFn: async (data: { id: bigint; author: string; message: string }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.updateTestimonial(id, author, message);
+      return actor.updateTestimonial(data.id, data.author, data.message);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success('Testimonial updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteTestimonial() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
       return actor.deleteTestimonial(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['testimonials'] });
+      toast.success('Testimonial deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Leads ────────────────────────────────────────────────────────────────────
+// ── Services ──────────────────────────────────────────────────────────────────
+
+export function useGetServices() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Service[]>({
+    queryKey: ['services'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        const result = await actor.getServices();
+        return result.data ?? [];
+      } catch (e) {
+        console.warn('Failed to fetch services:', e);
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false,
+  });
+}
+
+/** Aliases for backward compatibility */
+export const useListServices = useGetServices;
+
+export function useAddService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { title: string; description: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.addService(data.title, data.description);
+      if (!result.success) throw new Error(result.error ?? 'Failed to add service');
+      return result.data!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast.success('Service added!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useUpdateService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: bigint; title: string; description: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.updateService(data.id, data.title, data.description);
+      if (!result.success) throw new Error(result.error ?? 'Failed to update service');
+      return result.data!;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast.success('Service updated!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useDeleteService() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      const result = await actor.deleteService(id);
+      if (!result.success) throw new Error(result.error ?? 'Failed to delete service');
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['services'] });
+      toast.success('Service deleted!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+// ── Skills ────────────────────────────────────────────────────────────────────
+
+export function useGetSkills() {
+  const { actor, isFetching } = useActor();
+  return useQuery<Skill[]>({
+    queryKey: ['skills'],
+    queryFn: async () => {
+      if (!actor) return [];
+      try {
+        return await actor.getSkills();
+      } catch (e) {
+        console.warn('Failed to fetch skills:', e);
+        return [];
+      }
+    },
+    enabled: !!actor && !isFetching,
+    retry: false,
+  });
+}
+
+/** Alias for backward compatibility */
+export const useListSkills = useGetSkills;
+
+export function useCreateSkill() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; experience: bigint; category: SkillCategory }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.addSkill(data.name, data.experience, data.category);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast.success('Skill added!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useUpdateSkill() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { id: bigint; name: string; experience: bigint; category: SkillCategory }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateSkill(data.id, data.name, data.experience, data.category);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast.success('Skill updated!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+export function useDeleteSkill() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.deleteSkill(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['skills'] });
+      toast.success('Skill deleted!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+// ── Leads ─────────────────────────────────────────────────────────────────────
 
 export function useGetLeads() {
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
-
   return useQuery<Lead[]>({
     queryKey: ['leads'],
     queryFn: async () => {
       if (!actor) return [];
       return actor.getLeads();
     },
-    enabled: !!actor && !isFetching && !!identity,
+    enabled: !!actor && !isFetching,
   });
 }
 
+export function useSubmitLead() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; email: string; message: string }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.submitLead(data.name, data.email, data.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Message sent!');
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+}
+
+/** Alias for backward compatibility */
+export const useProcessContactForm = useSubmitLead;
+
 export function useDeleteLead() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
       return actor.deleteLead(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Lead deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-export function useProcessContactForm() {
-  const { actor } = useActor();
-
-  return useMutation<void, Error, { name: string; email: string; message: string }>({
-    mutationFn: async ({ name, email, message }) => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.processContactForm(name, email, message);
-    },
-  });
-}
-
-// ─── SEO Settings ─────────────────────────────────────────────────────────────
+// ── SEO Settings ──────────────────────────────────────────────────────────────
 
 export function useGetSeoSettings() {
   const { actor, isFetching } = useActor();
-
   return useQuery<SeoSetting[]>({
     queryKey: ['seoSettings'],
     queryFn: async () => {
@@ -524,12 +768,11 @@ export function useGetSeoSettings() {
 
 export function useGetSeoSettingByPage(page: string) {
   const { actor, isFetching } = useActor();
-
   return useQuery<SeoSetting | null>({
     queryKey: ['seoSetting', page],
     queryFn: async () => {
       if (!actor) return null;
-      return actor.getSeoSettingByPage(page);
+      return actor.getSeoSetting(page);
     },
     enabled: !!actor && !isFetching && !!page,
   });
@@ -537,208 +780,247 @@ export function useGetSeoSettingByPage(page: string) {
 
 export function useSetSeoSetting() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { page: string; metaTitle: string; metaDescription: string }>({
-    mutationFn: async ({ page, metaTitle, metaDescription }) => {
+  return useMutation({
+    mutationFn: async (data: { page: string; metaTitle: string; metaDescription: string }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.setSeoSetting(page, metaTitle, metaDescription);
+      return actor.saveSeoSetting(data.page, data.metaTitle, data.metaDescription);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seoSettings'] });
       queryClient.invalidateQueries({ queryKey: ['seoSetting'] });
+      toast.success('SEO setting saved!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteSeoSetting() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, string>({
-    mutationFn: async (page) => {
+  return useMutation({
+    mutationFn: async (_page: string) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.deleteSeoSetting(page);
+      // SEO settings don't have a delete endpoint; overwrite with empty values
+      return actor.saveSeoSetting(_page, '', '');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['seoSettings'] });
       queryClient.invalidateQueries({ queryKey: ['seoSetting'] });
+      toast.success('SEO setting cleared!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Social Links ─────────────────────────────────────────────────────────────
+// ── Social Links ──────────────────────────────────────────────────────────────
 
-export function useListSocialLinks() {
+export function useGetSocialLinks() {
   const { actor, isFetching } = useActor();
-
   return useQuery<SocialLink[]>({
     queryKey: ['socialLinks'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.listSocialLinks();
+      try {
+        return await actor.getSocialLinks();
+      } catch (e) {
+        console.warn('Failed to fetch social links:', e);
+        return [];
+      }
     },
     enabled: !!actor && !isFetching,
+    retry: false,
   });
 }
 
-/** @alias useListSocialLinks — kept for backward compatibility */
-export const useGetSocialLinks = useListSocialLinks;
+/** Alias for backward compatibility */
+export const useListSocialLinks = useGetSocialLinks;
 
-export function useCreateSocialLink() {
+export function useAddSocialLink() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { platform: SocialPlatform; url: string; icon: string }>({
-    mutationFn: async ({ platform, url, icon }) => {
+  return useMutation({
+    mutationFn: async (data: { platform: SocialPlatform; url: string; icon: string; isActive: boolean }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.createSocialLink(platform, url, icon);
+      return actor.addSocialLink(data.platform, data.url, data.icon, data.isActive);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+      toast.success('Social link added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
+
+/** Alias for backward compatibility */
+export const useCreateSocialLink = useAddSocialLink;
 
 export function useUpdateSocialLink() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { id: bigint; url: string; icon: string }>({
-    mutationFn: async ({ id, url, icon }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      id: bigint;
+      platform: SocialPlatform;
+      url: string;
+      icon: string;
+      isActive: boolean;
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.updateSocialLink(id, url, icon);
+      return actor.updateSocialLink(data.id, data.platform, data.url, data.icon, data.isActive);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+      toast.success('Social link updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useToggleSocialLink() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (link: SocialLink) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      return actor.toggleSocialLink(id);
+      return actor.updateSocialLink(link.id, link.platform, link.url, link.icon, !link.isActive);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+      toast.success('Social link toggled!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteSocialLink() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
       return actor.deleteSocialLink(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['socialLinks'] });
+      toast.success('Social link deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Categories ───────────────────────────────────────────────────────────────
+// ── Experiences ───────────────────────────────────────────────────────────────
 
-export function useListCategories() {
+export function useGetExperiences() {
   const { actor, isFetching } = useActor();
-
-  return useQuery<ProjectCategory[]>({
-    queryKey: ['categories'],
+  return useQuery<Experience[]>({
+    queryKey: ['experiences'],
     queryFn: async () => {
       if (!actor) return [];
-      const result = await actor.listCategories();
+      const result = await actor.getExperiences();
       return result.data ?? [];
     },
     enabled: !!actor && !isFetching,
   });
 }
 
-/** @alias useListCategories — kept for backward compatibility */
-export const useGetCategories = useListCategories;
+/** Alias for backward compatibility */
+export const useListExperiences = useGetExperiences;
 
-export function useCreateCategory() {
+export function useAddExperience() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, { name: string; slug: string }>({
-    mutationFn: async ({ name, slug }) => {
+  return useMutation({
+    mutationFn: async (data: {
+      title: string;
+      company: string;
+      period: string;
+      description: string;
+      responsibilities: string[];
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.createCategory(name, slug);
+      const result = await actor.addExperience(
+        data.title,
+        data.company,
+        data.period,
+        data.description,
+        data.responsibilities,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to add experience');
+      return result.data!;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      toast.success('Experience added!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-export function useUpdateCategory() {
-  const { actor } = useActor();
-  const { identity } = useInternetIdentity();
-  const queryClient = useQueryClient();
+/** Alias for backward compatibility */
+export const useCreateExperience = useAddExperience;
 
-  return useMutation<void, Error, { id: bigint; name: string; slug: string }>({
-    mutationFn: async ({ id, name, slug }) => {
+export function useUpdateExperience() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: {
+      id: bigint;
+      title: string;
+      company: string;
+      period: string;
+      description: string;
+      responsibilities: string[];
+    }) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.updateCategory(id, name, slug);
+      const result = await actor.updateExperience(
+        data.id,
+        data.title,
+        data.company,
+        data.period,
+        data.description,
+        data.responsibilities,
+      );
+      if (!result.success) throw new Error(result.error ?? 'Failed to update experience');
+      return result.data!;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      toast.success('Experience updated!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-export function useDeleteCategory() {
+export function useDeleteExperience() {
   const { actor } = useActor();
-  const { identity } = useInternetIdentity();
   const queryClient = useQueryClient();
-
-  return useMutation<void, Error, bigint>({
-    mutationFn: async (id) => {
+  return useMutation({
+    mutationFn: async (id: bigint) => {
       if (!actor) throw new Error('Actor not available');
-      if (!identity) throw new Error('Not authenticated');
-      await actor.deleteCategory(id);
+      const result = await actor.deleteExperience(id);
+      if (!result.success) throw new Error(result.error ?? 'Failed to delete experience');
+      return result.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['experiences'] });
+      toast.success('Experience deleted!');
     },
+    onError: (e: Error) => toast.error(e.message),
   });
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ── Dashboard Stats ───────────────────────────────────────────────────────────
 
 export function useGetDashboardStats() {
-  const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
+  const projects = useGetAllProjectsAdmin();
+  const leads = useGetLeads();
+  const blogs = useGetBlogPosts();
 
-  return useQuery<{ leadCount: bigint; projectCount: bigint; blogCount: bigint }>({
-    queryKey: ['dashboardStats'],
-    queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getDashboardStats();
-    },
-    enabled: !!actor && !isFetching && !!identity,
-  });
+  return {
+    projectCount: projects.data?.length ?? 0,
+    leadCount: leads.data?.length ?? 0,
+    blogCount: blogs.data?.length ?? 0,
+    isLoading: projects.isLoading || leads.isLoading || blogs.isLoading,
+  };
 }

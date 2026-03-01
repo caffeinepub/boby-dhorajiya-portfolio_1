@@ -19,29 +19,25 @@ export const _CaffeineStorageRefillResult = IDL.Record({
   'success' : IDL.Opt(IDL.Bool),
   'topped_up_amount' : IDL.Opt(IDL.Nat),
 });
-export const SkillCategory = IDL.Variant({
-  'security' : IDL.Null,
-  'secondary' : IDL.Null,
-  'primary' : IDL.Null,
-  'additional' : IDL.Null,
-});
-export const UserRole = IDL.Variant({
-  'admin' : IDL.Null,
-  'user' : IDL.Null,
-  'guest' : IDL.Null,
-});
-export const ClaimAdminResult = IDL.Variant({
-  'notAuthenticated' : IDL.Null,
-  'success' : IDL.Null,
-  'alreadyClaimed' : IDL.Null,
-});
-export const ProjectCategory = IDL.Record({
+export const BlogPost = IDL.Record({
   'id' : IDL.Nat,
-  'name' : IDL.Text,
+  'metaDescription' : IDL.Text,
+  'title' : IDL.Text,
+  'content' : IDL.Text,
   'slug' : IDL.Text,
+  'metaTitle' : IDL.Text,
+  'timestamp' : IDL.Int,
 });
-export const CategoryResult = IDL.Record({
-  'data' : IDL.Opt(ProjectCategory),
+export const Experience = IDL.Record({
+  'id' : IDL.Nat,
+  'title' : IDL.Text,
+  'responsibilities' : IDL.Vec(IDL.Text),
+  'period' : IDL.Text,
+  'description' : IDL.Text,
+  'company' : IDL.Text,
+});
+export const ExperienceResult = IDL.Record({
+  'data' : IDL.Opt(Experience),
   'error' : IDL.Opt(IDL.Text),
   'success' : IDL.Bool,
 });
@@ -51,12 +47,25 @@ export const Project = IDL.Record({
   'url' : IDL.Text,
   'categoryId' : IDL.Opt(IDL.Nat),
   'title' : IDL.Text,
+  'order' : IDL.Nat,
   'description' : IDL.Text,
+  'isActive' : IDL.Bool,
   'timestamp' : IDL.Int,
   'image' : IDL.Opt(ExternalBlob),
 });
 export const ProjectResult = IDL.Record({
   'data' : IDL.Opt(Project),
+  'error' : IDL.Opt(IDL.Text),
+  'success' : IDL.Bool,
+});
+export const ProjectCategory = IDL.Record({
+  'id' : IDL.Nat,
+  'order' : IDL.Nat,
+  'name' : IDL.Text,
+  'slug' : IDL.Text,
+});
+export const CategoryResult = IDL.Record({
+  'data' : IDL.Opt(ProjectCategory),
   'error' : IDL.Opt(IDL.Text),
   'success' : IDL.Bool,
 });
@@ -70,23 +79,58 @@ export const ServiceResult = IDL.Record({
   'error' : IDL.Opt(IDL.Text),
   'success' : IDL.Bool,
 });
+export const SkillCategory = IDL.Variant({
+  'security' : IDL.Null,
+  'secondary' : IDL.Null,
+  'primary' : IDL.Null,
+  'additional' : IDL.Null,
+});
+export const Skill = IDL.Record({
+  'id' : IDL.Nat,
+  'name' : IDL.Text,
+  'experience' : IDL.Int,
+  'category' : SkillCategory,
+});
 export const SocialPlatform = IDL.Variant({
   'x' : IDL.Null,
   'linkedin' : IDL.Null,
   'github' : IDL.Null,
 });
-export const BlogPost = IDL.Record({
+export const SocialLink = IDL.Record({
   'id' : IDL.Nat,
-  'metaDescription' : IDL.Text,
-  'title' : IDL.Text,
-  'content' : IDL.Text,
-  'slug' : IDL.Text,
-  'metaTitle' : IDL.Text,
-  'timestamp' : IDL.Int,
+  'url' : IDL.Text,
+  'icon' : IDL.Text,
+  'platform' : SocialPlatform,
+  'isActive' : IDL.Bool,
+});
+export const Testimonial = IDL.Record({
+  'id' : IDL.Nat,
+  'author' : IDL.Text,
+  'message' : IDL.Text,
+});
+export const UserRole = IDL.Variant({
+  'admin' : IDL.Null,
+  'user' : IDL.Null,
+  'guest' : IDL.Null,
+});
+export const ClaimAdminResult = IDL.Variant({
+  'notAuthenticated' : IDL.Null,
+  'success' : IDL.Null,
+  'alreadyClaimed' : IDL.Null,
+});
+export const CrudResponse = IDL.Record({
+  'data' : IDL.Opt(IDL.Bool),
+  'error' : IDL.Opt(IDL.Text),
+  'success' : IDL.Bool,
 });
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Text,
+});
+export const ExperiencesResult = IDL.Record({
+  'data' : IDL.Opt(IDL.Vec(Experience)),
+  'error' : IDL.Opt(IDL.Text),
+  'success' : IDL.Bool,
 });
 export const Lead = IDL.Record({
   'id' : IDL.Nat,
@@ -94,16 +138,6 @@ export const Lead = IDL.Record({
   'email' : IDL.Text,
   'message' : IDL.Text,
   'timestamp' : IDL.Int,
-});
-export const SeoSetting = IDL.Record({
-  'metaDescription' : IDL.Text,
-  'page' : IDL.Text,
-  'metaTitle' : IDL.Text,
-});
-export const Testimonial = IDL.Record({
-  'id' : IDL.Nat,
-  'author' : IDL.Text,
-  'message' : IDL.Text,
 });
 export const CategoriesResult = IDL.Record({
   'data' : IDL.Opt(IDL.Vec(ProjectCategory)),
@@ -115,23 +149,15 @@ export const ProjectsResult = IDL.Record({
   'error' : IDL.Opt(IDL.Text),
   'success' : IDL.Bool,
 });
+export const SeoSetting = IDL.Record({
+  'metaDescription' : IDL.Text,
+  'page' : IDL.Text,
+  'metaTitle' : IDL.Text,
+});
 export const ServicesResult = IDL.Record({
   'data' : IDL.Opt(IDL.Vec(Service)),
   'error' : IDL.Opt(IDL.Text),
   'success' : IDL.Bool,
-});
-export const Skill = IDL.Record({
-  'id' : IDL.Nat,
-  'name' : IDL.Text,
-  'experience' : IDL.Int,
-  'category' : SkillCategory,
-});
-export const SocialLink = IDL.Record({
-  'id' : IDL.Nat,
-  'url' : IDL.Text,
-  'icon' : IDL.Text,
-  'platform' : SocialPlatform,
-  'isActive' : IDL.Bool,
 });
 
 export const idlService = IDL.Service({
@@ -162,59 +188,67 @@ export const idlService = IDL.Service({
     ),
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'addBlog' : IDL.Func(
+  'addBlogPost' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-      [],
+      [BlogPost],
       [],
     ),
-  'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [], []),
-  'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [], []),
-  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'checkAdminStatus' : IDL.Func([], [IDL.Bool], ['query']),
-  'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
-  'createCategory' : IDL.Func([IDL.Text, IDL.Text], [CategoryResult], []),
-  'createProject' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob), IDL.Opt(IDL.Nat)],
+  'addExperience' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+      [ExperienceResult],
+      [],
+    ),
+  'addProject' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Opt(ExternalBlob),
+        IDL.Opt(IDL.Nat),
+        IDL.Nat,
+        IDL.Bool,
+      ],
       [ProjectResult],
       [],
     ),
-  'createService' : IDL.Func([IDL.Text, IDL.Text], [ServiceResult], []),
-  'createSocialLink' : IDL.Func([SocialPlatform, IDL.Text, IDL.Text], [], []),
-  'deleteBlog' : IDL.Func([IDL.Nat], [], []),
-  'deleteCategory' : IDL.Func([IDL.Nat], [CategoryResult], []),
-  'deleteLead' : IDL.Func([IDL.Nat], [], []),
-  'deleteProject' : IDL.Func([IDL.Nat], [ProjectResult], []),
-  'deleteSeoSetting' : IDL.Func([IDL.Text], [], []),
-  'deleteService' : IDL.Func([IDL.Nat], [ServiceResult], []),
-  'deleteSkill' : IDL.Func([IDL.Nat], [], []),
-  'deleteSocialLink' : IDL.Func([IDL.Nat], [], []),
-  'deleteTestimonial' : IDL.Func([IDL.Nat], [], []),
-  'getBlogBySlug' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
-  'getBlogs' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+  'addProjectCategory' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Nat],
+      [CategoryResult],
+      [],
+    ),
+  'addService' : IDL.Func([IDL.Text, IDL.Text], [ServiceResult], []),
+  'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [Skill], []),
+  'addSocialLink' : IDL.Func(
+      [SocialPlatform, IDL.Text, IDL.Text, IDL.Bool],
+      [SocialLink],
+      [],
+    ),
+  'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [Testimonial], []),
+  'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
+  'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteExperience' : IDL.Func([IDL.Nat], [CrudResponse], []),
+  'deleteLead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteProject' : IDL.Func([IDL.Nat], [CrudResponse], []),
+  'deleteProjectCategory' : IDL.Func([IDL.Nat], [CrudResponse], []),
+  'deleteService' : IDL.Func([IDL.Nat], [CrudResponse], []),
+  'deleteSkill' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteSocialLink' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteTestimonial' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
+  'getBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getCategory' : IDL.Func([IDL.Nat], [CategoryResult], ['query']),
-  'getDashboardStats' : IDL.Func(
-      [],
-      [
-        IDL.Record({
-          'leadCount' : IDL.Nat,
-          'projectCount' : IDL.Nat,
-          'blogCount' : IDL.Nat,
-        }),
-      ],
-      ['query'],
-    ),
+  'getExperiences' : IDL.Func([], [ExperiencesResult], ['query']),
   'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
   'getProject' : IDL.Func([IDL.Nat], [ProjectResult], ['query']),
-  'getProjects' : IDL.Func([], [IDL.Vec(Project)], ['query']),
-  'getSeoSettingByPage' : IDL.Func(
-      [IDL.Text],
-      [IDL.Opt(SeoSetting)],
-      ['query'],
-    ),
+  'getProjectCategories' : IDL.Func([], [CategoriesResult], ['query']),
+  'getProjects' : IDL.Func([], [ProjectsResult], ['query']),
+  'getSeoSetting' : IDL.Func([IDL.Text], [IDL.Opt(SeoSetting)], ['query']),
   'getSeoSettings' : IDL.Func([], [IDL.Vec(SeoSetting)], ['query']),
-  'getService' : IDL.Func([IDL.Nat], [ServiceResult], ['query']),
+  'getServices' : IDL.Func([], [ServicesResult], ['query']),
+  'getSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
+  'getSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
   'getTestimonials' : IDL.Func([], [IDL.Vec(Testimonial)], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
@@ -222,24 +256,18 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'listCategories' : IDL.Func([], [CategoriesResult], ['query']),
-  'listProjects' : IDL.Func([], [ProjectsResult], ['query']),
-  'listServices' : IDL.Func([], [ServicesResult], ['query']),
-  'listSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
-  'listSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
-  'processContactForm' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
-  'resetAdmin' : IDL.Func([], [], []),
+  'reorderProjects' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'setSeoSetting' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
-  'toggleSocialLink' : IDL.Func([IDL.Nat], [], []),
-  'updateBlog' : IDL.Func(
+  'saveSeoSetting' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [SeoSetting], []),
+  'submitLead' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Lead], []),
+  'updateBlogPost' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-      [],
+      [IDL.Opt(BlogPost)],
       [],
     ),
-  'updateCategory' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text],
-      [CategoryResult],
+  'updateExperience' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+      [ExperienceResult],
       [],
     ),
   'updateProject' : IDL.Func(
@@ -250,8 +278,15 @@ export const idlService = IDL.Service({
         IDL.Text,
         IDL.Opt(ExternalBlob),
         IDL.Opt(IDL.Nat),
+        IDL.Nat,
+        IDL.Bool,
       ],
       [ProjectResult],
+      [],
+    ),
+  'updateProjectCategory' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat],
+      [CategoryResult],
       [],
     ),
   'updateService' : IDL.Func(
@@ -259,9 +294,21 @@ export const idlService = IDL.Service({
       [ServiceResult],
       [],
     ),
-  'updateSkill' : IDL.Func([IDL.Nat, IDL.Text, IDL.Int, SkillCategory], [], []),
-  'updateSocialLink' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
-  'updateTestimonial' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
+  'updateSkill' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Int, SkillCategory],
+      [IDL.Opt(Skill)],
+      [],
+    ),
+  'updateSocialLink' : IDL.Func(
+      [IDL.Nat, SocialPlatform, IDL.Text, IDL.Text, IDL.Bool],
+      [IDL.Opt(SocialLink)],
+      [],
+    ),
+  'updateTestimonial' : IDL.Func(
+      [IDL.Nat, IDL.Text, IDL.Text],
+      [IDL.Opt(Testimonial)],
+      [],
+    ),
 });
 
 export const idlInitArgs = [];
@@ -278,29 +325,25 @@ export const idlFactory = ({ IDL }) => {
     'success' : IDL.Opt(IDL.Bool),
     'topped_up_amount' : IDL.Opt(IDL.Nat),
   });
-  const SkillCategory = IDL.Variant({
-    'security' : IDL.Null,
-    'secondary' : IDL.Null,
-    'primary' : IDL.Null,
-    'additional' : IDL.Null,
-  });
-  const UserRole = IDL.Variant({
-    'admin' : IDL.Null,
-    'user' : IDL.Null,
-    'guest' : IDL.Null,
-  });
-  const ClaimAdminResult = IDL.Variant({
-    'notAuthenticated' : IDL.Null,
-    'success' : IDL.Null,
-    'alreadyClaimed' : IDL.Null,
-  });
-  const ProjectCategory = IDL.Record({
+  const BlogPost = IDL.Record({
     'id' : IDL.Nat,
-    'name' : IDL.Text,
+    'metaDescription' : IDL.Text,
+    'title' : IDL.Text,
+    'content' : IDL.Text,
     'slug' : IDL.Text,
+    'metaTitle' : IDL.Text,
+    'timestamp' : IDL.Int,
   });
-  const CategoryResult = IDL.Record({
-    'data' : IDL.Opt(ProjectCategory),
+  const Experience = IDL.Record({
+    'id' : IDL.Nat,
+    'title' : IDL.Text,
+    'responsibilities' : IDL.Vec(IDL.Text),
+    'period' : IDL.Text,
+    'description' : IDL.Text,
+    'company' : IDL.Text,
+  });
+  const ExperienceResult = IDL.Record({
+    'data' : IDL.Opt(Experience),
     'error' : IDL.Opt(IDL.Text),
     'success' : IDL.Bool,
   });
@@ -310,12 +353,25 @@ export const idlFactory = ({ IDL }) => {
     'url' : IDL.Text,
     'categoryId' : IDL.Opt(IDL.Nat),
     'title' : IDL.Text,
+    'order' : IDL.Nat,
     'description' : IDL.Text,
+    'isActive' : IDL.Bool,
     'timestamp' : IDL.Int,
     'image' : IDL.Opt(ExternalBlob),
   });
   const ProjectResult = IDL.Record({
     'data' : IDL.Opt(Project),
+    'error' : IDL.Opt(IDL.Text),
+    'success' : IDL.Bool,
+  });
+  const ProjectCategory = IDL.Record({
+    'id' : IDL.Nat,
+    'order' : IDL.Nat,
+    'name' : IDL.Text,
+    'slug' : IDL.Text,
+  });
+  const CategoryResult = IDL.Record({
+    'data' : IDL.Opt(ProjectCategory),
     'error' : IDL.Opt(IDL.Text),
     'success' : IDL.Bool,
   });
@@ -329,37 +385,62 @@ export const idlFactory = ({ IDL }) => {
     'error' : IDL.Opt(IDL.Text),
     'success' : IDL.Bool,
   });
+  const SkillCategory = IDL.Variant({
+    'security' : IDL.Null,
+    'secondary' : IDL.Null,
+    'primary' : IDL.Null,
+    'additional' : IDL.Null,
+  });
+  const Skill = IDL.Record({
+    'id' : IDL.Nat,
+    'name' : IDL.Text,
+    'experience' : IDL.Int,
+    'category' : SkillCategory,
+  });
   const SocialPlatform = IDL.Variant({
     'x' : IDL.Null,
     'linkedin' : IDL.Null,
     'github' : IDL.Null,
   });
-  const BlogPost = IDL.Record({
+  const SocialLink = IDL.Record({
     'id' : IDL.Nat,
-    'metaDescription' : IDL.Text,
-    'title' : IDL.Text,
-    'content' : IDL.Text,
-    'slug' : IDL.Text,
-    'metaTitle' : IDL.Text,
-    'timestamp' : IDL.Int,
+    'url' : IDL.Text,
+    'icon' : IDL.Text,
+    'platform' : SocialPlatform,
+    'isActive' : IDL.Bool,
+  });
+  const Testimonial = IDL.Record({
+    'id' : IDL.Nat,
+    'author' : IDL.Text,
+    'message' : IDL.Text,
+  });
+  const UserRole = IDL.Variant({
+    'admin' : IDL.Null,
+    'user' : IDL.Null,
+    'guest' : IDL.Null,
+  });
+  const ClaimAdminResult = IDL.Variant({
+    'notAuthenticated' : IDL.Null,
+    'success' : IDL.Null,
+    'alreadyClaimed' : IDL.Null,
+  });
+  const CrudResponse = IDL.Record({
+    'data' : IDL.Opt(IDL.Bool),
+    'error' : IDL.Opt(IDL.Text),
+    'success' : IDL.Bool,
   });
   const UserProfile = IDL.Record({ 'name' : IDL.Text, 'email' : IDL.Text });
+  const ExperiencesResult = IDL.Record({
+    'data' : IDL.Opt(IDL.Vec(Experience)),
+    'error' : IDL.Opt(IDL.Text),
+    'success' : IDL.Bool,
+  });
   const Lead = IDL.Record({
     'id' : IDL.Nat,
     'name' : IDL.Text,
     'email' : IDL.Text,
     'message' : IDL.Text,
     'timestamp' : IDL.Int,
-  });
-  const SeoSetting = IDL.Record({
-    'metaDescription' : IDL.Text,
-    'page' : IDL.Text,
-    'metaTitle' : IDL.Text,
-  });
-  const Testimonial = IDL.Record({
-    'id' : IDL.Nat,
-    'author' : IDL.Text,
-    'message' : IDL.Text,
   });
   const CategoriesResult = IDL.Record({
     'data' : IDL.Opt(IDL.Vec(ProjectCategory)),
@@ -371,23 +452,15 @@ export const idlFactory = ({ IDL }) => {
     'error' : IDL.Opt(IDL.Text),
     'success' : IDL.Bool,
   });
+  const SeoSetting = IDL.Record({
+    'metaDescription' : IDL.Text,
+    'page' : IDL.Text,
+    'metaTitle' : IDL.Text,
+  });
   const ServicesResult = IDL.Record({
     'data' : IDL.Opt(IDL.Vec(Service)),
     'error' : IDL.Opt(IDL.Text),
     'success' : IDL.Bool,
-  });
-  const Skill = IDL.Record({
-    'id' : IDL.Nat,
-    'name' : IDL.Text,
-    'experience' : IDL.Int,
-    'category' : SkillCategory,
-  });
-  const SocialLink = IDL.Record({
-    'id' : IDL.Nat,
-    'url' : IDL.Text,
-    'icon' : IDL.Text,
-    'platform' : SocialPlatform,
-    'isActive' : IDL.Bool,
   });
   
   return IDL.Service({
@@ -418,59 +491,67 @@ export const idlFactory = ({ IDL }) => {
       ),
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'addBlog' : IDL.Func(
+    'addBlogPost' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-        [],
+        [BlogPost],
         [],
       ),
-    'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [], []),
-    'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [], []),
-    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'checkAdminStatus' : IDL.Func([], [IDL.Bool], ['query']),
-    'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
-    'createCategory' : IDL.Func([IDL.Text, IDL.Text], [CategoryResult], []),
-    'createProject' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Opt(ExternalBlob), IDL.Opt(IDL.Nat)],
+    'addExperience' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+        [ExperienceResult],
+        [],
+      ),
+    'addProject' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Opt(ExternalBlob),
+          IDL.Opt(IDL.Nat),
+          IDL.Nat,
+          IDL.Bool,
+        ],
         [ProjectResult],
         [],
       ),
-    'createService' : IDL.Func([IDL.Text, IDL.Text], [ServiceResult], []),
-    'createSocialLink' : IDL.Func([SocialPlatform, IDL.Text, IDL.Text], [], []),
-    'deleteBlog' : IDL.Func([IDL.Nat], [], []),
-    'deleteCategory' : IDL.Func([IDL.Nat], [CategoryResult], []),
-    'deleteLead' : IDL.Func([IDL.Nat], [], []),
-    'deleteProject' : IDL.Func([IDL.Nat], [ProjectResult], []),
-    'deleteSeoSetting' : IDL.Func([IDL.Text], [], []),
-    'deleteService' : IDL.Func([IDL.Nat], [ServiceResult], []),
-    'deleteSkill' : IDL.Func([IDL.Nat], [], []),
-    'deleteSocialLink' : IDL.Func([IDL.Nat], [], []),
-    'deleteTestimonial' : IDL.Func([IDL.Nat], [], []),
-    'getBlogBySlug' : IDL.Func([IDL.Text], [IDL.Opt(BlogPost)], ['query']),
-    'getBlogs' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
+    'addProjectCategory' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Nat],
+        [CategoryResult],
+        [],
+      ),
+    'addService' : IDL.Func([IDL.Text, IDL.Text], [ServiceResult], []),
+    'addSkill' : IDL.Func([IDL.Text, IDL.Int, SkillCategory], [Skill], []),
+    'addSocialLink' : IDL.Func(
+        [SocialPlatform, IDL.Text, IDL.Text, IDL.Bool],
+        [SocialLink],
+        [],
+      ),
+    'addTestimonial' : IDL.Func([IDL.Text, IDL.Text], [Testimonial], []),
+    'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'claimAdmin' : IDL.Func([], [ClaimAdminResult], []),
+    'deleteBlogPost' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteExperience' : IDL.Func([IDL.Nat], [CrudResponse], []),
+    'deleteLead' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteProject' : IDL.Func([IDL.Nat], [CrudResponse], []),
+    'deleteProjectCategory' : IDL.Func([IDL.Nat], [CrudResponse], []),
+    'deleteService' : IDL.Func([IDL.Nat], [CrudResponse], []),
+    'deleteSkill' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteSocialLink' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteTestimonial' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'getBlogPost' : IDL.Func([IDL.Nat], [IDL.Opt(BlogPost)], ['query']),
+    'getBlogPosts' : IDL.Func([], [IDL.Vec(BlogPost)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getCategory' : IDL.Func([IDL.Nat], [CategoryResult], ['query']),
-    'getDashboardStats' : IDL.Func(
-        [],
-        [
-          IDL.Record({
-            'leadCount' : IDL.Nat,
-            'projectCount' : IDL.Nat,
-            'blogCount' : IDL.Nat,
-          }),
-        ],
-        ['query'],
-      ),
+    'getExperiences' : IDL.Func([], [ExperiencesResult], ['query']),
     'getLeads' : IDL.Func([], [IDL.Vec(Lead)], ['query']),
     'getProject' : IDL.Func([IDL.Nat], [ProjectResult], ['query']),
-    'getProjects' : IDL.Func([], [IDL.Vec(Project)], ['query']),
-    'getSeoSettingByPage' : IDL.Func(
-        [IDL.Text],
-        [IDL.Opt(SeoSetting)],
-        ['query'],
-      ),
+    'getProjectCategories' : IDL.Func([], [CategoriesResult], ['query']),
+    'getProjects' : IDL.Func([], [ProjectsResult], ['query']),
+    'getSeoSetting' : IDL.Func([IDL.Text], [IDL.Opt(SeoSetting)], ['query']),
     'getSeoSettings' : IDL.Func([], [IDL.Vec(SeoSetting)], ['query']),
-    'getService' : IDL.Func([IDL.Nat], [ServiceResult], ['query']),
+    'getServices' : IDL.Func([], [ServicesResult], ['query']),
+    'getSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
+    'getSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
     'getTestimonials' : IDL.Func([], [IDL.Vec(Testimonial)], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
@@ -478,24 +559,22 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'listCategories' : IDL.Func([], [CategoriesResult], ['query']),
-    'listProjects' : IDL.Func([], [ProjectsResult], ['query']),
-    'listServices' : IDL.Func([], [ServicesResult], ['query']),
-    'listSkills' : IDL.Func([], [IDL.Vec(Skill)], ['query']),
-    'listSocialLinks' : IDL.Func([], [IDL.Vec(SocialLink)], ['query']),
-    'processContactForm' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
-    'resetAdmin' : IDL.Func([], [], []),
+    'reorderProjects' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'setSeoSetting' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
-    'toggleSocialLink' : IDL.Func([IDL.Nat], [], []),
-    'updateBlog' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
-        [],
+    'saveSeoSetting' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text],
+        [SeoSetting],
         [],
       ),
-    'updateCategory' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text],
-        [CategoryResult],
+    'submitLead' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [Lead], []),
+    'updateBlogPost' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Opt(BlogPost)],
+        [],
+      ),
+    'updateExperience' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Vec(IDL.Text)],
+        [ExperienceResult],
         [],
       ),
     'updateProject' : IDL.Func(
@@ -506,8 +585,15 @@ export const idlFactory = ({ IDL }) => {
           IDL.Text,
           IDL.Opt(ExternalBlob),
           IDL.Opt(IDL.Nat),
+          IDL.Nat,
+          IDL.Bool,
         ],
         [ProjectResult],
+        [],
+      ),
+    'updateProjectCategory' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text, IDL.Nat],
+        [CategoryResult],
         [],
       ),
     'updateService' : IDL.Func(
@@ -517,11 +603,19 @@ export const idlFactory = ({ IDL }) => {
       ),
     'updateSkill' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Int, SkillCategory],
-        [],
+        [IDL.Opt(Skill)],
         [],
       ),
-    'updateSocialLink' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
-    'updateTestimonial' : IDL.Func([IDL.Nat, IDL.Text, IDL.Text], [], []),
+    'updateSocialLink' : IDL.Func(
+        [IDL.Nat, SocialPlatform, IDL.Text, IDL.Text, IDL.Bool],
+        [IDL.Opt(SocialLink)],
+        [],
+      ),
+    'updateTestimonial' : IDL.Func(
+        [IDL.Nat, IDL.Text, IDL.Text],
+        [IDL.Opt(Testimonial)],
+        [],
+      ),
   });
 };
 

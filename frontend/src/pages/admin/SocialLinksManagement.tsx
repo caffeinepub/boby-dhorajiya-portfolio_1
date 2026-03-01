@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import AdminGuard from '../../components/AdminGuard';
 import AdminSidebar from '../../components/AdminSidebar';
 import {
-  useListSocialLinks,
-  useCreateSocialLink,
+  useGetSocialLinks,
+  useAddSocialLink,
   useUpdateSocialLink,
   useToggleSocialLink,
   useDeleteSocialLink,
@@ -28,8 +28,8 @@ const PLATFORMS = [
 ];
 
 function SocialLinksManagementContent() {
-  const { data: socialLinks = [], isLoading } = useListSocialLinks();
-  const createSocialLink = useCreateSocialLink();
+  const { data: socialLinks = [], isLoading } = useGetSocialLinks();
+  const createSocialLink = useAddSocialLink();
   const updateSocialLink = useUpdateSocialLink();
   const toggleSocialLink = useToggleSocialLink();
   const deleteSocialLink = useDeleteSocialLink();
@@ -42,6 +42,7 @@ function SocialLinksManagementContent() {
     platform: SocialPlatform.github as SocialPlatform,
     url: '',
     icon: '',
+    isActive: true,
   });
 
   const filtered = socialLinks.filter(
@@ -54,13 +55,13 @@ function SocialLinksManagementContent() {
 
   const openAdd = () => {
     setEditingLink(null);
-    setForm({ platform: SocialPlatform.github, url: '', icon: '' });
+    setForm({ platform: SocialPlatform.github, url: '', icon: '', isActive: true });
     setDialogOpen(true);
   };
 
   const openEdit = (link: SocialLink) => {
     setEditingLink(link);
-    setForm({ platform: link.platform, url: link.url, icon: link.icon });
+    setForm({ platform: link.platform, url: link.url, icon: link.icon, isActive: link.isActive });
     setDialogOpen(true);
   };
 
@@ -71,10 +72,21 @@ function SocialLinksManagementContent() {
     }
     try {
       if (editingLink) {
-        await updateSocialLink.mutateAsync({ id: editingLink.id, url: form.url, icon: form.icon });
+        await updateSocialLink.mutateAsync({
+          id: editingLink.id,
+          platform: editingLink.platform,
+          url: form.url,
+          icon: form.icon,
+          isActive: form.isActive,
+        });
         toast.success('Social link updated.');
       } else {
-        await createSocialLink.mutateAsync(form);
+        await createSocialLink.mutateAsync({
+          platform: form.platform,
+          url: form.url,
+          icon: form.icon,
+          isActive: form.isActive,
+        });
         toast.success('Social link created.');
       }
       setDialogOpen(false);
@@ -83,9 +95,9 @@ function SocialLinksManagementContent() {
     }
   };
 
-  const handleToggle = async (id: bigint) => {
+  const handleToggle = async (link: SocialLink) => {
     try {
-      await toggleSocialLink.mutateAsync(id);
+      await toggleSocialLink.mutateAsync(link);
     } catch {
       toast.error('Failed to toggle social link.');
     }
@@ -143,7 +155,7 @@ function SocialLinksManagementContent() {
                     <div className="flex items-center gap-3">
                       <Switch
                         checked={link.isActive}
-                        onCheckedChange={() => handleToggle(link.id)}
+                        onCheckedChange={() => handleToggle(link)}
                         disabled={toggleSocialLink.isPending}
                       />
                       <div>
@@ -223,6 +235,14 @@ function SocialLinksManagementContent() {
                 onChange={(e) => setForm(f => ({ ...f, icon: e.target.value }))}
                 placeholder="e.g. github, linkedin"
               />
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch
+                id="isActive"
+                checked={form.isActive}
+                onCheckedChange={(checked) => setForm(f => ({ ...f, isActive: checked }))}
+              />
+              <Label htmlFor="isActive">Active</Label>
             </div>
           </div>
           <DialogFooter>

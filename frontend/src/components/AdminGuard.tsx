@@ -1,66 +1,39 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useQuery } from '@tanstack/react-query';
 import { useActor } from '../hooks/useActor';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
-import { Shield, Loader2 } from 'lucide-react';
+import { Loader2, ShieldAlert } from 'lucide-react';
 
 interface AdminGuardProps {
   children: React.ReactNode;
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  const { identity, login, loginStatus } = useInternetIdentity();
+  const { identity, login, loginStatus, isInitializing } = useInternetIdentity();
   const { actor, isFetching: actorFetching } = useActor();
-  const queryClient = useQueryClient();
-  const isAuthenticated = !!identity;
-  const principalStr = identity?.getPrincipal().toString() ?? 'anonymous';
 
-  // Use React Query to cache admin status, scoped to the current principal
+  const isAuthenticated = !!identity;
+  const isLoggingIn = loginStatus === 'logging-in';
+
   const {
     data: isAdmin,
     isLoading: adminLoading,
-    isFetched: adminFetched,
-    refetch: refetchAdmin,
   } = useQuery<boolean>({
-    queryKey: ['isAdmin', principalStr],
+    queryKey: ['isAdmin', identity?.getPrincipal().toString()],
     queryFn: async () => {
       if (!actor) return false;
-      try {
-        return await actor.checkAdminStatus();
-      } catch {
-        return false;
-      }
+      return actor.isCallerAdmin();
     },
     enabled: !!actor && !actorFetching && isAuthenticated,
-    staleTime: 1000 * 60 * 5, // 5 minutes
     retry: false,
   });
 
-  // Re-check admin status whenever the actor changes (e.g., after login)
-  useEffect(() => {
-    if (actor && !actorFetching && isAuthenticated) {
-      refetchAdmin();
-    }
-  }, [actor, actorFetching, isAuthenticated, refetchAdmin]);
-
-  // Invalidate admin status on logout
-  useEffect(() => {
-    if (!isAuthenticated) {
-      queryClient.invalidateQueries({ queryKey: ['isAdmin'] });
-    }
-  }, [isAuthenticated, queryClient]);
-
-  const isLoggingIn = loginStatus === 'logging-in';
-
-  // Show loading while actor is initializing or admin status is being checked
-  const isLoading = actorFetching || (isAuthenticated && adminLoading && !adminFetched);
-
-  if (isLoading) {
+  if (isInitializing || actorFetching || (isAuthenticated && adminLoading)) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Verifying access...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Loading...</p>
         </div>
       </div>
     );
@@ -68,35 +41,29 @@ export default function AdminGuard({ children }: AdminGuardProps) {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center px-4">
+          <div className="p-4 rounded-full bg-primary/10">
+            <ShieldAlert className="h-12 w-12 text-primary" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Admin Access Required</h2>
             <p className="text-muted-foreground text-sm">
-              You need to log in with your admin account to access this area.
+              Please log in with your Internet Identity to access the admin panel.
             </p>
           </div>
           <button
-            onClick={() => {
-              try {
-                login();
-              } catch {
-                // login() is void; errors surface via loginStatus
-              }
-            }}
+            onClick={() => login()}
             disabled={isLoggingIn}
             className="w-full px-6 py-3 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isLoggingIn ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Logging in...
               </>
             ) : (
-              'Log In'
+              'Login with Internet Identity'
             )}
           </button>
         </div>
@@ -104,38 +71,30 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     );
   }
 
-  // Authenticated but admin status not yet confirmed — show loading
-  if (!adminFetched) {
+  if (isAdmin === false) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">Checking admin privileges...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="flex flex-col items-center gap-6 max-w-sm text-center p-8">
-          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-destructive" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center px-4">
+          <div className="p-4 rounded-full bg-destructive/10">
+            <ShieldAlert className="h-12 w-12 text-destructive" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
             <p className="text-muted-foreground text-sm">
-              Your account does not have admin privileges. Please contact the administrator.
+              Your account does not have admin privileges. Please contact the site administrator.
             </p>
           </div>
-          <p className="text-xs text-muted-foreground font-mono bg-muted px-3 py-1 rounded">
-            {principalStr.slice(0, 20)}...
+          <p className="text-xs text-muted-foreground break-all">
+            Principal: {identity?.getPrincipal().toString()}
           </p>
         </div>
       </div>
     );
   }
 
-  return <>{children}</>;
+  if (isAdmin) {
+    return <>{children}</>;
+  }
+
+  return null;
 }

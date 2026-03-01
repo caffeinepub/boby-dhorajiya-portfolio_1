@@ -1,14 +1,20 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import AdminGuard from '../../components/AdminGuard';
 import AdminSidebar from '../../components/AdminSidebar';
-import { useListCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from '../../hooks/useQueries';
+import {
+  useGetProjectCategories,
+  useAddProjectCategory,
+  useUpdateProjectCategory,
+  useDeleteProjectCategory,
+  useUpdateCategoryOrder,
+} from '../../hooks/useQueries';
 import { type ProjectCategory } from '../../backend';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Loader2, Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Loader2, Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 
 const ITEMS_PER_PAGE = 10;
@@ -25,19 +31,60 @@ function useDebounce<T>(value: T, delay: number): T {
 
 interface CategoryCardProps {
   cat: ProjectCategory;
+  index: number;
+  total: number;
   onEdit: (cat: ProjectCategory) => void;
   onDelete: (id: bigint) => void;
+  onMoveUp: (cat: ProjectCategory, index: number) => void;
+  onMoveDown: (cat: ProjectCategory, index: number) => void;
   isDeleting: boolean;
+  isReordering: boolean;
 }
 
-const CategoryCard = memo(({ cat, onEdit, onDelete, isDeleting }: CategoryCardProps) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between py-3">
-      <div>
-        <CardTitle className="text-base">{cat.name}</CardTitle>
-        <p className="text-xs text-muted-foreground mt-1">/{cat.slug}</p>
+const CategoryCard = memo(({
+  cat,
+  index,
+  total,
+  onEdit,
+  onDelete,
+  onMoveUp,
+  onMoveDown,
+  isDeleting,
+  isReordering,
+}: CategoryCardProps) => (
+  <Card className="transition-all">
+    <CardHeader className="flex flex-row items-center justify-between py-3 gap-2">
+      <div className="flex items-center gap-3 min-w-0">
+        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <div className="min-w-0">
+          <CardTitle className="text-base truncate">{cat.name}</CardTitle>
+          <p className="text-xs text-muted-foreground mt-0.5">/{cat.slug}</p>
+        </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Reorder controls */}
+        <div className="flex flex-col gap-0.5 mr-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => onMoveUp(cat, index)}
+            disabled={index === 0 || isReordering}
+            title="Move up"
+          >
+            <ChevronUp className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={() => onMoveDown(cat, index)}
+            disabled={index === total - 1 || isReordering}
+            title="Move down"
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </Button>
+        </div>
         <Button size="icon" variant="ghost" onClick={() => onEdit(cat)}>
           <Pencil className="h-4 w-4" />
         </Button>
@@ -56,10 +103,11 @@ const CategoryCard = memo(({ cat, onEdit, onDelete, isDeleting }: CategoryCardPr
 ));
 
 function CategoriesManagementContent() {
-  const { data: categories = [], isLoading } = useListCategories();
-  const createCategory = useCreateCategory();
-  const updateCategory = useUpdateCategory();
-  const deleteCategory = useDeleteCategory();
+  const { data: categories = [], isLoading } = useGetProjectCategories();
+  const createCategory = useAddProjectCategory();
+  const updateCategory = useUpdateProjectCategory();
+  const deleteCategory = useDeleteProjectCategory();
+  const updateCategoryOrder = useUpdateCategoryOrder();
 
   const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebounce(searchInput, DEBOUNCE_MS);
@@ -76,7 +124,10 @@ function CategoriesManagementContent() {
     }
   }, [debouncedSearch]);
 
-  const filtered = categories.filter(
+  // Sort categories by order for display
+  const sortedCategories = [...categories].sort((a, b) => Number(a.order) - Number(b.order));
+
+  const filtered = sortedCategories.filter(
     (c) =>
       c.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
       c.slug.toLowerCase().includes(debouncedSearch.toLowerCase())
@@ -100,7 +151,6 @@ function CategoriesManagementContent() {
     setForm(f => ({
       ...f,
       name,
-      // Auto-generate slug only when adding new category
       ...(editingCategory ? {} : {
         slug: name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim()
       }),
@@ -114,10 +164,23 @@ function CategoriesManagementContent() {
     }
     try {
       if (editingCategory) {
-        await updateCategory.mutateAsync({ id: editingCategory.id, ...form });
+        await updateCategory.mutateAsync({
+          id: editingCategory.id,
+          name: form.name,
+          slug: form.slug,
+          order: editingCategory.order,
+        });
         toast.success('Category updated.');
       } else {
-        await createCategory.mutateAsync(form);
+        // Assign next order value
+        const maxOrder = sortedCategories.length > 0
+          ? Math.max(...sortedCategories.map(c => Number(c.order)))
+          : 0;
+        await createCategory.mutateAsync({
+          name: form.name,
+          slug: form.slug,
+          order: BigInt(maxOrder + 1),
+        });
         toast.success('Category created.');
       }
       setDialogOpen(false);
@@ -138,7 +201,49 @@ function CategoriesManagementContent() {
     }
   }, [deleteCategory]);
 
+  // Move a category up (swap order with the one above it in the sorted list)
+  const handleMoveUp = useCallback(async (cat: ProjectCategory, index: number) => {
+    if (index === 0) return;
+    const above = filtered[index - 1];
+    try {
+      // Swap orders
+      await Promise.all([
+        updateCategoryOrder.mutateAsync({
+          category: cat,
+          newOrder: above.order,
+        }),
+        updateCategoryOrder.mutateAsync({
+          category: above,
+          newOrder: cat.order,
+        }),
+      ]);
+    } catch {
+      // Error handled by mutation hook
+    }
+  }, [filtered, updateCategoryOrder]);
+
+  // Move a category down (swap order with the one below it in the sorted list)
+  const handleMoveDown = useCallback(async (cat: ProjectCategory, index: number) => {
+    if (index === filtered.length - 1) return;
+    const below = filtered[index + 1];
+    try {
+      await Promise.all([
+        updateCategoryOrder.mutateAsync({
+          category: cat,
+          newOrder: below.order,
+        }),
+        updateCategoryOrder.mutateAsync({
+          category: below,
+          newOrder: cat.order,
+        }),
+      ]);
+    } catch {
+      // Error handled by mutation hook
+    }
+  }, [filtered, updateCategoryOrder]);
+
   const isSaving = createCategory.isPending || updateCategory.isPending;
+  const isReordering = updateCategoryOrder.isPending;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -174,15 +279,23 @@ function CategoriesManagementContent() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {paginated.map((cat) => (
-                <CategoryCard
-                  key={String(cat.id)}
-                  cat={cat}
-                  onEdit={openEdit}
-                  onDelete={handleDelete}
-                  isDeleting={deleteCategory.isPending}
-                />
-              ))}
+              {paginated.map((cat, idx) => {
+                const actualIndex = (page - 1) * ITEMS_PER_PAGE + idx;
+                return (
+                  <CategoryCard
+                    key={String(cat.id)}
+                    cat={cat}
+                    index={actualIndex}
+                    total={filtered.length}
+                    onEdit={openEdit}
+                    onDelete={handleDelete}
+                    onMoveUp={handleMoveUp}
+                    onMoveDown={handleMoveDown}
+                    isDeleting={deleteCategory.isPending}
+                    isReordering={isReordering}
+                  />
+                );
+              })}
             </div>
           )}
 

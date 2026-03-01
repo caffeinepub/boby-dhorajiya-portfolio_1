@@ -1,117 +1,186 @@
 import React from 'react';
-import { Link } from '@tanstack/react-router';
-import { Briefcase, MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react';
-import SEOHead from '../components/SEOHead';
+import { User, Code2, Smartphone, Globe, Award, Heart } from 'lucide-react';
+import { useGetSkills, useGetTestimonials } from '../hooks/useQueries';
+import { Skeleton } from '@/components/ui/skeleton';
+import { SkillCategory } from '../backend';
 
-const values = [
-  'Security-first development approach',
-  'Clean, maintainable code architecture',
-  'Performance optimization at every layer',
-  'Cross-platform consistency',
-  'Continuous learning & improvement',
-];
+const skillCategoryLabels: Record<string, string> = {
+  primary: 'Primary Skills',
+  secondary: 'Secondary Skills',
+  security: 'Security',
+  additional: 'Additional Skills',
+};
 
 export default function About() {
-  return (
-    <>
-      <SEOHead page="about" defaultTitle="About – Boby Dhorajiya" defaultDescription="Learn about Boby Dhorajiya, a mobile app developer specializing in Flutter and React Native." />
+  const { data: skills, isLoading: skillsLoading } = useGetSkills();
+  const { data: testimonials, isLoading: testimonialsLoading } = useGetTestimonials();
 
-      <div className="pt-24 section-padding">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-16 animate-fade-in">
-            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">About Me</span>
-            <h1 className="section-title font-display mt-2">
-              Passionate About <span className="gradient-text">Secure Mobile</span> Development
-            </h1>
+  const groupedSkills = skills?.reduce(
+    (acc, skill) => {
+      const cat = skill.category as string;
+      if (!acc[cat]) acc[cat] = [];
+      acc[cat].push(skill);
+      return acc;
+    },
+    {} as Record<string, typeof skills>
+  );
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Hero */}
+      <section className="py-20 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-10">
+            <div className="flex-shrink-0">
+              <div className="w-40 h-40 rounded-full bg-primary/10 border-4 border-primary/20 flex items-center justify-center overflow-hidden">
+                <img
+                  src="/assets/image.png"
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+                <User className="w-20 h-20 text-primary/40 absolute" />
+              </div>
+            </div>
+            <div>
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium mb-4">
+                <User className="w-4 h-4" />
+                About Me
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-3">
+                Mobile App Developer
+              </h1>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Passionate mobile app developer with expertise in building high-quality, 
+                user-centric applications for iOS and Android platforms. I specialize in 
+                creating seamless digital experiences that solve real-world problems.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Content */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Smartphone className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground text-lg">Mobile Development</h3>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Specializing in cross-platform and native mobile app development using 
+                Flutter, React Native, Swift, and Kotlin. Building apps that users love.
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Globe className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground text-lg">Web Development</h3>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Full-stack web development with modern frameworks like React, Next.js, 
+                and Node.js. Creating responsive, performant web applications.
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Code2 className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground text-lg">Clean Code</h3>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Writing maintainable, scalable, and well-documented code following 
+                industry best practices and design patterns.
+              </p>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Heart className="w-5 h-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground text-lg">User-Centric</h3>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Focused on delivering exceptional user experiences through thoughtful 
+                UI/UX design and performance optimization.
+              </p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Image placeholder + stats */}
-            <div className="space-y-6 animate-slide-in-left">
-              <div className="relative">
-                <div className="w-full aspect-square max-w-sm mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center overflow-hidden">
-                  <div className="text-center space-y-4 p-8">
-                    <div className="w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center mx-auto">
-                      <span className="text-4xl font-display font-bold text-primary">BD</span>
-                    </div>
-                    <div>
-                      <p className="font-display font-bold text-xl">Boby Dhorajiya</p>
-                      <p className="text-primary text-sm font-medium">Mobile App Developer</p>
+          {/* Skills */}
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+              <Award className="w-6 h-6 text-primary" />
+              Skills & Expertise
+            </h2>
+            {skillsLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i}>
+                    <Skeleton className="h-5 w-32 mb-3" />
+                    <div className="flex flex-wrap gap-2">
+                      {[1, 2, 3, 4].map((j) => (
+                        <Skeleton key={j} className="h-8 w-20 rounded-full" />
+                      ))}
                     </div>
                   </div>
-                </div>
-                {/* Floating badge */}
-                <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-xl px-4 py-3 shadow-card-dark">
-                  <p className="text-xs text-muted-foreground">Specialization</p>
-                  <p className="font-semibold text-sm text-primary">Flutter & React Native</p>
-                </div>
+                ))}
               </div>
+            ) : !skills || skills.length === 0 ? (
+              <p className="text-muted-foreground">No skills added yet.</p>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupedSkills ?? {}).map(([category, categorySkills]) => (
+                  <div key={category}>
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                      {skillCategoryLabels[category] ?? category}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {categorySkills?.map((skill) => (
+                        <div
+                          key={String(skill.id)}
+                          className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium"
+                        >
+                          <span>{skill.name}</span>
+                          {Number(skill.experience) > 0 && (
+                            <span className="text-xs opacity-70">{Number(skill.experience)}y</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-4 pt-6">
-                {[
-                  { value: '3+', label: 'Years Exp.' },
-                  { value: '20+', label: 'Apps Built' },
-                  { value: '100%', label: 'Secure Code' },
-                ].map((stat) => (
-                  <div key={stat.label} className="text-center p-4 rounded-xl bg-card border border-border">
-                    <p className="text-2xl font-display font-bold text-primary">{stat.value}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+          {/* Testimonials */}
+          {!testimonialsLoading && testimonials && testimonials.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold text-foreground mb-6">What Clients Say</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {testimonials.map((t) => (
+                  <div key={String(t.id)} className="bg-card border border-border rounded-xl p-5">
+                    <p className="text-muted-foreground text-sm leading-relaxed mb-3 italic">
+                      "{t.message}"
+                    </p>
+                    <p className="font-semibold text-foreground text-sm">— {t.author}</p>
                   </div>
                 ))}
               </div>
             </div>
-
-            {/* Right: Bio */}
-            <div className="space-y-6 animate-slide-up">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Briefcase className="w-4 h-4 text-primary" />
-                  <span>Freelance Mobile App Developer</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span>Available Worldwide (Remote)</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span>Open to New Projects</span>
-                </div>
-              </div>
-
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p className="text-lg">
-                  Boby is a mobile-focused developer specializing in Flutter and React Native, with strong expertise in building secure and scalable applications for startups and enterprises.
-                </p>
-                <p>
-                  With a deep understanding of mobile security principles, Boby ensures every application is built with security at its core — from secure API integration and authentication to data encryption and secure local storage.
-                </p>
-                <p>
-                  Whether you're a startup looking to launch your first app or an enterprise needing to modernize your mobile presence, Boby brings the technical expertise and security mindset to deliver exceptional results.
-                </p>
-              </div>
-
-              {/* Values */}
-              <div className="space-y-3">
-                <h3 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground">Core Values</h3>
-                <ul className="space-y-2">
-                  {values.map((value) => (
-                    <li key={value} className="flex items-center gap-3 text-sm">
-                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
-                      <span>{value}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <Link to="/contact" className="btn-primary inline-flex">
-                Work With Me <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+          )}
         </div>
-      </div>
-    </>
+      </section>
+    </div>
   );
 }
