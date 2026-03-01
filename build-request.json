@@ -1,58 +1,43 @@
 {
   "kind": "build_request",
-  "title": "Restore backend/main.mo to Version 12 state",
+  "title": "Generate migration.mo to transition canister state from Version 16 schema to Version 12 schema",
   "projectName": "Portfolio Backend",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-8",
-      "text": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality. The frontend must remain completely untouched.",
+      "id": "REQ-10",
+      "text": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-6",
-          "msg-8"
+          "msg-recent"
         ],
         "quotes": [
-          "restore 12 version backend code",
-          "Restoring `backend/main.mo` to its exact Version 12 state — reverting all changes from versions 13–16, including schema changes, new endpoints, and modified logic. Frontend stays untouched."
+          "build",
+          "Building the migration file to safely transition the canister state from the Version 16 schema back to the Version 12 schema, ensuring a stable upgrade without data loss when redeployed."
         ]
       },
       "acceptanceCriteria": [
-        "backend/main.mo contains only the data types, CRUD operations, and logic that existed in Version 12",
-        "All schema changes introduced in versions 13–16 are removed from backend/main.mo",
-        "All new endpoints or actor methods added in versions 13–16 are removed from backend/main.mo",
-        "All logic modifications introduced in versions 13–16 are reverted in backend/main.mo",
-        "No frontend files are modified"
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-6"
-        ],
-        "quotes": [
-          "restore 12 version backend code"
-        ]
-      },
-      "acceptanceCriteria": [
-        "migration.mo is generated and handles the stable variable shape differences between version 16 and version 12",
-        "Canister can be upgraded without trapping or losing existing persisted data",
-        "Any fields or entities added in versions 13–16 that do not exist in version 12 are gracefully dropped or mapped during migration"
+        "backend/migration.mo exists and compiles without errors alongside backend/main.mo",
+        "All stable variables present in the Version 16 schema that also exist in the Version 12 schema are correctly mapped and preserved",
+        "Fields that existed in Version 16 but not in Version 12 are safely dropped without causing upgrade panics",
+        "Fields that existed in Version 12 but were absent in Version 16 are initialized with appropriate default values",
+        "Type shape differences (e.g., optional vs non-optional fields, changed record structures) are explicitly handled with conversion logic",
+        "Canister can be upgraded from a Version 16 state to Version 12 main.mo without a trap or data wipe",
+        "All existing blog posts, projects, services, skills, leads, SEO settings, social links, experiences, and user records survive the upgrade intact"
       ]
     }
   ],
   "constraints": [
+    "Do not modify backend/main.mo — it has already been restored to its Version 12 state",
     "Do not modify any frontend files",
     "Do not modify any immutable frontend paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Modifying or reverting any frontend source files",
-    "Introducing new backend features or endpoints beyond what existed in Version 12",
-    "Changing the frontend routing, components, hooks, or styles"
+    "Modifying backend/main.mo",
+    "Making any frontend changes",
+    "Adding new backend features or endpoints",
+    "Migrating forward to a newer schema version"
   ],
   "imageRequirements": {
     "required": [],

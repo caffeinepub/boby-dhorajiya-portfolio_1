@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 11,
-  "summary": "Restore backend/main.mo to its exact Version 12 state, reverting all changes introduced in versions 13 through 16. Frontend remains untouched.",
+  "projectStateVersion": 13,
+  "summary": "Restore backend/main.mo to its exact Version 12 state (completed in v22). Now building migration.mo to safely transition canister state from Version 16 schema back to Version 12 schema without data loss.",
   "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": true,
@@ -75,6 +75,14 @@
       "summary": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
       "reqIds": [
         "REQ-9"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
+      "reqIds": [
+        "REQ-10"
       ],
       "status": "pending"
     }

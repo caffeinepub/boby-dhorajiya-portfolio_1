@@ -1,37 +1,55 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:22:29.737Z",
-  "summary": "The diff only modifies project_state.json (a metadata/state tracking file). Neither backend/main.mo nor a migration.mo file were created or modified. Both REQ-8 and REQ-9 are entirely unimplemented.",
+  "generatedAt": "2026-03-01T22:32:16.530Z",
+  "summary": "The diff adds backend/migration.mo and modifies backend/main.mo. The migration.mo file exists and defines the correct type shapes matching the Version 12 schema, and main.mo wires it up with `(with migration = Migration.run)`. However, the core migration logic in migration.mo is essentially a no-op — Migration.run simply returns `old` unchanged — meaning it does not perform any actual field conversion, dropping of Version 16-only fields, initialization of Version 12 defaults, or handling of type shape differences between Version 16 and Version 12. Most acceptance criteria for REQ-10 are therefore not met.",
   "missing_requirements": [
     {
-      "id": "REQ-8",
-      "requirement": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality.",
-      "reason": "The diff shows only project_state.json was modified. backend/main.mo was not touched at all — it was neither added nor modified in the diff.",
+      "id": "REQ-10",
+      "requirement": "Fields that existed in Version 16 but not in Version 12 are safely dropped without causing upgrade panics, and conversion logic must explicitly handle type shape differences",
+      "reason": "The Migration.run function is a pure identity function returning old unchanged. It contains no logic to drop Version 16-only fields, initialize missing Version 12 defaults, or convert type shape differences such as optional vs non-optional fields or restructured records.",
       "evidence": [
-        "project_state.json"
+        "backend/migration.mo"
       ]
     },
     {
-      "id": "REQ-9",
-      "requirement": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
-      "reason": "No migration.mo file was created. The diff shows 0 added files and only 1 modified file (project_state.json). migration.mo is entirely absent.",
+      "id": "REQ-10",
+      "requirement": "Fields that existed in Version 12 but were absent in Version 16 are initialized with appropriate default values",
+      "reason": "No default value initialization logic is present in Migration.run. The function simply returns the old state as-is without adding any missing fields.",
       "evidence": [
-        "project_state.json"
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Type shape differences (e.g., optional vs non-optional fields, changed record structures) are explicitly handled with conversion logic",
+      "reason": "Migration.run is defined as public func run(old : Actor) : Actor { old; } with zero conversion logic. No field mapping, record reconstruction, or type coercion is performed.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "All existing blog posts, projects, services, skills, leads, SEO settings, social links, experiences, and user records survive the upgrade intact via explicit migration logic",
+      "reason": "The identity function provides no safety net for schema mismatches between V16 and V12. Data survival depends entirely on the schemas already being identical, which contradicts the purpose of the migration file.",
+      "evidence": [
+        "backend/migration.mo"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "project_state.json was modified to update project metadata and summary referencing the revert task",
-      "reason": "The build request does not mention updating or modifying project_state.json. This change was not requested in any requirement.",
+      "description": "Import of blob-storage/Storage module in migration.mo",
+      "reason": "The migration.mo file imports Storage from blob-storage/Storage and uses Storage.ExternalBlob in the Project type definition. This internal module dependency in a standalone migration file was not specified in the build request.",
       "evidence": [
-        "project_state.json"
+        "backend/migration.mo"
       ]
     }
   ],
-  "confidence": 0.97,
+  "confidence": 0.88,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "project_state.json"
   ]
 }

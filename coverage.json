@@ -1,25 +1,18 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-03-01T22:22:29.740Z",
+  "generatedAt": "2026-03-01T22:32:16.533Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
+    "total": 1,
     "implemented": 0,
     "items": [
       {
-        "id": "REQ-8",
-        "summary": "Restore backend/main.mo to its exact Version 12 state by reverting all changes introduced in versions 13 through 16, including any schema changes, new endpoints, modified logic, or removed functionality. The frontend must remain completely untouched.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-9",
-        "summary": "Generate a migration.mo file to safely migrate any existing canister state from the current version (16) schema back to the Version 12 schema without data loss when the canister is upgraded and redeployed.",
+        "id": "REQ-10",
+        "summary": "Generate backend/migration.mo that safely migrates existing canister stable state from the Version 16 schema back to the Version 12 schema. The migration must handle all stable variable shape differences between the two versions — including any added, removed, or restructured fields in types such as BlogPost, Project, Service, Skill, Lead, SeoSetting, SocialLink, Experience, and User — so that when the canister is upgraded and redeployed with the Version 12 main.mo, all existing data is preserved without data loss or deserialization errors.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
@@ -27,6 +20,8 @@
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-implementation-plan.json",

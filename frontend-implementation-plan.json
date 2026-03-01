@@ -1,6 +1,6 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Restore backend/main.mo to Version 12 state",
+  "title": "Generate migration.mo to transition canister state from Version 16 schema to Version 12 schema",
   "requirements": []
 }
