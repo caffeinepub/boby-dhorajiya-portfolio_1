@@ -1,10 +1,10 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "New project",
+  "projectStateVersion": 9,
+  "summary": "Restore Home.tsx and About.tsx to their Version 12 state, leaving all other files untouched.",
   "architectural_notes": [],
   "known_issues": [],
-  "isFixRequest": false,
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-revert-all-frontend-source-files-to-their-version-12-state-by-undoing-all-changes-introduced-in-versions-13-through-16-including-modifications-to-pages-home-tsx-about-tsx-and-all-other-pages-components-hooks-styles-and-configuration-files",
@@ -19,6 +19,22 @@
       "title": "Revert all frontend source files to their Version 12 state by undoing all changes introduced in versions 13 through 16. This includes all pages (Home.tsx, About.tsx, Blog.tsx, BlogPost.tsx, Contact.tsx, Experience.tsx, Projects.tsx, Services.tsx, Skills.tsx, Testimonials.tsx, NotFound.tsx), all admin pages (Dashboard.tsx, BlogManagement.tsx, CategoriesManagement.tsx, ExperienceManagement.tsx, Help.tsx, LeadsManagement.tsx, ProjectsManagement.tsx, SeoManagement.tsx, ServicesManagement.tsx, SkillsManagement.tsx, SocialLinksManagement.tsx, TestimonialsManagement.tsx), all non-immutable components (AdminGuard.tsx, AdminSidebar.tsx, Footer.tsx, Layout.tsx, LoginButton.tsx, Navigation.tsx, ProfileSetup.tsx, SEOHead.tsx, ThemeToggle.tsx), all non-immutable hooks (useActorWrapper.ts, useQueries.ts), all styles (frontend/src/index.css, frontend/index.css), and configuration files (tailwind.config.js, frontend/index.html, frontend/src/App.tsx). Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui.",
       "reqIds": [
         "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-frontend-src-pages-home-tsx-to-its-exact-version-12-state-using-the-user-provided-version-12-source-code-undoing-all-changes-introduced-in-versions-13-through-16-leave-all-other-files-untouched",
+      "title": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-restore-frontend-src-pages-about-tsx-to-its-exact-version-12-state-using-the-user-provided-version-12-source-code-undoing-all-changes-introduced-in-versions-13-through-16-leave-all-other-files-untouched",
+      "title": "Restore frontend/src/pages/About.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
+      "reqIds": [
+        "REQ-7"
       ],
       "version": 1
     }
@@ -46,6 +62,12 @@
       "reqIds": [
         "REQ-4"
       ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Restore only Home.tsx and About.tsx to their Version 12 state using the user-provided source code, leaving all other files untouched.",
+      "reqIds": [],
       "status": "pending"
     }
   ],

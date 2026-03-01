@@ -22,5 +22,7 @@
   "frontend/src/hooks/useGoogleAuth.tsx": "New Google authentication context provider that defines ADMIN_EMAIL as 'bobydhorajiya8@gmail.com', manages user state with localStorage persistence (key: 'portfolio_admin_user'), dynamically loads Google Identity Services, and exports GoogleAuthProvider and useGoogleAuth hook returning { user, isAdmin, isLoading, error, login, logout }.",
   "frontend/src/main.tsx": "Application entry point that wraps App with QueryClientProvider and InternetIdentityProvider, without any Google auth provider.",
   "frontend/index.html": "HTML entry point without any Google Identity Services script tags.",
-  "frontend/src/pages/admin/ExperienceManagement.tsx": "Admin experience management page that imports `useAddExperience` instead of the non-existent `useCreateExperience`, with full CRUD for work experience entries including dynamic responsibility fields, search, and pagination."
+  "frontend/src/pages/admin/ExperienceManagement.tsx": "Admin experience management page that imports `useAddExperience` instead of the non-existent `useCreateExperience`, with full CRUD for work experience entries including dynamic responsibility fields, search, and pagination.",
+  "frontend/src/pages/Home.tsx": "Version 12 home page with hero section (background image, availability badge, CTA buttons, social links), Why Work With Me cards, Development Process steps, Security-First Approach section, Tech Stack grid, CTA banner, and FAQ accordion.",
+  "frontend/src/pages/About.tsx": "Version 12 about page with SEO head, profile card with initials/stats, bio text, core values list, and a \"Work With Me\" CTA link to the contact page."
 }

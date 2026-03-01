@@ -1,43 +1,58 @@
 {
   "kind": "build_request",
-  "title": "Restore frontend app to Version 12 state",
-  "projectName": "Portfolio App",
+  "title": "Restore Home.tsx and About.tsx to Version 12 state",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-5",
-      "text": "Revert all frontend source files to their Version 12 state by undoing all changes introduced in versions 13 through 16. This includes all pages (Home.tsx, About.tsx, Blog.tsx, BlogPost.tsx, Contact.tsx, Experience.tsx, Projects.tsx, Services.tsx, Skills.tsx, Testimonials.tsx, NotFound.tsx), all admin pages (Dashboard.tsx, BlogManagement.tsx, CategoriesManagement.tsx, ExperienceManagement.tsx, Help.tsx, LeadsManagement.tsx, ProjectsManagement.tsx, SeoManagement.tsx, ServicesManagement.tsx, SkillsManagement.tsx, SocialLinksManagement.tsx, TestimonialsManagement.tsx), all non-immutable components (AdminGuard.tsx, AdminSidebar.tsx, Footer.tsx, Layout.tsx, LoginButton.tsx, Navigation.tsx, ProfileSetup.tsx, SEOHead.tsx, ThemeToggle.tsx), all non-immutable hooks (useActorWrapper.ts, useQueries.ts), all styles (frontend/src/index.css, frontend/index.css), and configuration files (tailwind.config.js, frontend/index.html, frontend/src/App.tsx). Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, and frontend/src/components/ui.",
+      "id": "REQ-6",
+      "text": "Restore frontend/src/pages/Home.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-recent"
+          "msg-3",
+          "msg-4"
         ],
         "quotes": [
-          "okay thanks now restore frontend app first",
-          "build"
+          "I want to restore only this home about file from version 12",
+          "I'll restore only Home.tsx and About.tsx to their Version 12 state, leaving all other files completely untouched."
         ]
       },
       "acceptanceCriteria": [
-        "All frontend pages match their Version 12 implementations with no code from versions 13–16 present.",
-        "All admin pages match their Version 12 implementations.",
-        "All non-immutable components (Navigation, Footer, Layout, AdminSidebar, AdminGuard, LoginButton, ProfileSetup, SEOHead, ThemeToggle) match their Version 12 state.",
-        "Non-immutable hooks (useActorWrapper.ts, useQueries.ts) match their Version 12 state.",
-        "Global stylesheets (frontend/src/index.css, frontend/index.css) match their Version 12 state.",
-        "Tailwind config and other configuration files match their Version 12 state.",
-        "Immutable paths (useInternetIdentity.ts, useActor.ts, main.tsx, components/ui) are unchanged.",
-        "The frontend application builds without errors."
+        "frontend/src/pages/Home.tsx matches the Version 12 source code provided by the user",
+        "No other files are modified as part of this change",
+        "The Home page renders correctly using the Version 12 implementation"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Restore frontend/src/pages/About.tsx to its exact Version 12 state using the user-provided Version 12 source code, undoing all changes introduced in versions 13 through 16. Leave all other files untouched.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-3",
+          "msg-4"
+        ],
+        "quotes": [
+          "I want to restore only this home about file from version 12",
+          "I'll restore only Home.tsx and About.tsx to their Version 12 state, leaving all other files completely untouched."
+        ]
+      },
+      "acceptanceCriteria": [
+        "frontend/src/pages/About.tsx matches the Version 12 source code provided by the user",
+        "No other files are modified as part of this change",
+        "The About page renders correctly using the Version 12 implementation"
       ]
     }
   ],
   "constraints": [
-    "Do not modify immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui.",
-    "Do not make any changes to the backend (backend/main.mo) in this build — frontend only.",
-    "Do not generate a migration.mo file in this build."
+    "Only Home.tsx and About.tsx may be modified — all other files must remain untouched",
+    "Do not modify any immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui"
   ],
   "nonGoals": [
-    "Reverting or modifying the backend (backend/main.mo) — this is frontend only.",
-    "Generating a migration.mo file.",
-    "Adding any new features or UI improvements beyond restoring Version 12 state."
+    "Reverting any other frontend pages, components, hooks, styles, or configuration files",
+    "Reverting the backend (backend/main.mo) to Version 12",
+    "Generating a migration.mo file",
+    "Restoring any admin pages or shared components"
   ],
   "imageRequirements": {
     "required": [],

@@ -1,143 +1,117 @@
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import React from 'react';
+import { Link } from '@tanstack/react-router';
+import { Briefcase, MapPin, Calendar, ArrowRight, CheckCircle2 } from 'lucide-react';
 import SEOHead from '../components/SEOHead';
-import { useGetSkills, useGetTestimonials } from '../hooks/useQueries';
-import { SkillCategory } from '../backend';
-import { Star } from 'lucide-react';
 
-const categoryLabels: Record<string, string> = {
-  primary: 'Primary Skills',
-  secondary: 'Secondary Skills',
-  security: 'Security',
-  additional: 'Additional Skills',
-};
+const values = [
+  'Security-first development approach',
+  'Clean, maintainable code architecture',
+  'Performance optimization at every layer',
+  'Cross-platform consistency',
+  'Continuous learning & improvement',
+];
 
 export default function About() {
-  const { data: skills, isLoading: skillsLoading } = useGetSkills();
-  const { data: testimonials, isLoading: testimonialsLoading } = useGetTestimonials();
-
-  const skillsByCategory = skills?.reduce(
-    (acc, skill) => {
-      const cat = skill.category as string;
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(skill);
-      return acc;
-    },
-    {} as Record<string, typeof skills>
-  ) ?? {};
-
   return (
     <>
-      <SEOHead page="about" defaultTitle="About - Portfolio" defaultDescription="Learn more about my background, skills, and experience." />
+      <SEOHead page="about" defaultTitle="About – Boby Dhorajiya" defaultDescription="Learn about Boby Dhorajiya, a mobile app developer specializing in Flutter and React Native." />
 
-      {/* Hero */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4 text-center space-y-6 max-w-3xl">
-          <Badge variant="secondary">About Me</Badge>
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-            Passionate Developer & Problem Solver
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            I'm a full-stack developer with a passion for building elegant, performant, and user-friendly applications. With years of experience across various technologies, I bring ideas to life through clean code and thoughtful design.
-          </p>
-        </div>
-      </section>
-
-      {/* Skills by Category */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 space-y-4">
-            <Badge variant="secondary">Expertise</Badge>
-            <h2 className="text-3xl font-bold text-foreground">Skills & Technologies</h2>
+      <div className="pt-24 section-padding">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-16 animate-fade-in">
+            <span className="text-primary text-sm font-mono font-medium uppercase tracking-widest">About Me</span>
+            <h1 className="section-title font-display mt-2">
+              Passionate About <span className="gradient-text">Secure Mobile</span> Development
+            </h1>
           </div>
-          {skillsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <Skeleton className="h-6 w-1/2" />
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {Array.from({ length: 3 }).map((_, j) => (
-                      <Skeleton key={j} className="h-8 w-full" />
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Object.entries(skillsByCategory).map(([category, categorySkills]) => (
-                <Card key={category}>
-                  <CardHeader>
-                    <CardTitle className="text-lg">
-                      {categoryLabels[category] ?? category}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {categorySkills?.map(skill => (
-                      <div key={skill.id.toString()} className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="font-medium text-foreground">{skill.name}</span>
-                          <span className="text-muted-foreground">{Number(skill.experience)}y exp</span>
-                        </div>
-                        <div className="h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full transition-all"
-                            style={{ width: `${Math.min(100, (Number(skill.experience) / 10) * 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 space-y-4">
-            <Badge variant="secondary">Testimonials</Badge>
-            <h2 className="text-3xl font-bold text-foreground">What People Say</h2>
-          </div>
-          {testimonialsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i}>
-                  <CardContent className="pt-6">
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-4 w-3/4 mb-4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : testimonials && testimonials.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {testimonials.map(t => (
-                <Card key={t.id.toString()} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="flex gap-1">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                      ))}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Image placeholder + stats */}
+            <div className="space-y-6 animate-slide-in-left">
+              <div className="relative">
+                <div className="w-full aspect-square max-w-sm mx-auto rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center overflow-hidden">
+                  <div className="text-center space-y-4 p-8">
+                    <div className="w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center mx-auto">
+                      <span className="text-4xl font-display font-bold text-primary">BD</span>
                     </div>
-                    <p className="text-muted-foreground italic">"{t.message}"</p>
-                    <p className="font-semibold text-foreground">— {t.author}</p>
-                  </CardContent>
-                </Card>
-              ))}
+                    <div>
+                      <p className="font-display font-bold text-xl">Boby Dhorajiya</p>
+                      <p className="text-primary text-sm font-medium">Mobile App Developer</p>
+                    </div>
+                  </div>
+                </div>
+                {/* Floating badge */}
+                <div className="absolute -bottom-4 -right-4 bg-card border border-border rounded-xl px-4 py-3 shadow-card-dark">
+                  <p className="text-xs text-muted-foreground">Specialization</p>
+                  <p className="font-semibold text-sm text-primary">Flutter & React Native</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4 pt-6">
+                {[
+                  { value: '3+', label: 'Years Exp.' },
+                  { value: '20+', label: 'Apps Built' },
+                  { value: '100%', label: 'Secure Code' },
+                ].map((stat) => (
+                  <div key={stat.label} className="text-center p-4 rounded-xl bg-card border border-border">
+                    <p className="text-2xl font-display font-bold text-primary">{stat.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-          ) : (
-            <p className="text-center text-muted-foreground">No testimonials yet.</p>
-          )}
+
+            {/* Right: Bio */}
+            <div className="space-y-6 animate-slide-up">
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Briefcase className="w-4 h-4 text-primary" />
+                  <span>Freelance Mobile App Developer</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span>Available Worldwide (Remote)</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="w-4 h-4 text-primary" />
+                  <span>Open to New Projects</span>
+                </div>
+              </div>
+
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <p className="text-lg">
+                  Boby is a mobile-focused developer specializing in Flutter and React Native, with strong expertise in building secure and scalable applications for startups and enterprises.
+                </p>
+                <p>
+                  With a deep understanding of mobile security principles, Boby ensures every application is built with security at its core — from secure API integration and authentication to data encryption and secure local storage.
+                </p>
+                <p>
+                  Whether you're a startup looking to launch your first app or an enterprise needing to modernize your mobile presence, Boby brings the technical expertise and security mindset to deliver exceptional results.
+                </p>
+              </div>
+
+              {/* Values */}
+              <div className="space-y-3">
+                <h3 className="font-display font-semibold text-sm uppercase tracking-wider text-muted-foreground">Core Values</h3>
+                <ul className="space-y-2">
+                  {values.map((value) => (
+                    <li key={value} className="flex items-center gap-3 text-sm">
+                      <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />
+                      <span>{value}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <Link to="/contact" className="btn-primary inline-flex">
+                Work With Me <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     </>
   );
 }
