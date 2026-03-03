@@ -152,7 +152,7 @@ export default function Home() {
             className="text-lg sm:text-xl md:text-2xl text-slate-200 font-medium mb-4"
             style={{ textShadow: "0 1px 4px rgba(0,0,0,0.7)" }}
           >
-            Senior Mobile App Developer
+            Mobile App Developer
           </p>
 
           <p
@@ -199,6 +199,25 @@ export default function Home() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Floating mobile phone mockup */}
+        <div className="absolute right-8 bottom-16 hidden xl:flex flex-col items-center pointer-events-none select-none opacity-30">
+          <div className="relative w-28 h-52 rounded-3xl border-4 border-white/40 bg-gradient-to-b from-slate-900/80 to-blue-950/80 shadow-2xl flex flex-col items-center overflow-hidden backdrop-blur-sm">
+            {/* Phone notch */}
+            <div className="w-12 h-4 bg-white/20 rounded-b-xl mt-1" />
+            {/* Screen content lines */}
+            <div className="flex-1 w-full px-3 pt-4 flex flex-col gap-2">
+              <div className="h-1.5 w-full bg-cyan-400/60 rounded" />
+              <div className="h-1.5 w-3/4 bg-white/30 rounded" />
+              <div className="h-1.5 w-5/6 bg-white/20 rounded" />
+              <div className="mt-3 h-10 w-full bg-cyan-500/30 rounded-xl border border-cyan-400/30" />
+              <div className="h-1.5 w-2/3 bg-white/20 rounded mt-2" />
+              <div className="h-1.5 w-4/5 bg-white/15 rounded" />
+            </div>
+            {/* Home bar */}
+            <div className="w-10 h-1 bg-white/30 rounded-full mb-2" />
+          </div>
         </div>
 
         {/* Scroll indicator */}
