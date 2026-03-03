@@ -7,14 +7,12 @@ import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
 import Time "mo:core/Time";
 
-
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import Storage "blob-storage/Storage";
 
-// This is a V16 -> V12 rollback canister.
-// Migration logic is in "migration.mo". This logic is ONLY used when moving back from V16 -> V12. It is ignored when moving to V17 or higher.
+
 
 actor {
   include MixinStorage();

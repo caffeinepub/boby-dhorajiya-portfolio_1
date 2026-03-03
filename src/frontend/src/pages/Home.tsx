@@ -116,6 +116,7 @@ export default function Home() {
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        style={{ backgroundColor: "#0a0e1a" }}
         aria-label="Hero section"
       >
         {/* Background image */}
@@ -129,7 +130,7 @@ export default function Home() {
           aria-label="Portfolio hero background"
         />
         {/* Dark gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-slate-900/65 to-blue-950/70" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/75 via-slate-900/65 to-blue-950/70" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 sm:px-8 text-center">
           {/* Availability badge */}
