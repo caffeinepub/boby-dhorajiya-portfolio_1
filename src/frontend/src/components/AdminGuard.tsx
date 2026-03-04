@@ -1,23 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Lock, Shield } from "lucide-react";
 import type { ReactNode } from "react";
-import { useActor } from "../hooks/useActor";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useIsCallerAdmin } from "../hooks/useQueries";
-import LoginButton from "./LoginButton";
+import { useGoogleAuth } from "../hooks/useGoogleAuth";
+import GoogleLoginButton from "./LoginButton";
 
 interface AdminGuardProps {
   children: ReactNode;
 }
 
 export default function AdminGuard({ children }: AdminGuardProps) {
-  const { identity, isInitializing } = useInternetIdentity();
-  const { isFetching: actorFetching } = useActor();
-  const { data: isAdmin, isLoading: adminLoading } = useIsCallerAdmin();
+  const { user, isAuthenticated, isLoading } = useGoogleAuth();
 
-  const isAuthenticated = !!identity;
-
-  if (isInitializing || actorFetching || (isAuthenticated && adminLoading)) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-4">
@@ -28,7 +22,7 @@ export default function AdminGuard({ children }: AdminGuardProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center space-y-6 max-w-md mx-auto px-4">
@@ -42,18 +36,21 @@ export default function AdminGuard({ children }: AdminGuardProps) {
               Admin Access Required
             </h1>
             <p className="text-muted-foreground">
-              Please log in to access the admin panel.
+              Please sign in with your Google account to access the admin panel.
             </p>
           </div>
-          <LoginButton />
+          <GoogleLoginButton />
         </div>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (!isAuthenticated) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div
+        className="flex items-center justify-center min-h-screen bg-background"
+        data-ocid="admin.error_state"
+      >
         <div className="text-center space-y-6 max-w-md mx-auto px-4">
           <div className="flex justify-center">
             <div className="p-4 rounded-full bg-destructive/10">
@@ -65,11 +62,13 @@ export default function AdminGuard({ children }: AdminGuardProps) {
               Access Denied
             </h1>
             <p className="text-muted-foreground">
-              You don't have admin privileges to access this area.
+              The account <strong>{user.email}</strong> does not have admin
+              privileges.
             </p>
           </div>
           <Button
             variant="outline"
+            data-ocid="admin.cancel_button"
             onClick={() => {
               window.location.href = "/";
             }}

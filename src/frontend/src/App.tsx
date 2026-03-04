@@ -13,6 +13,7 @@ import { Suspense, lazy } from "react";
 import AdminGuard from "./components/AdminGuard";
 import AdminSidebar from "./components/AdminSidebar";
 import Layout from "./components/Layout";
+import { GoogleAuthProvider } from "./hooks/useGoogleAuth";
 
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
@@ -300,8 +301,10 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster />
+        <GoogleAuthProvider>
+          <RouterProvider router={router} />
+          <Toaster />
+        </GoogleAuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

@@ -4,7 +4,6 @@ import { Code2, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SiGithub, SiLinkedin, SiX } from "react-icons/si";
 import { useGetSocialLinks } from "../hooks/useQueries";
-import LoginButton from "./LoginButton";
 import ThemeToggle from "./ThemeToggle";
 
 const navLinks = [
@@ -100,7 +99,6 @@ export default function Navigation() {
             </a>
           ))}
           <ThemeToggle />
-          <LoginButton />
         </div>
 
         {/* Mobile Menu Button */}
@@ -146,7 +144,6 @@ export default function Navigation() {
                   {getSocialIcon(link.platform)}
                 </a>
               ))}
-              <LoginButton />
             </div>
           </div>
         </div>
